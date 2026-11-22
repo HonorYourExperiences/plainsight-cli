@@ -10,7 +10,7 @@ import path from "node:path";
 import { execSync } from "node:child_process";
 import { fixPrompt } from "./fixprompt.mjs";
 
-export const VERSION = "0.3.0";
+export const VERSION = "0.3.1";
 
 /** Analyze the repository at `rootDir` and return its graph. */
 export function analyze(rootDir = ".", { name } = {}) {
@@ -432,13 +432,16 @@ function condTests(e, names) {
 function verifyGate(m, fn, call, name) {
   let p = call.parent; while (p && (ts.isAwaitExpression(p) || ts.isParenthesizedExpression(p))) p = p.parent;
   const awaited = ts.isAwaitExpression(call.parent) || (ts.isParenthesizedExpression(call.parent) && ts.isAwaitExpression(call.parent.parent));
+  // a verifier skipped when the value it checks is missing (if (t) verify(t), t && verify(t)) lets requests without it through.
+  // Branching on something else (if (req.method === "GET") verifyA(req) else verifyB(req)) is fine.
+  if (skippedWhenMissing(call, fn, m.sf)) return { enforced: false };
   // a failure caught by a catch that doesn't stop the request is ignored
   for (let c = call, q = call.parent; q && q !== fn; c = q, q = q.parent) {
     if (ts.isTryStatement(q) && c === q.tryBlock && q.catchClause) {
-      const cb = q.catchClause.block; let stops = false;
-      const v = (n) => { if (stops) return; if (ts.isThrowStatement(n) || ts.isReturnStatement(n) || (ts.isCallExpression(n) && /^(redirect|notFound|unauthorized|forbidden)$/.test(n.expression.getText(m.sf)))) stops = true; else if (!ts.isFunctionLike(n)) ts.forEachChild(n, v); };
-      v(cb);
-      if (!stops) return { enforced: false };
+      // the handler's own catch stops the request when every path through it returns, throws or redirects
+      const cb = q.catchClause.block;
+      const leavesAll = (st) => !!st && (ts.isReturnStatement(st) || alwaysStops(st, m.sf) || (ts.isBlock(st) && st.statements.some(leavesAll)) || (ts.isIfStatement(st) && leavesAll(st.thenStatement) && leavesAll(st.elseStatement)));
+      if (!leavesAll(cb)) return { enforced: false };
     }
   }
   if (p && ts.isExpressionStatement(p) && !/timingSafe/i.test(name)) {
@@ -452,8 +455,76 @@ function verifyGate(m, fn, call, name) {
     const isAsync = tfn && (tfn.modifiers || []).some((x) => x.kind === ts.SyntaxKind.AsyncKeyword);
     if (!awaited && (isAsync || !body)) return { enforced: false };
     if (body) {
-      let throws = false; const v = (n) => { if (throws) return; if (ts.isThrowStatement(n) || (ts.isCallExpression(n) && /^(redirect|notFound|unauthorized|forbidden)$/.test(n.expression.getText(target.m.sf))) || (ts.isCallExpression(n) && /^(jwtVerify|verify)$/.test(n.expression.getText(target.m.sf).split(".").pop()))) throws = true; else if (!ts.isFunctionLike(n)) ts.forEachChild(n, v); };
-      ts.forEachChild(body, v);
+      // follows calls into other functions in the repo (seenFns holds the helpers being scanned right now, so recursion stops but the same helper can be scanned again with other inputs): rejectInvalidToken(t) can be the throw
+      const seenFns = new Set();
+      // a throw only rejects the request when it depends on what the verifier was given (not, say, missing config)
+      const inputsOf = (fnNode, seed) => {
+        const t = new Set(seed); let grew = true;
+        while (grew) { grew = false; const w = (n) => { if (ts.isVariableDeclaration(n) && n.initializer && mentions(n.initializer, t)) { const names = new Set(); collectNames(n.name, names); for (const x of names) if (!t.has(x)) { t.add(x); grew = true; } } ts.forEachChild(n, w); }; if (fnNode.body) w(fnNode.body); }
+        return t;
+      };
+      // a condition rejects the input when it is about the input alone: every && term mentions it, and it reads no configuration
+      const aboutInput = (cond, inputs, tm) => {
+        if (/process\.env|import\.meta\.env|\bconfig\b|\benv\b/i.test(cond.getText(tm.sf))) return false;
+        const terms = []; const split = (e) => { e = unwrap(e); if (ts.isBinaryExpression(e) && e.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) { split(e.left); split(e.right); } else terms.push(e); };
+        split(cond);
+        return terms.every((t) => mentions(t, inputs));
+      };
+      // a branch that always leaves (return or throw), like the early success return in if (t === "ok") return;
+      const leaves = (st) => !!st && (ts.isReturnStatement(st) || ts.isThrowStatement(st) || (ts.isBlock(st) && st.statements.length > 0 && leaves(st.statements[st.statements.length - 1])));
+      const dependsOnInput = (n, stop, inputs, tm) => {
+        // a throw nested under a configuration check (if (t) { if (!process.env.KEY) throw }) is about the configuration
+        const cfg = /process\.env|import\.meta\.env|\bconfig\b|\benv\b/i;
+        for (let c = n, p = n.parent; p && c !== stop; c = p, p = p.parent) {
+          if (ts.isIfStatement(p) && c !== p.expression && cfg.test(p.expression.getText(tm.sf))) return false;
+          if (ts.isConditionalExpression(p) && c !== p.condition && cfg.test(p.condition.getText(tm.sf))) return false;
+          if (ts.isBinaryExpression(p) && c === p.right && cfg.test(p.left.getText(tm.sf))) return false;
+        }
+        for (let c = n, p = n.parent; p && c !== stop; c = p, p = p.parent) {
+          // code after if (<about the input>) return; only runs for some inputs
+          if (ts.isBlock(p) || ts.isSourceFile(p)) { const i = p.statements.indexOf(c); if (p.statements.slice(0, Math.max(i, 0)).some((st) => ts.isIfStatement(st) && aboutInput(st.expression, inputs, tm) && (leaves(st.thenStatement) || leaves(st.elseStatement)))) return true; }
+          if (ts.isIfStatement(p) && c !== p.expression && aboutInput(p.expression, inputs, tm)) return true;
+          if (ts.isConditionalExpression(p) && c !== p.condition && aboutInput(p.condition, inputs, tm)) return true;
+          if (ts.isBinaryExpression(p) && c === p.right && aboutInput(p.left, inputs, tm)) return true;
+        }
+        return false;
+      };
+      const throwsIn = (tm, b, inputs) => {
+        let hit = false;
+        const v = (n) => {
+          if (hit) return;
+          if ((ts.isThrowStatement(n) || (ts.isCallExpression(n) && /^(redirect|notFound|unauthorized|forbidden)$/.test(n.expression.getText(tm.sf)))) && dependsOnInput(n, b, inputs, tm)) { hit = true; return; }
+          // a library verifier given the input throws on a bad one
+          if (ts.isCallExpression(n) && /^(jwtVerify|verify)$/.test(n.expression.getText(tm.sf).split(".").pop()) && n.arguments.some((a) => mentions(a, inputs)) && !onBranch(n, (() => { let q = n.parent; while (q && !ts.isFunctionLike(q)) q = q.parent; return q; })())) { hit = true; return; }
+          // a return in finally overrides any throw from its try (and catch)
+          if (ts.isTryStatement(n) && n.finallyBlock && n.finallyBlock.statements.some(ts.isReturnStatement)) { v(n.finallyBlock); return; }
+          // a try whose catch carries on (doesn't throw, return or redirect) swallows anything thrown inside it
+          if (ts.isTryStatement(n) && n.catchClause) {
+            // (a return here only leaves the verifier, so the caller carries on: that swallows the failure too)
+            if (!alwaysStops(n.catchClause.block, tm.sf)) { if (n.finallyBlock) v(n.finallyBlock); return; } // a rethrow on only some paths is still swallowed on the rest
+          }
+          if (ts.isCallExpression(n) && ts.isIdentifier(unwrap(n.expression)) && ts.isExpressionStatement(n.parent.kind === ts.SyntaxKind.AwaitExpression ? n.parent.parent : n.parent)) {
+            const id = unwrap(n.expression).text, im = tm.importMap.get(id);
+            const t2 = im?.resolved ? findExport(im.resolved, im.imported) : tm.fns.has(id) ? { m: tm, local: id } : null;
+            const key = t2 && t2.m.rel + "#" + t2.local;
+            const f2 = t2 && t2.m.fns.get(t2.local);
+            // an async helper's rejection only reaches the caller if the call is awaited
+            const async2 = f2 && (f2.modifiers || []).some((x) => x.kind === ts.SyntaxKind.AsyncKeyword);
+            const awaited2 = n.parent.kind === ts.SyntaxKind.AwaitExpression;
+            // a helper called only on some paths (if (t) reject(t)) doesn't reject every bad request
+            const ownFn = (() => { let p = n.parent; while (p && !ts.isFunctionLike(p)) p = p.parent; return p; })();
+            // the helper's own parameters that receive the verifier's input
+            const passed = new Set(); (f2?.parameters || []).forEach((prm, i) => { if (n.arguments[i] && mentions(n.arguments[i], inputs)) collectNames(prm.name, passed); });
+            if (f2?.body && passed.size && !seenFns.has(key) && (!async2 || awaited2) && !onBranch(n, ownFn)) { seenFns.add(key); const r = throwsIn(t2.m, f2.body, inputsOf(f2, passed)); seenFns.delete(key); if (r) { hit = true; return; } }
+          }
+          if (!ts.isFunctionLike(n)) ts.forEachChild(n, v);
+        };
+        ts.forEachChild(b, v);
+        return hit;
+      };
+      seenFns.add(target.m.rel + "#" + target.local);
+      const seed = new Set(); (tfn.parameters || []).forEach((prm) => collectNames(prm.name, seed));
+      const throws = throwsIn(target.m, body, inputsOf(tfn, seed));
       if (!throws) return { enforced: false };
       return { enforced: true, full: true, stop: "throw", certainty: "proven", how: `${name}() throws when it can't verify the request` };
     }
@@ -559,6 +630,12 @@ const optionalAuth = (m, node, names, optVars = new Set()) => {
   v(node); return hit;
 };
 // drizzle: walk up a query chain (db.select().from(t).where(...)) and test its where() arguments
+// the values in a sql`` template, grouped by predicate: a new group starts wherever the literal text has AND or OR
+function sqlPredicates(t) {
+  const groups = [[]];
+  for (const sp of t.templateSpans) { groups[groups.length - 1].push(sp.expression); if (/\b(and|or)\b/i.test(sp.literal.text)) groups.push([]); }
+  return groups;
+}
 function drizzleWhere(n, test) {
   for (let p = n.parent; p && (ts.isPropertyAccessExpression(p) || ts.isCallExpression(p) || ts.isAwaitExpression(p)); p = p.parent) {
     if (ts.isCallExpression(p) && ts.isPropertyAccessExpression(p.expression) && p.expression.name.text === "where" && p.arguments.some(test)) return true;
@@ -590,7 +667,7 @@ function directEffects(m, name, fn) {
     if ((ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) && ts.isIdentifier(n.tagName) && /^[A-Z]/.test(n.tagName.text)) callTo(n.tagName.text, n, "renders");
     if (ts.isIdentifier(n) && !(ts.isCallExpression(n.parent) && n.parent.expression === n) && !(ts.isPropertyAccessExpression(n.parent) && n.parent.name === n) && !ts.isJsxOpeningElement(n.parent) && !ts.isJsxSelfClosingElement(n.parent) && !ts.isJsxClosingElement(n.parent)
       && !ts.isPropertyAssignment(n.parent) && !ts.isVariableDeclaration(n.parent) && !ts.isBindingElement(n.parent) && !ts.isParameter(n.parent) && !ts.isFunctionDeclaration(n.parent) && !ts.isTypeReferenceNode(n.parent)) {
-      if (m.importMap.has(n.text) || m.fns.has(n.text)) callTo(n.text, n, "passes");
+      if (m.importMap.has(n.text) || m.fns.has(n.text)) { const before = effects.length; callTo(n.text, n, "passes"); if (effects.length > before) { let c = n; while (c.parent && (ts.isParenthesizedExpression(c.parent) || ts.isAsExpression(c.parent) || ts.isNonNullExpression(c.parent) || ts.isTypeAssertionExpression(c.parent) || (ts.isSatisfiesExpression && ts.isSatisfiesExpression(c.parent)))) c = c.parent; if (ts.isConditionalExpression(c.parent) && c.parent.condition !== c) effects[effects.length - 1].conditional = c.parent.condition.getText(m.sf); } }
     }
     if (ts.isCallExpression(n)) {
       const callee = unwrap(n.expression);
@@ -624,7 +701,11 @@ function directEffects(m, name, fn) {
           const write = last !== "from";
           effects.push({ type: "db", model: drizzleTableOf(m, unwrap(n.arguments[0])), op: write ? last : "select", write, whereFromRequest: drizzleWhere(n, (a) => mentions(a, tainted)), site });
         } else if (h?.kind === "db" && h.db === "drizzle" && /^(leftJoin|rightJoin|innerJoin|fullJoin)$/.test(last) && n.arguments[0] && drizzleTableOf(m, unwrap(n.arguments[0]))) {
-          effects.push({ type: "db", model: drizzleTableOf(m, unwrap(n.arguments[0])), op: "select", write: false, whereFromRequest: false, site });
+          // the joined table is only "selected by the request" when the request-driven filter is on that table's columns
+          const joinId = unwrap(n.arguments[0]).getText(m.sf);
+          // parts are a call's arguments, or the values in a sql`...` template
+          const onJoined = (a) => { let hit = false; const v = (x) => { if (hit) return; const groups = ts.isCallExpression(x) ? [x.arguments] : ts.isTaggedTemplateExpression(x) && ts.isTemplateExpression(x.template) ? sqlPredicates(x.template) : []; for (const parts of groups) if (parts.some((y) => (ts.isPropertyAccessExpression(unwrap(y)) || ts.isElementAccessExpression(unwrap(y))) && unwrap(y).expression.getText(m.sf) === joinId) && parts.some((y) => mentions(y, tainted))) hit = true; ts.forEachChild(x, v); }; v(a); return hit; };
+          effects.push({ type: "db", model: drizzleTableOf(m, unwrap(n.arguments[0])), op: "select", write: false, whereFromRequest: drizzleWhere(n, onJoined), site });
         } else if (h?.kind === "db" && h.db === "drizzle" && ch[1] === "query" && ch.length >= 4 && /^find(First|Many)$/.test(last)) {
           const key = [...drizzleTables.values()].find((t) => t.local === ch[2])?.key || ch[2];
           const opts = n.arguments[0];
@@ -708,12 +789,45 @@ function wrapperAuth(m, name, stack, cutActions, depth) {
   return out;
 }
 // is this node inside an if/else, ternary, && / || or try within fn (so it may not run on every request)?
+// every path through the block ends in a throw or a redirect (a catch that only sometimes rethrows still swallows the rest)
+const STOP_CALL = /^(redirect|notFound|unauthorized|forbidden)$/;
+function alwaysStops(st, sf) {
+  if (!st) return false;
+  if (ts.isThrowStatement(st)) return true;
+  if (ts.isExpressionStatement(st)) { let e = st.expression; if (ts.isAwaitExpression(e)) e = e.expression; return ts.isCallExpression(e) && STOP_CALL.test(e.expression.getText(sf)); }
+  if (ts.isReturnStatement(st)) { let e = st.expression; if (e && ts.isAwaitExpression(e)) e = e.expression; return !!e && ts.isCallExpression(e) && STOP_CALL.test(e.expression.getText(sf)); }
+  // statements run in order: a stop counts only if nothing before it can return first
+  if (ts.isBlock(st)) { for (const x of st.statements) { if (alwaysStops(x, sf)) return true; if (mayReturn(x, sf)) return false; } return false; }
+  if (ts.isIfStatement(st)) return alwaysStops(st.thenStatement, sf) && alwaysStops(st.elseStatement, sf);
+  if (ts.isTryStatement(st)) return alwaysStops(st.finallyBlock, sf) || (alwaysStops(st.tryBlock, sf) && (!st.catchClause || alwaysStops(st.catchClause.block, sf)));
+  return false;
+}
+function skippedWhenMissing(call, fn, sf) {
+  const args = new Set(call.arguments.flatMap((a) => { const out = [a.getText(sf)]; const v = (x) => { if (ts.isIdentifier(x) || ts.isPropertyAccessExpression(x)) out.push(x.getText(sf)); ts.forEachChild(x, v); }; v(a); return out; }));
+  const presence = (e) => { e = unwrap(e);
+    if (ts.isIdentifier(e) || ts.isPropertyAccessExpression(e) || ts.isElementAccessExpression(e)) return args.has(e.getText(sf));
+    if (ts.isBinaryExpression(e) && [ts.SyntaxKind.ExclamationEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken].includes(e.operatorToken.kind) && /^(null|undefined|"")$/.test(e.right.getText(sf))) return args.has(unwrap(e.left).getText(sf));
+    if (ts.isBinaryExpression(e) && e.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) return presence(e.left) || presence(e.right);
+    return false; };
+  for (let c = call, p = call.parent; p && p !== fn; c = p, p = p.parent) {
+    if (ts.isIfStatement(p) && c === p.thenStatement && presence(p.expression)) return true;
+    if (ts.isConditionalExpression(p) && c === p.whenTrue && presence(p.condition)) return true;
+    if (ts.isBinaryExpression(p) && c === p.right && p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && presence(p.left)) return true;
+  }
+  return false;
+}
+// a plain return (not return redirect(...)) somewhere in the statement, outside nested functions
+function mayReturn(st, sf) {
+  let hit = false;
+  const v = (n) => { if (hit || ts.isFunctionLike(n)) return; if (ts.isReturnStatement(n) && !alwaysStops(n, sf)) { hit = true; return; } ts.forEachChild(n, v); };
+  v(st); return hit;
+}
 function onBranch(node, fn) {
   for (let c = node, p = node?.parent; p && p !== fn; c = p, p = p.parent) {
     if (ts.isIfStatement(p) && c !== p.expression) return true;
     if (ts.isConditionalExpression(p) && c !== p.condition) return true;
     if (ts.isBinaryExpression(p) && c === p.right && [ts.SyntaxKind.AmpersandAmpersandToken, ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken].includes(p.operatorToken.kind)) return true;
-    if (ts.isCaseClause(p) || ts.isCatchClause(p)) return true;
+    if (ts.isCaseClause(p) || ts.isDefaultClause(p) || ts.isCatchClause(p)) return true;
   }
   return false;
 }
@@ -748,7 +862,7 @@ function unitEffects(m, local, stack = new Set(), cutActions = false) {
   if (w) for (const s of wrapperAuth(m, w.name, stack, cutActions, 0)) out.push({ ...s, via: [{ fn: w.name, ev: ev(m, w.node, 2), ref: "wraps" }, ...s.via], entry: s.site, files: [m.rel, ...s.files] });
   for (const e of directEffects(m, local, fn)) {
     if (e.type !== "call") { out.push({ ...e, via: [], entry: e.site, files: [m.rel] }); continue; }
-    if (cutActions && isAction(e.target.m, e.target.local)) { out.push({ type: "action", target: e.target, name: e.name, ref: e.ref, site: e.site, via: [], entry: e.site, files: [m.rel] }); continue; }
+    if (cutActions && isAction(e.target.m, e.target.local)) { out.push({ type: "action", target: e.target, name: e.name, ref: e.ref, conditional: e.conditional, site: e.site, via: [], entry: e.site, files: [m.rel] }); continue; }
     const sub = unitEffects(e.target.m, e.target.local, stack, cutActions);
     // a helper only touches "records named by the request" if this call hands it something from the request;
     // a login check inside a helper called on only one branch doesn't protect the rest of this function
@@ -1030,7 +1144,8 @@ for (const p of pages) {
   const effects = def ? unitEffects(m, def.local, new Set(), true).slice() : [];
   // de-duplicate effects that were reached through several functions
   const seen = new Set();
-  node.effects = effects.filter((e) => { const k = e.type + e.site.ev.file + e.site.ev.line; if (seen.has(k)) return false; seen.add(k); return true; });
+  // (two different tables read on one line, e.g. a select and its join, are two effects)
+  node.effects = effects.filter((e) => { const k = [e.type, e.site.ev.file, e.site.ev.line, e.model, e.op, e.name, e.pkg, e.call, e.url?.path, e.conditional ? "cond" : ""].join("|"); if (seen.has(k)) return false; seen.add(k); return true; });
   node.client = client; node.pageClient = pageClient;
 }
 
@@ -1319,7 +1434,10 @@ for (const node of [...nodes.values()].filter((n) => n.kind === "route" || n.kin
   for (const e of node.effects || []) {
     const chain = evChain(e);
     if (e.type === "action") {
-      const ed = addEdge(node.id, actionId(e.target), "request", e.site.ev, { label: e.ref === "passes" ? `hands ${e.name}() to a form or button` : `calls ${e.name}()` });
+      const ed = addEdge(node.id, actionId(e.target), "request", e.site.ev, { label: e.ref === "passes" ? `hands ${e.name}() to a form or button` : `calls ${e.name}()`,
+        ...(e.conditional ? { certainty: "inferred", why: `Chosen in the code by the condition ${e.conditional.slice(0, 60)}, which Plainsight doesn't evaluate for each page.` } : {}) });
+      // the same action reached unconditionally elsewhere on this page is proven
+      if (!e.conditional && ed.certainty === "inferred" && ed.why?.startsWith("Chosen in the code")) { ed.certainty = "proven"; delete ed.why; }
       if (chain.length > 1) ed.evidence = chain;
       continue;
     }
@@ -1523,7 +1641,9 @@ for (const n of nodes.values()) {
     const reqs = out.filter((e) => e.kind === "request");
     const acts = reqs.filter((e) => e.to.startsWith("action:")), apis = reqs.filter((e) => !e.to.startsWith("action:"));
     if (apis.length) S.push({ text: `It sends requests to ${list(apis.map((e) => `${e.label}`))}.`, evidence: apis.flatMap((e) => e.evidence) });
-    if (acts.length) S.push({ text: `It triggers server actions: ${list(acts.map((e) => nodeName(e.to)))}.`, evidence: acts.flatMap((e) => e.evidence) });
+    const actsSure = acts.filter((e) => e.certainty === "proven"), actsMaybe = acts.filter((e) => e.certainty !== "proven");
+    if (actsSure.length) S.push({ text: `It triggers server actions: ${list(actsSure.map((e) => nodeName(e.to)))}.`, evidence: actsSure.flatMap((e) => e.evidence) });
+    if (actsMaybe.length) S.push({ text: `It may trigger ${list(actsMaybe.map((e) => nodeName(e.to)))}: which one is picked by a condition in the code that Plainsight doesn't evaluate.`, evidence: actsMaybe.flatMap((e) => e.evidence) });
     if (!reqs.length) S.push({ text: "It doesn't send any requests to your server.", evidence: [] });
     const dbs = out.filter((e) => e.kind === "read" || e.kind === "write");
     if (dbs.length) S.push({ text: `While building the page, the server ${list(dbs.map((e) => `${e.label} ${nodeName(e.to)}`))}.`, evidence: dbs.flatMap((e) => e.evidence) });
@@ -1555,8 +1675,11 @@ for (const n of nodes.values()) {
   } else if (n.kind === "action") {
     const callers = inn.filter((e) => e.kind === "request");
     S.push({ text: `A server action: a function in ${n.file} that the browser can trigger directly, like a hidden API route.`, evidence: [n.ev].filter(Boolean) });
-    if (callers.length) S.push({ text: `Triggered from ${list([...new Set(callers.map((e) => (nodes.get(e.from).layout ? "" : "page ") + nodeName(e.from)))])}.`, evidence: callers.flatMap((e) => e.evidence) });
-    else S.push({ text: "No page in the app triggers it.", evidence: [] });
+    const callerName = (e) => (nodes.get(e.from).layout ? "" : "page ") + nodeName(e.from);
+    const callersSure = callers.filter((e) => e.certainty === "proven"), callersMaybe = callers.filter((e) => e.certainty !== "proven");
+    if (callersSure.length) S.push({ text: `Triggered from ${list([...new Set(callersSure.map(callerName))])}.`, evidence: callersSure.flatMap((e) => e.evidence) });
+    if (callersMaybe.length) S.push({ text: `May be triggered from ${list([...new Set(callersMaybe.map(callerName))])}, depending on a condition in the code.`, evidence: callersMaybe.flatMap((e) => e.evidence) });
+    if (!callers.length) S.push({ text: "No page in the app triggers it.", evidence: [] });
     const reads = out.filter((e) => e.kind === "read"), writes = out.filter((e) => e.kind === "write"), svc = out.filter((e) => e.kind === "service");
     if (reads.length) S.push({ text: `Reads from ${list(reads.map((e) => nodeName(e.to)))}.`, evidence: reads.flatMap((e) => e.evidence) });
     if (writes.length) S.push({ text: `Saves changes to ${list(writes.map((e) => nodeName(e.to)))}.`, evidence: writes.flatMap((e) => e.evidence) });
