@@ -364,3 +364,42 @@ test("the report has a copy button for each fix prompt", () => {
   assert.ok(html.includes('class="fixcopy"'), "no Copy fix prompt button in the report");
   assert.ok(html.includes("Copy fix prompt"));
 });
+
+test("keys in a finding's title, text or a private key never reach the prompt", () => {
+  const p = fixPrompt({ sev: "info", rule: "fails-after-save", title: "If https://sk_live_abcdefghijklmnop@api.example.com fails, the request fails after data was saved",
+    text: "Calls https://sk_live_abcdefghijklmnop@api.example.com after saving.", evidence: [] }, {});
+  assert.ok(!p.includes("sk_live_abcdefghijklmnop"), "a key in the title or text reached the prompt");
+  const pem = 'const k = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASC\n-----END PRIVATE KEY-----\n";';
+  const q = fixPrompt({ sev: "warn", rule: "secret-in-code", title: "private key is written into the code", text: "x", evidence: [{ file: "a.ts", line: 1, code: pem }] }, {});
+  assert.ok(!q.includes("MIIEvQIBADANBgkqhkiG9w0BAQEFAASC"), "private key body reached the prompt");
+  assert.ok(q.includes("-----BEGIN PRIVATE KEY----- … (key removed)"));
+  const multi = redact("-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA\nabc\n-----END RSA PRIVATE KEY-----");
+  assert.ok(!multi.includes("MIIEpAIBAAKCAQEA"));
+});
+
+test("webhook guidance keeps the raw body for signature checks", () => {
+  const f = find("Accepts messages without checking who sent them");
+  assert.match(f.fix, /raw request body/);
+  assert.doesNotMatch(f.fix, /before reading the body/);
+});
+
+test("a partial login check that may be public on purpose asks before locking it down", () => {
+  const review = fixPrompt({ sev: "info", rule: "partial-login", title: "Login check only covers one case", text: "x", evidence: [] }, {});
+  assert.match(review, /ask me whether that is intended/);
+  const fix = fixPrompt({ sev: "warn", rule: "partial-login", title: "Login check only covers one case", text: "x", evidence: [] }, {});
+  assert.match(fix, /cover every case/);
+});
+
+test("the Markdown summary has a prompt for every finding, including ones to review", () => {
+  const out = path.join(os.tmpdir(), `plainsight-md-${process.pid}.md`);
+  const r = spawnSync(process.execPath, [path.join(root, "bin", "plainsight.mjs"), tidy, "--no-report", "--markdown", out, "-q"], { encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  const md = fs.readFileSync(out, "utf8");
+  for (const f of g.findings) assert.ok(md.includes(`Fix prompt: ${f.title}`), `no prompt in Markdown for "${f.title}"`);
+  fs.rmSync(out, { force: true });
+});
+
+test("findings that aren't tied to a part still get a copy button", () => {
+  const html = renderReport([g]);
+  assert.ok(html.includes("data-fixall"), "no copy control for findings without a part");
+});

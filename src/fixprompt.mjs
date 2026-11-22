@@ -21,10 +21,12 @@ const GUIDE = {
   "secret-in-code":
     "Move the key into an environment variable that is only read on the server, and tell me to rotate the key, because it is already in the code history.",
   "unsigned-webhook":
-    "Verify the sender's signature before reading the body or touching the database, using the provider's own verification function and a webhook secret from an environment variable. " +
-    "Reject the request with 400 if the signature is missing or wrong.",
-  "partial-login":
-    "Make the login check cover every case: stop the request unless a user is logged in, not only for the one condition it checks now.",
+    "Verify the sender's signature with the provider's own verification function and a webhook secret from an environment variable, before acting on the event or touching the database. " +
+    "If that function needs the raw request body (Stripe's does), read the body as raw text and pass it in unparsed. Reject the request with 400 if the signature is missing or wrong.",
+  // "Review"-level partial checks are ones the analyzer thinks may be public on purpose
+  "partial-login": (f) => f.sev === "info"
+    ? "This looks like it may be public on purpose for some records. First ask me whether that is intended. Keep the public case working, and require a login only for the operations that should be protected."
+    : "Make the login check cover every case: stop the request unless a user is logged in, not only for the one condition it checks now.",
   "login-not-enforced":
     "The handler looks up the login but carries on either way. Return 401 when there is no logged-in user, before doing anything else.",
   "missing-route":
@@ -39,10 +41,13 @@ const GUIDE = {
     "Replace the placeholder in this link with the real address, or remove the link if the page doesn't exist yet.",
 };
 
-// Secrets that slipped into a code snippet are masked before anything is copied,
-// so pasting the prompt into an AI chat never hands the key to another company.
+// Secrets are masked in the whole prompt before anything is copied (titles and
+// explanations can quote a host or a line too), so pasting it into an AI chat or
+// a CI summary never hands a key to anyone. Private keys are cut down to their
+// header, whether written with real or escaped (\n) line breaks.
 const SECRET = /(sk_(?:live|test)_|rk_(?:live|test)_|sk-(?:ant-|proj-)?|AKIA|ghp_|gho_|github_pat_|xox[abpr]-|re_|whsec_)([A-Za-z0-9]{4})[A-Za-z0-9_-]{6,}/g;
-export const redact = (code = "") => code.replace(SECRET, "$1$2…");
+const PEM = /(-----BEGIN ([A-Z ]*)PRIVATE KEY-----)[\s\S]*?(?:-----END \2PRIVATE KEY-----|(?=["'`])|$)/g;
+export const redact = (text = "") => text.replace(PEM, "$1 … (key removed)").replace(SECRET, "$1$2…");
 
 function stackLine(stack = {}) {
   const parts = [];
@@ -61,7 +66,7 @@ export function fixPrompt(finding, graph = {}) {
   const first = ev[0];
   const where = [node ? (node.kind === "route" && node.method && node.method !== "ANY" ? `${node.method} ${node.name}` : node.name) : null, first ? `${first.file}:${first.line}` : finding.file].filter(Boolean).join(" · ");
   const stack = stackLine(graph.stack);
-  const guide = GUIDE[finding.rule];
+  const guide = typeof GUIDE[finding.rule] === "function" ? GUIDE[finding.rule](finding) : GUIDE[finding.rule];
 
   const out = [
     `Plainsight (a code checker) found a problem in my app${graph.app ? ` "${graph.app}"` : ""}. Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.`,
@@ -75,7 +80,7 @@ export function fixPrompt(finding, graph = {}) {
     out.push("", ev.length > 1 ? "The code involved, in order:" : "The code involved:");
     for (const e of ev) {
       out.push(`${e.file}:${e.line}${e.endLine && e.endLine !== e.line ? `-${e.endLine}` : ""}`);
-      out.push(...redact(e.code).split("\n").map((l) => "    " + l));
+      out.push(...(e.code || "").split("\n").map((l) => "    " + l));
     }
   }
   if (guide) out.push("", `How to fix it: ${guide}`);
@@ -85,5 +90,5 @@ export function fixPrompt(finding, graph = {}) {
       "If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. " +
       "When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone.",
   );
-  return out.join("\n");
+  return redact(out.join("\n"));
 }

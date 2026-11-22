@@ -1031,8 +1031,9 @@ const GRAPHS = /*__GRAPHS__*/[];
     panel.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => openGroup(b.dataset.open)));
     panel.querySelector("#back")?.addEventListener("click", showOverview);
     panel.querySelectorAll(".norc summary").forEach((s) => s.addEventListener("click", (e) => e.preventDefault()));
-    panel.querySelectorAll("[data-fix]").forEach((b) => b.addEventListener("click", () => {
-      copyText(panel._fixes?.[+b.dataset.fix] || "").then((ok) => {
+    panel.querySelectorAll("[data-fix], [data-fixall]").forEach((b) => b.addEventListener("click", () => {
+      const text = b.dataset.fixall != null ? G.findings[+b.dataset.fixall]?.fix : panel._fixes?.[+b.dataset.fix];
+      copyText(text || "").then((ok) => {
         b.textContent = ok ? "Copied ✓" : "Couldn't copy: open “See the prompt”";
         b.classList.toggle("done", ok);
         setTimeout(() => { b.textContent = "Copy fix prompt"; b.classList.remove("done"); }, 2200);
@@ -1048,7 +1049,7 @@ const GRAPHS = /*__GRAPHS__*/[];
   function findingBtn(f) {
     const last = f.evidence?.[f.evidence.length - 1];
     const where = f.node ? label(byId[f.node]) : f.file;
-    return `<li><button class="find" ${f.node ? `data-node="${esc(f.node)}"` : ""}><span class="sev ${f.sev}">${f.sev === "crit" ? "Fix now" : f.sev === "warn" ? "Fix soon" : "Review"}</span><strong>${esc(f.title)}</strong><span class="where">${esc(where || "")}${last ? ` · ${esc(last.file)}:${last.line}` : ""}</span></button></li>`;
+    return `<li><button class="find" ${f.node ? `data-node="${esc(f.node)}"` : ""}><span class="sev ${f.sev}">${f.sev === "crit" ? "Fix now" : f.sev === "warn" ? "Fix soon" : "Review"}</span><strong>${esc(f.title)}</strong><span class="where">${esc(where || "")}${last ? ` · ${esc(last.file)}:${last.line}` : ""}</span></button>${!f.node && f.fix ? `<div class="fixrow"><button type="button" class="fixcopy" data-fixall="${G.findings.indexOf(f)}">Copy fix prompt</button><small>Paste it into Claude, Cursor or Lovable</small></div>` : ""}</li>`;
   }
   function showOverview() {
     selected = null; focus(null, null);
