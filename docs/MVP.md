@@ -93,5 +93,5 @@ No telemetry, so the signals are public and voluntary:
 - [x] npm: [plainsight-cli](https://www.npmjs.com/package/plainsight-cli) 0.3.0 published, so `npx plainsight-cli` works
 - [ ] **Owner:** release 0.3.1 through the tag workflow, not by hand: set up trusted publishing for `release.yml` on npm, then push `v0.3.1` (see [RELEASE.md](RELEASE.md) section 3, step 3)
 - [x] GitHub Pages: https://honoryourexperiences.github.io/plainsight-cli/
-- [ ] **Owner:** raise the GitHub Actions budget so CI runs
+- [x] CI runs: public repos get free GitHub Actions minutes (tests passed on every push to `plainsight-cli`)
 - [ ] **Owner:** report the taxonomy bug upstream before using it in launch posts
