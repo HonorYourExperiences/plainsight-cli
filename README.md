@@ -1,10 +1,27 @@
-<img src="docs/img/logo.svg" width="64" height="64" alt="Plainsight logo">
+<p align="center">
+  <img src="docs/img/banner.png" alt="Plainsight: see what you built. Draws your Next.js app as a living schematic and finds the security holes, with receipts." width="100%">
+</p>
 
-# Plainsight
+<p align="center">
+  <a href="https://github.com/HonorYourExperiences/plainsight-cli/actions/workflows/test.yml"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/HonorYourExperiences/plainsight-cli/test.yml?branch=main&style=flat-square&label=tests&labelColor=0A1A2A&color=5CE1FF"></a>
+  <a href="https://github.com/HonorYourExperiences/plainsight-cli/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/HonorYourExperiences/plainsight-cli?style=flat-square&labelColor=0A1A2A&color=5CE1FF"></a>
+  <img alt="Node 18+" src="https://img.shields.io/badge/node-18%2B-5CE1FF?style=flat-square&labelColor=0A1A2A">
+  <img alt="Runs locally, no telemetry" src="https://img.shields.io/badge/runs-locally%20%C2%B7%20no%20telemetry-5CE1FF?style=flat-square&labelColor=0A1A2A">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-5CE1FF?style=flat-square&labelColor=0A1A2A"></a>
+</p>
+
+<p align="center">
+  <a href="https://honoryourexperiences.github.io/plainsight-cli/demo.html"><b>Live demo</b></a> ·
+  <a href="https://honoryourexperiences.github.io/plainsight-cli/">Website</a> ·
+  <a href="#what-it-finds">What it finds</a> ·
+  <a href="#install-and-run">Install</a> ·
+  <a href="#in-ci-block-pull-requests-that-open-holes">GitHub Action</a> ·
+  <a href="https://github.com/HonorYourExperiences/plainsight-cli/issues/new/choose">Report a false alarm</a>
+</p>
+
+<br>
 
 **See what you built.** Plainsight reads your Next.js app and draws it as a living schematic: every page, route, table and outside service, and every pipe between them. It finds the security holes AI-written code tends to have, and every box, line and sentence links to the lines of code that prove it.
-
-![Plainsight's hologram view: a pulse runs from the /dashboard page and stops in red at GET /api/habits, where anyone can read other people's records](docs/img/hologram.jpg)
 
 ```bash
 npx plainsight-cli
@@ -12,7 +29,13 @@ npx plainsight-cli
 
 One command, in your app's folder. No account, no upload: your code never leaves your machine. You get a summary in the terminal and a single HTML report you can open offline, share or attach to a ticket.
 
-**[Open the live demo report →](https://honoryourexperiences.github.io/plainsight-cli/demo.html)**
+<p align="center">
+  <a href="https://honoryourexperiences.github.io/plainsight-cli/demo.html">
+    <img src="docs/img/demo.gif" alt="The hologram assembles layer by layer. The /dashboard page is picked and Run sends a pulse along its pipes; it stops in red at GET /api/habits with the finding: anyone can read other people's Habit records." width="100%">
+  </a>
+  <br>
+  <sub>The report for a sample app: the pulse leaves <code>/dashboard</code> and stops at the first hole it reaches. <a href="https://honoryourexperiences.github.io/plainsight-cli/demo.html">Try it yourself →</a></sub>
+</p>
 
 ## Why
 

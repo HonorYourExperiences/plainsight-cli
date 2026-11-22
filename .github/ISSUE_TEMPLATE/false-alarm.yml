@@ -1,0 +1,35 @@
+name: Wrong finding (false alarm)
+description: Plainsight flagged something that is actually safe.
+labels: ["false alarm"]
+body:
+  - type: markdown
+    attributes:
+      value: Every confirmed false alarm becomes a fixture and a regression test. Thank you.
+  - type: input
+    id: finding
+    attributes:
+      label: The finding as printed
+      description: Title, part, file and line.
+      placeholder: 'Fix now · Anyone can read other people''s Habit records · GET /api/habits · app/api/habits/route.ts:6'
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Smallest code that reproduces it
+      description: Usually the route plus the helper it calls is enough. Remove anything private.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it's safe
+      description: The check you expected Plainsight to see, or why the data is safe.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Plainsight version
+      placeholder: 0.3.0

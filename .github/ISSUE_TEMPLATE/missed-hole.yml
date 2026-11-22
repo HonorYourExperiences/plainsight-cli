@@ -1,0 +1,26 @@
+name: Missed hole
+description: Your app has a security problem Plainsight didn't flag.
+labels: ["missed finding"]
+body:
+  - type: markdown
+    attributes:
+      value: "If the hole is in someone else's project, report it to them privately first. Never paste secrets or live credentials here."
+  - type: textarea
+    id: code
+    attributes:
+      label: Smallest code that has the hole
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What Plainsight should have said
+      description: Which finding, on which part.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Plainsight version
+      placeholder: 0.3.0
