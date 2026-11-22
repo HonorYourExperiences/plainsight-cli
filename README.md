@@ -57,6 +57,8 @@ AI tools let you ship an app without reading every line of it. It works in the d
 
 Every finding comes with its **receipts**: the exact lines, in order, from the entry point to the problem. Anything the code can't prove (who calls a webhook, an address built at runtime) is labeled *inferred* or *unresolved*, never drawn as fact.
 
+Every finding also has a **Copy fix prompt** button. It copies a prompt you can paste straight into Claude, Cursor or Lovable: the problem, the exact file and line, the code involved (with any keys masked), what a real fix looks like, and a request to change nothing else. Run Plainsight again afterwards to check the finding is gone.
+
 ## The report
 
 ![Every finding opens with the code behind it, and the drawing lights up the parts involved](docs/img/finding.jpg)

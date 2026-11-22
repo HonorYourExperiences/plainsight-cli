@@ -8,6 +8,7 @@ import ts from "typescript";
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
+import { fixPrompt } from "./fixprompt.mjs";
 
 export const VERSION = "0.3.1";
 
@@ -1402,7 +1403,7 @@ const staticInfo = { on: false };
       v(m.sf);
     }
     for (const e of edges.filter((e) => e.placeholder)) {
-      findings.push({ sev: "info", node: e.from, title: `Placeholder link to ${nodes.get(e.to).name}`, text: "This address still contains a placeholder, so following it won't reach a real page yet.", evidence: e.evidence });
+      findings.push({ rule: "placeholder-link", sev: "info", node: e.from, title: `Placeholder link to ${nodes.get(e.to).name}`, text: "This address still contains a placeholder, so following it won't reach a real page yet.", evidence: e.evidence });
     }
   }
 }
@@ -1445,7 +1446,7 @@ for (const node of [...nodes.values()].filter((n) => n.kind === "route" || n.kin
         const { exact, anyMethod } = matchRoute(e.url, e.method);
         if (exact.length) for (const r of exact) addEdge(node.id, `route:${r.method} ${r.route}`, "request", e.site.ev, { label: `${e.method} ${e.url.path}` });
         else if (e.url.path.startsWith("/api") || anyMethod.length) {
-          findings.push({ sev: "warn", node: node.id, title: anyMethod.length ? `Calls ${e.method} ${e.url.path}, which has no ${e.method} handler` : `Calls ${e.url.path}, which doesn't exist`,
+          findings.push({ rule: "missing-route", sev: "warn", node: node.id, title: anyMethod.length ? `Calls ${e.method} ${e.url.path}, which has no ${e.method} handler` : `Calls ${e.url.path}, which doesn't exist`,
             text: anyMethod.length ? `The route exists but only handles ${anyMethod.map((r) => r.method).join(", ")}. This request will fail.` : "No route file in the app matches this address, so this request will fail.", evidence: chain });
         }
       } else if (e.url.kind === "external") {
@@ -1523,7 +1524,7 @@ for (const node of nodes.values()) {
   if (isWebhook) {
     const verified = eff.some((e) => (e.type === "service" && e.verify) || (e.type === "verify" && e.enforced));
     node.verified = verified;
-    if (!verified && dbE.length) findings.push({ sev: "warn", node: node.id, title: "Accepts messages without checking who sent them",
+    if (!verified && dbE.length) findings.push({ rule: "unsigned-webhook", sev: "warn", node: node.id, title: "Accepts messages without checking who sent them",
       text: `This webhook changes the database (${[...new Set(dbE.map((e) => tableName(e.model)))].join(", ")}) but never verifies a signature. Anyone who finds the address can send a fake message.`, evidence: dbE.map((e) => evChain(e)).flat() });
     continue;
   }
@@ -1531,10 +1532,10 @@ for (const node of nodes.values()) {
     // a check that only applies to private records is usually a deliberate public mode: list it for review
     const undefFilter = dbE.filter((e) => e.whereOptionalAuth);
     const publicMode = node.guard.status === "partial" && /public|visib|publish|shared|private/i.test(node.guard.how);
-    if (node.guard.status === "partial") findings.push({ sev: publicMode ? "info" : "warn", node: node.id, title: "Login check only covers one case", text: `It ${node.guard.how}. Other requests go through without a login.`, evidence: node.guard.evidence });
+    if (node.guard.status === "partial") findings.push({ rule: "partial-login", sev: publicMode ? "info" : "warn", node: node.id, title: "Login check only covers one case", text: `It ${node.guard.how}. Other requests go through without a login.`, evidence: node.guard.evidence });
     if (undefFilter.length) {
       const writes = [...new Set(dbE.filter((e) => e.write).map((e) => tableName(e.model)))];
-      findings.push({ sev: "crit", node: node.id, title: "Logged-out visitors pass the ownership check",
+      findings.push({ rule: "logged-out-owner", sev: "crit", node: node.id, title: "Logged-out visitors pass the ownership check",
         text: `The login is only used inside a database filter (${undefFilter[0].whereOptionalAuth.code.replace(/\s+/g, " ").slice(0, 80)}). When nobody is logged in that value is undefined, and Prisma drops filters that are undefined, so the check matches the record anyway${writes.length ? ` and the request goes on to change ${writes.join(", ")}` : ""}. Stop the request when there's no login before querying.`,
         evidence: [...undefFilter.map((e) => evChain(e)).flat(), undefFilter[0].whereOptionalAuth] });
     }
@@ -1546,15 +1547,15 @@ for (const node of nodes.values()) {
     const tbls = [...new Set(fromReq.map((e) => tableName(e.model)))].join(", ");
     const ownedReq = fromReq.filter((e) => owned(e.model) || !tables.has(tableName(e.model)));
     const external = node.guard.status === "external";
-    if (fromReq.length && (publicMode || byDesign || external || !ownedReq.length)) findings.push({ sev: "info", node: node.id, title: `Looks up ${tbls} records by what the request sends, without a login`,
+    if (fromReq.length && (publicMode || byDesign || external || !ownedReq.length)) findings.push({ rule: "public-lookup", sev: "info", node: node.id, title: `Looks up ${tbls} records by what the request sends, without a login`,
       text: external ? `It ${node.guard.how}. Check that a missing or wrong key is turned away.` : publicMode ? "The login check covers private records only, so this is likely a deliberate public mode. Check that public records are the only ones it returns."
         : byDesign ? "That's normal for sign-up, sign-in, tracking and payment return flows, which is what this looks like from its name. Check it only returns or changes what it should."
         : "None of these tables has a column naming an owner (like userId), so this may be public data. Check it only returns or changes what it should.", evidence: fromReq.map((e) => evChain(e)).flat() });
-    else if (fromReq.length) findings.push({ sev: "crit", node: node.id, title: `Anyone can ${fromReq.some((e) => e.write) ? "change" : "read"} other people's ${tbls} records`,
+    else if (fromReq.length) findings.push({ rule: "others-records", sev: "crit", node: node.id, title: `Anyone can ${fromReq.some((e) => e.write) ? "change" : "read"} other people's ${tbls} records`,
       text: "Which records it uses comes straight from the request, and nothing checks who is asking. Changing a value in the request gets someone else's data.", evidence: fromReq.map((e) => evChain(e)).flat() });
-    else if (dbE.length && node.guard.status === "none") findings.push({ sev: "info", node: node.id, title: "Open to anyone, no login check", text: "This route uses the database without checking a login. That can be intended (sign-up, public data), so it's listed for review, not as a bug.", evidence: [node.ev].filter(Boolean) });
+    else if (dbE.length && node.guard.status === "none") findings.push({ rule: "open-route", sev: "info", node: node.id, title: "Open to anyone, no login check", text: "This route uses the database without checking a login. That can be intended (sign-up, public data), so it's listed for review, not as a bug.", evidence: [node.ev].filter(Boolean) });
     // only a problem worth fixing when the request can change something; otherwise list it for review
-    if (node.guard.status === "unenforced" && !undefFilter.length) findings.push({ sev: dbE.some((e) => e.write) ? "warn" : "info", node: node.id, title: "Looks up the login but doesn't act on it", text: node.guard.how + (dbE.some((e) => e.write) ? ", and it changes data" : ""), evidence: node.guard.evidence });
+    if (node.guard.status === "unenforced" && !undefFilter.length) findings.push({ rule: "login-not-enforced", sev: dbE.some((e) => e.write) ? "warn" : "info", node: node.id, title: "Looks up the login but doesn't act on it", text: node.guard.how + (dbE.some((e) => e.write) ? ", and it changes data" : ""), evidence: node.guard.evidence });
   }
   // external call after a write, with no error handling
   const firstWrite = dbE.filter((e) => e.write).sort((a, b) => a.entry.pos - b.entry.pos)[0];
@@ -1562,7 +1563,7 @@ for (const node of nodes.values()) {
     const later = eff.filter((e) => (e.type === "service" || e.type === "fetch") && e.entry.pos > firstWrite.entry.pos && !e.entry.inTry && !e.site.inTry);
     for (const e of later) {
       const who = e.type === "service" ? SERVICES[e.pkg].name : e.url.kind === "external" ? e.url.host : "an unresolved address";
-      findings.push({ sev: "info", node: node.id, title: `If ${who} fails, the request fails after data was saved`,
+      findings.push({ rule: "fails-after-save", sev: "info", node: node.id, title: `If ${who} fails, the request fails after data was saved`,
         text: `The call to ${who} isn't wrapped in error handling and happens after the ${tableName(firstWrite.model)} write. A failure there shows the user an error even though the record already exists.`, evidence: [...evChain(firstWrite), ...evChain(e)] });
     }
   }
@@ -1573,7 +1574,7 @@ for (const m of F.values()) if (m.directives.has("use client")) for (const f of 
 for (const m of F.values()) for (const s of m.secrets) {
   const inBrowser = browserFiles.has(m.file);
   const who = [...nodes.values()].filter((n) => n.kind === "page" && n.files?.includes(m.rel));
-  findings.push({ sev: inBrowser ? "crit" : "warn", node: who[0]?.id || null, file: m.rel, title: inBrowser ? `${s.label} is sent to the browser` : `${s.label} is written into the code`,
+  findings.push({ rule: inBrowser ? "secret-in-browser" : "secret-in-code", sev: inBrowser ? "crit" : "warn", node: who[0]?.id || null, file: m.rel, title: inBrowser ? `${s.label} is sent to the browser` : `${s.label} is written into the code`,
     text: inBrowser ? `${m.rel} contains a ${s.label} and is imported by code that runs in the browser${who.length ? ` (${who.map((w) => w.name).join(", ")})` : ""}. Anyone can open developer tools and copy it.` : `${m.rel} contains a ${s.label}. Anyone with access to the code has it. Move it to an environment variable.`,
     evidence: [{ ...ev(m, s.node, 1), code: m.lines[lineOf(m.sf, s.node) - 1].trim().replace(/(sk_(live|test)_|sk-|AKIA|ghp_|xox.-|re_)([A-Za-z0-9]{4})[A-Za-z0-9_-]+/, "$1$3…") }] });
 }
@@ -1740,5 +1741,6 @@ const graph = {
     ...(staticInfo.on ? ["For plain HTML pages, only <script> tags and their imports are followed. Pages linking to each other are not drawn.", "Saved-data keys are shown when the key is a fixed text or built by a simple function; other keys appear as built at runtime."] : []),
   ],
 };
+for (const f of graph.findings) f.fix = fixPrompt(f, graph);
 return graph;
 }

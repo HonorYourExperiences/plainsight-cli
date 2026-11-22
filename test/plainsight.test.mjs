@@ -9,6 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { analyze } from "../src/analyze.mjs";
 import { renderReport } from "../src/report.mjs";
+import { fixPrompt, redact } from "../src/fixprompt.mjs";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const tidy = path.join(root, "fixtures", "tidy");
@@ -332,6 +333,83 @@ test("explicit Drizzle joins read the joined tables", () => {
     "app/api/j/route.ts": 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes, teams } from "@/lib/db/schema";\nexport async function GET() { return Response.json(await db.select().from(notes).leftJoin(teams, eq(notes.teamId, teams.id))); }\n',
   });
   assert.ok(analyze(dir).edges.some((e) => e.from === "route:GET /api/j" && e.to === "table:teams"));
+});
+
+test("every finding has a rule and a fix prompt with its receipts", () => {
+  for (const f of g.findings) {
+    assert.ok(f.rule, `no rule id for "${f.title}"`);
+    assert.ok(f.fix?.includes(f.title), `fix prompt doesn't name "${f.title}"`);
+    for (const e of f.evidence || []) assert.ok(f.fix.includes(`${e.file}:${e.line}`), `fix prompt for "${f.title}" misses ${e.file}:${e.line}`);
+  }
+  const read = find("Anyone can read other people's Habit records");
+  assert.match(read.fix, /Where: GET \/api\/habits · app\/api\/habits\/route\.ts:6/);
+  assert.match(read.fix, /How to fix it: /);
+});
+
+test("every rule that can be fixed tells the AI how", () => {
+  for (const f of g.findings) assert.match(f.fix, /How to fix it: \S/, `no fix guidance for rule "${f.rule}"`);
+});
+
+test("fix prompts never carry a full secret key", () => {
+  assert.equal(redact('new Stripe("sk_live_51NabcdEFGHijkl123456")'), 'new Stripe("sk_live_51Na…")');
+  assert.equal(redact("key = 'sk-ant-api03-abcdefghijklmnop'"), "key = 'sk-ant-api0…'");
+  const leaky = { sev: "crit", rule: "secret-in-browser", title: "t", text: "x", evidence: [{ file: "a.ts", line: 1, code: 'const k = "sk_live_51NabcdEFGHijkl123456"; const w = "whsec_abcdEFGH12345678";' }] };
+  const p = fixPrompt(leaky, {});
+  assert.ok(!p.includes("sk_live_51NabcdEFGHijkl123456") && !p.includes("whsec_abcdEFGH12345678"), "a full key reached the prompt");
+  for (const f of g.findings) assert.ok(!/sk_live_[A-Za-z0-9]{12,}/.test(f.fix), `full key in prompt for "${f.title}"`);
+});
+
+test("the report has a copy button for each fix prompt", () => {
+  const html = renderReport([g]);
+  assert.ok(html.includes('class="fixcopy"'), "no Copy fix prompt button in the report");
+  assert.ok(html.includes("Copy fix prompt"));
+});
+
+test("keys in a finding's title, text or a private key never reach the prompt", () => {
+  const p = fixPrompt({ sev: "info", rule: "fails-after-save", title: "If https://sk_live_abcdefghijklmnop@api.example.com fails, the request fails after data was saved",
+    text: "Calls https://sk_live_abcdefghijklmnop@api.example.com after saving.", evidence: [] }, {});
+  assert.ok(!p.includes("sk_live_abcdefghijklmnop"), "a key in the title or text reached the prompt");
+  const pem = 'const k = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASC\n-----END PRIVATE KEY-----\n";';
+  const q = fixPrompt({ sev: "warn", rule: "secret-in-code", title: "private key is written into the code", text: "x", evidence: [{ file: "a.ts", line: 1, code: pem }] }, {});
+  assert.ok(!q.includes("MIIEvQIBADANBgkqhkiG9w0BAQEFAASC"), "private key body reached the prompt");
+  assert.ok(q.includes("-----BEGIN PRIVATE KEY----- … (key removed)"));
+  const multi = redact("-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA\nabc\n-----END RSA PRIVATE KEY-----");
+  assert.ok(!multi.includes("MIIEpAIBAAKCAQEA"));
+});
+
+test("webhook guidance keeps the raw body for signature checks", () => {
+  const f = find("Accepts messages without checking who sent them");
+  assert.match(f.fix, /raw request body/);
+  assert.doesNotMatch(f.fix, /before reading the body/);
+});
+
+test("a partial login check that may be public on purpose asks before locking it down", () => {
+  const review = fixPrompt({ sev: "info", rule: "partial-login", title: "Login check only covers one case", text: "x", evidence: [] }, {});
+  assert.match(review, /ask me whether that is intended/);
+  const fix = fixPrompt({ sev: "warn", rule: "partial-login", title: "Login check only covers one case", text: "x", evidence: [] }, {});
+  assert.match(fix, /cover every case/);
+});
+
+test("the Markdown summary has a prompt for every finding, including ones to review", () => {
+  const out = path.join(os.tmpdir(), `plainsight-md-${process.pid}.md`);
+  const r = spawnSync(process.execPath, [path.join(root, "bin", "plainsight.mjs"), tidy, "--no-report", "--markdown", out, "-q"], { encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  const md = fs.readFileSync(out, "utf8");
+  for (const f of g.findings) assert.ok(md.includes(`Fix prompt: ${f.title}`), `no prompt in Markdown for "${f.title}"`);
+  fs.rmSync(out, { force: true });
+});
+
+test("findings that aren't tied to a part still get a copy button", () => {
+  const html = renderReport([g]);
+  assert.ok(html.includes("data-fixall"), "no copy control for findings without a part");
+});
+
+test("a private key cut after its first line doesn't swallow the rest of the prompt", () => {
+  const p = fixPrompt({ sev: "warn", rule: "secret-in-code", title: "private key is written into the code", text: "x",
+    evidence: [{ file: "a.ts", line: 1, code: "const key = `-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkq" }] }, {});
+  assert.ok(!p.includes("MIIEvQIBADANBgkq"), "key body reached the prompt");
+  assert.match(p, /How to fix it: /);
+  assert.match(p, /npx plainsight-cli/, "the end of the prompt was removed");
 });
 
 // Review follow-ups after PR #6
