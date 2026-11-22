@@ -1,0 +1,693 @@
+<title>Plainsight</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: an engineering drawing sheet. Schematic on graph paper, plain-language readout beside it, short spec sections below. */
+:root {
+  --paper: #EBEFED;
+  --sheet: #F7F9F8;
+  --ink: #17231F;
+  --muted: #56665F;
+  --rule: #C3CDC9;
+  --grid: rgba(23, 35, 31, 0.055);
+  --flow: #0B7782;
+  --flow-soft: rgba(11, 119, 130, 0.14);
+  --crit: #C22F2F;
+  --crit-soft: rgba(194, 47, 47, 0.1);
+  --warn: #A86A12;
+  --warn-soft: rgba(168, 106, 18, 0.12);
+  --on-badge: #FFFFFF;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E1412; --sheet: #141C19; --ink: #DCE5E1; --muted: #8B9A94; --rule: #2B3732;
+    --grid: rgba(220, 229, 225, 0.045); --flow: #3EC3CD; --flow-soft: rgba(62, 195, 205, 0.15);
+    --crit: #F0675F; --crit-soft: rgba(240, 103, 95, 0.13); --warn: #E2A84B; --warn-soft: rgba(226, 168, 75, 0.13);
+    --on-badge: #0E1412; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0E1412; --sheet: #141C19; --ink: #DCE5E1; --muted: #8B9A94; --rule: #2B3732;
+  --grid: rgba(220, 229, 225, 0.045); --flow: #3EC3CD; --flow-soft: rgba(62, 195, 205, 0.15);
+  --crit: #F0675F; --crit-soft: rgba(240, 103, 95, 0.13); --warn: #E2A84B; --warn-soft: rgba(226, 168, 75, 0.13);
+  --on-badge: #0E1412; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--f-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: 48px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.1; }
+p { margin: 0; }
+.eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--flow); outline-offset: 2px; }
+
+/* Header */
+header { display: grid; gap: 14px; max-width: 760px; }
+header h1 { font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 700; letter-spacing: -0.01em; }
+header .lede { font-size: 1.12rem; color: var(--muted); max-width: 62ch; }
+header .lede strong { color: var(--ink); font-weight: 600; }
+
+/* Demo */
+.demo { display: grid; gap: 12px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; }
+.journeys { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.journeys .eyebrow { margin-right: 4px; }
+.jbtn {
+  border: 1px solid var(--rule); background: var(--sheet); border-radius: 999px;
+  padding: 6px 14px 6px 11px; cursor: pointer; font-size: 13.5px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.jbtn::before { content: ""; width: 0; height: 0; border-left: 7px solid var(--flow); border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; }
+.jbtn:hover { border-color: var(--flow); }
+.jbtn[aria-pressed="true"] { background: var(--flow-soft); border-color: var(--flow); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--muted); align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend svg { overflow: visible; }
+
+.bench { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 0; border: 1px solid var(--rule); background: var(--sheet); }
+.drawing {
+  min-width: 0; overflow-x: auto; border-right: 1px solid var(--rule);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+#schematic { display: block; width: 100%; min-width: 760px; height: auto; font-family: var(--f-body); }
+
+/* SVG parts */
+.zone-label { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.1em; fill: var(--muted); text-anchor: middle; }
+.zone-rule { stroke: var(--rule); stroke-dasharray: 2 5; }
+.pipe { fill: none; stroke: var(--ink); stroke-width: 2; transition: opacity .25s, stroke .25s; }
+.pipe.relation { stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 3 4; }
+.pipe.lit { stroke: var(--flow); stroke-width: 2.6; stroke-dasharray: 7 5; animation: flow 0.9s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -24; } }
+.pipe-label { font-family: var(--f-mono); font-size: 9.5px; fill: var(--muted); }
+.node { cursor: pointer; transition: opacity .25s; }
+.node rect.body { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.4; transition: stroke .2s, fill .2s; }
+.node:hover rect.body { stroke: var(--flow); }
+.node.sel rect.body, .node.current rect.body { stroke: var(--flow); stroke-width: 2.6; fill: var(--flow-soft); }
+.node .tag { font-family: var(--f-mono); font-size: 10px; fill: var(--muted); letter-spacing: 0.04em; }
+.node .name { font-size: 14.5px; font-weight: 600; fill: var(--ink); }
+.node .sub { font-family: var(--f-mono); font-size: 10px; fill: var(--muted); }
+.node:focus { outline: none; }
+.node:focus-visible rect.body { stroke: var(--flow); stroke-width: 2.6; }
+.badge-crit { fill: var(--crit); }
+.badge-warn { fill: var(--warn); }
+.badge-mark { fill: var(--on-badge); font-family: var(--f-mono); font-weight: 500; font-size: 12px; text-anchor: middle; }
+.valve { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.6; }
+.valve-label { font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.06em; fill: var(--ink); text-anchor: middle; }
+.nocheck { fill: var(--crit-soft); stroke: var(--crit); stroke-width: 1.6; stroke-dasharray: 3 2.5; }
+.nocheck-x { stroke: var(--crit); stroke-width: 1.8; }
+.nocheck-label { font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.06em; fill: var(--crit); text-anchor: middle; font-weight: 500; }
+.tb rect { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.2; }
+.tb line { stroke: var(--ink); stroke-width: 0.8; }
+.tb text { font-family: var(--f-mono); font-size: 8.5px; fill: var(--muted); letter-spacing: 0.05em; }
+.tb text.big { font-size: 11px; fill: var(--ink); font-weight: 500; }
+.dot { fill: var(--flow); }
+.dot-halo { fill: var(--flow); opacity: 0.22; }
+svg.tracing .node:not(.lit) { opacity: 0.3; }
+svg.tracing .pipe:not(.lit) { opacity: 0.22; }
+svg.tracing .pipe-label, svg.tracing .valve-group:not(.lit), svg.tracing .nocheck-group:not(.lit) { opacity: 0.35; }
+
+/* Readout panel */
+.readout { padding: 22px 22px 24px; display: grid; gap: 16px; align-content: start; min-width: 0; }
+.readout h2 { font-size: 1.55rem; font-weight: 600; }
+.readout .muted { color: var(--muted); }
+.readout h3 { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+.back { background: none; border: 0; padding: 0; color: var(--flow); cursor: pointer; font-size: 13px; font-weight: 500; justify-self: start; }
+.back:hover { text-decoration: underline; }
+.chiprow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { font-family: var(--f-mono); font-size: 11px; padding: 2px 8px; border: 1px solid var(--rule); border-radius: 3px; color: var(--muted); }
+.route { font-family: var(--f-mono); font-size: 12.5px; color: var(--ink); overflow-wrap: anywhere; }
+.flag { border-left: 3px solid var(--crit); background: var(--crit-soft); padding: 10px 12px; display: grid; gap: 4px; font-size: 14px; }
+.flag.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+.flag b { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; color: var(--crit); }
+.flag.warn b { color: var(--warn); }
+.links { display: flex; flex-wrap: wrap; gap: 6px; }
+.link {
+  border: 1px solid var(--rule); background: var(--sheet); border-radius: 3px; padding: 3px 9px;
+  font-size: 13px; cursor: pointer; display: inline-flex; gap: 6px; align-items: baseline;
+}
+.link:hover { border-color: var(--flow); }
+.link small { font-family: var(--f-mono); font-size: 10px; color: var(--muted); }
+.files { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.problems { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.problem {
+  width: 100%; text-align: left; border: 1px solid var(--rule); background: var(--sheet); padding: 10px 12px;
+  cursor: pointer; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; border-radius: 3px;
+}
+.problem:hover { border-color: var(--flow); }
+.sev { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 6px; border-radius: 2px; align-self: start; margin-top: 2px; }
+.sev.crit { background: var(--crit); color: var(--on-badge); }
+.sev.warn { background: var(--warn); color: var(--on-badge); }
+.problem strong { font-size: 14px; font-weight: 600; }
+.problem span.where { grid-column: 2; font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 26px 1fr; gap: 8px; padding: 8px 8px 8px 6px; border-radius: 3px; color: var(--muted); font-size: 14px; transition: background .2s, color .2s; }
+.steps li::before { content: counter(s); font-family: var(--f-mono); font-size: 11px; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--rule); display: grid; place-items: center; }
+.steps li.done { color: var(--ink); }
+.steps li.now { background: var(--flow-soft); color: var(--ink); }
+.steps li.now::before { background: var(--flow); border-color: var(--flow); color: var(--on-badge); }
+.steps li.alarm.now { background: var(--crit-soft); }
+.steps li.alarm.now::before { background: var(--crit); border-color: var(--crit); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--rule); background: var(--sheet); padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 500; }
+.btn:hover { border-color: var(--flow); }
+.hint { font-size: 13px; color: var(--muted); border-top: 1px dashed var(--rule); padding-top: 12px; }
+
+/* Spec sections */
+section.spec { display: grid; gap: 20px; }
+section.spec > header { gap: 8px; }
+section.spec h2 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); font-weight: 600; }
+.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
+.why > div { padding: 16px 20px 18px 0; display: grid; gap: 6px; align-content: start; }
+.why .big { font-family: var(--f-display); font-size: 1.35rem; font-weight: 600; line-height: 1.2; }
+.why p { color: var(--muted); max-width: 46ch; }
+.map-table-wrap { overflow-x: auto; border: 1px solid var(--rule); background: var(--sheet); }
+table.map { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 14.5px; }
+table.map th { text-align: left; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding: 12px 16px; border-bottom: 1px solid var(--rule); }
+table.map td { padding: 12px 16px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+table.map tr:last-child td { border-bottom: 0; }
+table.map td:first-child { color: var(--muted); width: 42%; }
+table.map td.arrow { width: 28px; color: var(--flow); font-family: var(--f-mono); padding-inline: 0; }
+.views { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.view { border: 1px solid var(--rule); background: var(--sheet); padding: 16px 18px; display: grid; gap: 8px; align-content: start; }
+.view .eyebrow { color: var(--flow); }
+.view h3 { font-size: 1.25rem; font-weight: 600; }
+.view p { color: var(--muted); font-size: 14.5px; }
+.pipe.unresolved { stroke: var(--muted); stroke-dasharray: 6 4; }
+.node.unresolved rect.body { stroke: var(--muted); stroke-dasharray: 5 4; }
+.badge-unk { fill: var(--muted); }
+.basis { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 2px; }
+.basis.code, .basis.schema { background: var(--flow-soft); color: var(--flow); }
+.basis.unknown { background: var(--warn-soft); color: var(--warn); }
+.evidence { border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+.ev-head { display: flex; justify-content: space-between; gap: 8px; font-family: var(--f-mono); font-size: 11px; padding: 6px 10px; background: var(--paper); border-bottom: 1px solid var(--rule); color: var(--muted); }
+.ev-head span:first-child { color: var(--ink); overflow-wrap: anywhere; }
+.evidence pre { margin: 0; padding: 10px; overflow-x: auto; font-family: var(--f-mono); font-size: 11.5px; line-height: 1.55; color: var(--ink); white-space: pre; }
+.ev-note { font-size: 13px; padding: 8px 10px; border-top: 1px dashed var(--rule); color: var(--muted); }
+.inside { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-left: 2px solid var(--rule); }
+.inside li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0 5px 12px; font-size: 14px; }
+.inside li span { font-family: var(--f-mono); font-size: 11px; color: var(--muted); white-space: nowrap; padding-top: 2px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 0 28px; border-top: 2px solid var(--ink); }
+.rules > div { padding: 16px 0 18px; display: grid; gap: 6px; align-content: start; border-bottom: 1px solid var(--rule); }
+.rules h3 { font-size: 1.2rem; font-weight: 600; }
+.rules p { color: var(--muted); font-size: 14.5px; max-width: 52ch; }
+.zoom { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.zoom > div { border: 1px solid var(--rule); background: var(--sheet); padding: 10px 14px; display: grid; gap: 2px; min-width: 0; flex: 1 1 140px; }
+.zoom b { font-family: var(--f-display); font-size: 1.4rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.zoom span { font-size: 13px; color: var(--muted); }
+.zoom small { font-family: var(--f-mono); font-size: 10.5px; color: var(--flow); letter-spacing: 0.06em; text-transform: uppercase; }
+footer { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 14px; }
+footer a { color: var(--flow); }
+
+@media (max-width: 900px) {
+  .bench { grid-template-columns: minmax(0, 1fr); }
+  .drawing { border-right: 0; border-bottom: 1px solid var(--rule); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pipe.lit { animation: none; stroke-dasharray: none; }
+  * { transition: none !important; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Concept · working name Plainsight</span>
+    <h1>See what you built.</h1>
+    <p class="lede">An AI can write a whole app in a weekend. Plainsight draws that app as a live schematic and explains every part in plain English, so <strong>you understand what you shipped before your users find the holes.</strong> Nothing is drawn for looks: every box, pipe and sentence links back to the exact lines of code it came from.</p>
+  </header>
+
+  <section class="demo" aria-label="Interactive example">
+    <div class="toolbar">
+      <div class="journeys" role="group" aria-label="Play a journey">
+        <span class="eyebrow">Play a journey</span>
+        <button class="jbtn" data-j="signup" aria-pressed="false">Someone signs up</button>
+        <button class="jbtn" data-j="habits" aria-pressed="false">Someone opens their habits</button>
+        <button class="jbtn" data-j="pay" aria-pressed="false">Someone upgrades to Pro</button>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" stroke="currentColor" stroke-width="2"/></svg>data moving</span>
+        <span><svg width="22" height="14" viewBox="-11 -7 22 14"><polygon class="valve" points="-9,-6 -9,6 0,0"/><polygon class="valve" points="9,-6 9,6 0,0"/></svg>login check</span>
+        <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" stroke="currentColor" stroke-width="2" stroke-dasharray="6 4"/></svg>not provable from code</span>
+        <span><svg width="14" height="14" viewBox="-7 -7 14 14"><circle r="7" class="badge-crit"/><text class="badge-mark" y="4" font-size="10">!</text></svg>problem</span>
+      </div>
+    </div>
+
+    <div class="bench">
+      <div class="drawing">
+        <svg id="schematic" viewBox="0 0 1010 620" role="img" aria-label="Schematic of the example app Tidy: pages, server routes, database tables and outside services connected by data pipes"></svg>
+      </div>
+      <aside class="readout" id="readout" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section class="spec">
+    <header>
+      <span class="eyebrow">The rule everything else follows</span>
+      <h2>Faithful, not flattering</h2>
+      <p class="lede" style="color:var(--muted);max-width:68ch">A readable drawing that's wrong is worse than no drawing, because people trust it. Revel's engineers trust their P&amp;ID because every symbol is wired to a real sensor. Plainsight has to earn the same trust from code, however large or tangled it is.</p>
+    </header>
+    <div class="rules">
+      <div><span class="eyebrow">Facts from analysis, words from AI</span><h3>The AI doesn't decide what exists</h3><p>Parts, pipes and checks are pulled out by parsers, type checkers and call-graph analysis, the same tools compilers use. The AI only writes the sentences, and each sentence is checked against the facts it claims before it's shown.</p></div>
+      <div><span class="eyebrow">Receipts</span><h3>Every claim links to its source</h3><p>Click any box, pipe or sentence and you see the exact file and lines behind it. If a statement can't point to code, it doesn't get printed.</p></div>
+      <div><span class="eyebrow">Zoom, don't simplify</span><h3>Complexity becomes levels, not omissions</h3><p>A huge system is shown like a map: zoom out and streets merge into neighborhoods, but no road is invented or erased. Each level is an exact summary of the one below, with real counts.</p></div>
+      <div><span class="eyebrow">Honest unknowns</span><h3>"Can't tell" is a valid answer</h3><p>Some code can't be resolved by reading it: addresses built from settings, plugins, reflection. Plainsight draws those dashed and labeled, never guessed, then fills them in from live traffic.</p></div>
+      <div><span class="eyebrow">Checked against reality</span><h3>Live traffic confirms the drawing</h3><p>Real requests are traced through the app. A pipe that never carries data, or data moving where no pipe is drawn, is flagged as drift between the drawing and the truth.</p></div>
+      <div><span class="eyebrow">Full coverage</span><h3>Nothing quietly left off the sheet</h3><p>Every file belongs to some part of the drawing, and the title block says so. If something doesn't fit, it's listed as unmapped instead of disappearing.</p></div>
+    </div>
+    <div class="zoom" aria-label="Zoom levels for the example app">
+      <div><small>Level 1</small><b>1</b><span>system</span></div>
+      <div><small>Level 2</small><b>4</b><span>zones</span></div>
+      <div><small>Level 3</small><b>11</b><span>parts</span></div>
+      <div><small>Level 4</small><b>23</b><span>functions</span></div>
+      <div><small>Level 5</small><b>1,140</b><span>lines of code</span></div>
+    </div>
+  </section>
+
+  <section class="spec">
+    <header>
+      <span class="eyebrow">The problem</span>
+      <h2>Vibe coding makes building easy. Understanding is still hard.</h2>
+    </header>
+    <div class="why">
+      <div><span class="big">Code you didn't write is code you can't fix.</span><p>When something breaks at 2 a.m., "ask the AI again" is the only plan most new builders have. That works until it doesn't.</p></div>
+      <div><span class="big">The dangerous bugs are invisible.</span><p>A missing login check or a leaked key doesn't crash anything. The app looks finished. You only learn about it when someone else does.</p></div>
+      <div><span class="big">Reading code is the wrong interface.</span><p>A builder needs the shape of the system and what each part does. A drawing and a sentence beat 4,000 lines of TypeScript.</p></div>
+    </div>
+  </section>
+
+  <section class="spec">
+    <header>
+      <span class="eyebrow">Borrowed from the test stand</span>
+      <h2>What Revel does for hardware, applied to code</h2>
+      <p class="lede" style="color:var(--muted);max-width:68ch">Revel lets rocket and reactor teams drop valves, pumps and sensors onto a P&amp;ID diagram, wire it to live data, and watch every run. An app has the same anatomy: parts, pipes between them, and checkpoints that decide what flows.</p>
+    </header>
+    <div class="map-table-wrap">
+      <table class="map">
+        <thead><tr><th>Revel, for hardware</th><th></th><th>Plainsight, for code</th></tr></thead>
+        <tbody>
+          <tr><td>One click finds every device on the network.</td><td class="arrow">→</td><td>Reads your repo and finds every page, server route, database table and outside service.</td></tr>
+          <tr><td>P&amp;ID schematic of valves, pumps and sensors, wired to live telemetry.</td><td class="arrow">→</td><td>A schematic of your app, with real requests flowing through the pipes as they happen.</td></tr>
+          <tr><td>Valves and interlocks control what flows where.</td><td class="arrow">→</td><td>Login checks and permissions are drawn as valves, so a missing one is a visible gap.</td></tr>
+          <tr><td>RevelCode declares expected states and runtime checks.</td><td class="arrow">→</td><td>Rules in plain English: "only Maya can see Maya's habits." Checked on every change.</td></tr>
+          <tr><td>Alerts point straight to the source.</td><td class="arrow">→</td><td>Problems are pinned to the exact part of the drawing, with the file and a plain-language fix.</td></tr>
+          <tr><td>Every channel records every run.</td><td class="arrow">→</td><td>Every AI edit is recorded as a change to the drawing: "added a pipe from Checkout to Users."</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="spec">
+    <header>
+      <span class="eyebrow">The product</span>
+      <h2>Four views of one app</h2>
+    </header>
+    <div class="views">
+      <div class="view"><span class="eyebrow">Map</span><h3>The whole system on one sheet</h3><p>Generated from the code, never drawn by hand. Grouped the way a person thinks: what users see, your server, stored data, outside services.</p></div>
+      <div class="view"><span class="eyebrow">Explain</span><h3>Every part in a sentence</h3><p>Click anything for what it does, what it talks to and where it lives in the code. Written for the builder, with the jargon taken out.</p></div>
+      <div class="view"><span class="eyebrow">Trace</span><h3>Follow one person through it</h3><p>Play "someone signs up" and watch the request travel pipe by pipe, narrated step by step. This is how the system clicks.</p></div>
+      <div class="view"><span class="eyebrow">Watch</span><h3>See what the AI just changed</h3><p>After every agent session, the drawing shows the new parts and pipes in a diff, and flags any rule that broke.</p></div>
+    </div>
+  </section>
+
+  <footer>"Tidy" is a fictional example app with planted problems typical of AI-generated code. Concept inspired by Revel's hardware platform (<a href="https://revel.io" target="_blank" rel="noopener">revel.io</a>).</footer>
+</div>
+
+<script>
+(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const W = 170, H = 64;
+  const svg = document.getElementById("schematic");
+  const readout = document.getElementById("readout");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const nodes = {
+    ui1: { tag: "UI-01", name: "Sign-up page", sub: "Page", x: 40, y: 70,
+      plain: "The form where a new person types an email and password. Pressing “Create account” sends those details to your server.",
+      files: ["app/signup/page.tsx"] },
+    ui2: { tag: "UI-02", name: "Habit dashboard", sub: "Page", x: 40, y: 250,
+      plain: "The main screen after logging in. It asks the server for this person’s habits and shows them as a checklist with streaks.",
+      files: ["app/dashboard/page.tsx", "components/HabitList.tsx"] },
+    ui3: { tag: "UI-03", name: "Checkout page", sub: "Page", x: 40, y: 430,
+      plain: "Where someone upgrades to Tidy Pro for $4 a month. It sends them to Stripe to pay, so card numbers never touch your server.",
+      files: ["app/pro/page.tsx", "lib/stripe.ts"],
+      flag: { sev: "warn", title: "Secret key visible in the browser",
+        text: "Your secret Stripe key is in lib/stripe.ts, and this page loads that file into the browser. Anyone can open developer tools and copy it.",
+        fix: "Move the key to a server-only environment variable and call Stripe from API-03 only." } },
+    api1: { tag: "API-01", name: "Create account", sub: "POST /api/signup", x: 300, y: 70,
+      plain: "Takes the email and password, scrambles the password so it’s never stored readable, saves a new user, then asks the email service to send a welcome email.",
+      files: ["app/api/signup/route.ts"] },
+    api2: { tag: "API-02", name: "Get habits", sub: "GET /api/habits?user=…", x: 300, y: 250,
+      plain: "Looks up habits in the database and sends them back. It finds them using the user ID written in the web address.",
+      files: ["app/api/habits/route.ts"],
+      flag: { sev: "crit", title: "Anyone can read anyone’s habits",
+        text: "This route never checks who is asking. Change the user ID in the address and you get a stranger’s habits. Every other route checks the login first. This one was skipped.",
+        fix: "Read the user from the login session instead of the address, the same way API-03 does." } },
+    api3: { tag: "API-03", name: "Start checkout", sub: "POST /api/checkout", x: 300, y: 430,
+      plain: "Confirms the person is logged in, asks Stripe to open a payment page for the Pro plan, and sends the person there.",
+      files: ["app/api/checkout/route.ts", "middleware.ts"] },
+    api4: { tag: "API-04", name: "Payment confirmed", sub: "POST /api/stripe-webhook", x: 300, y: 530,
+      plain: "Stripe calls this address after a payment goes through. It finds the user and marks their account as Pro.",
+      files: ["app/api/stripe-webhook/route.ts"],
+      flag: { sev: "warn", title: "Fake payments would be accepted",
+        text: "It doesn’t confirm the message really came from Stripe. Anyone who finds this address could send a fake “payment succeeded” and get Pro for free.",
+        fix: "Verify Stripe’s signature on every message before trusting it." } },
+    db1: { tag: "DB-01", name: "Users", sub: "Table", x: 560, y: 160,
+      plain: "One row per person: email, scrambled password, sign-up date, and whether they pay for Pro.",
+      files: ["prisma/schema.prisma"] },
+    db2: { tag: "DB-02", name: "Habits", sub: "Table", x: 560, y: 340,
+      plain: "One row per habit: its name, the days it was checked off, and which user owns it. Each habit points back to one row in Users.",
+      files: ["prisma/schema.prisma"] },
+    ext2: { tag: "EXT-02", name: "Resend", sub: "Outside service · email", x: 800, y: 70,
+      plain: "An outside email company. Your server asks it to send the welcome email. If Resend is down, sign-up still works, but the email never arrives.",
+      files: ["lib/email.ts"] },
+    ext1: { tag: "EXT-01", name: "Stripe", sub: "Outside service · payments", x: 800, y: 430,
+      plain: "An outside company that handles card payments. Your app never sees card numbers. Stripe tells your server when a payment succeeds.",
+      files: ["lib/stripe.ts"] }
+  };
+
+  const edges = [
+    { id: "e1", from: "ui1", to: "api1", d: "M210 102 H300", verb: "sends sign-up details" },
+    { id: "e2", from: "api1", to: "db1", d: "M470 118 H515 V192 H560", verb: "saves new user" },
+    { id: "e3", from: "api1", to: "ext2", d: "M470 86 H800", verb: "asks for welcome email", label: ["welcome email", 640, 78] },
+    { id: "e4", from: "ui2", to: "api2", d: "M210 282 H300", verb: "asks for habits" },
+    { id: "e5", from: "api2", to: "db2", d: "M470 282 H515 V372 H560", verb: "reads habits" },
+    { id: "e6", from: "db2", to: "db1", d: "M645 340 V224", verb: "each habit belongs to a user", relation: true, label: ["each habit belongs to a user", 653, 286] },
+    { id: "e7", from: "ui3", to: "api3", d: "M210 462 H300", verb: "asks to upgrade" },
+    { id: "e8", from: "api3", to: "ext1", d: "M470 462 H800", verb: "opens a payment page", label: ["payment page", 600, 454] },
+    { id: "e9", from: "ext1", to: "api4", d: "M885 494 V600 H385 V594", verb: "reports payment", label: ["payment succeeded", 610, 592] },
+    { id: "e10", from: "api4", to: "db1", d: "M470 562 H760 V470 A8 8 0 0 1 760 454 V208 H730", verb: "marks user as Pro", label: ["mark as Pro", 768, 330] },
+    { id: "e11", from: "api1", to: "ext3", d: "M440 134 V242 H637 A8 8 0 0 1 653 242 H752 A8 8 0 0 1 768 242 H800", verb: "sends a signup event", unresolved: true, label: ["destination not in code", 478, 236] }
+  ];
+
+  // An honest unknown: the code can't say where this goes.
+  nodes.ext3 = { tag: "EXT-03", name: "Unresolved service", sub: "Address set at deploy time", x: 800, y: 210, unresolved: true,
+    plain: "Your server sends a “signup” event somewhere every time someone joins. The code builds the address from a setting, so this part is marked unresolved instead of guessed.",
+    files: ["lib/analytics.ts", "config/production.json"] };
+  nodes.ext2.plain = "An outside email company. Create account sends the welcome email through it. That send has no error handling, so if Resend fails, the person sees an error even though their account was already saved.";
+
+  // Receipts: where each claim comes from.
+  const proof = {
+    ui1: { basis: "code", file: "app/signup/page.tsx", lines: "L14–17",
+      code: 'await fetch("/api/signup", {\n  method: "POST",\n  body: JSON.stringify({ email, password }),\n});' },
+    ui2: { basis: "code", file: "components/HabitList.tsx", lines: "L9",
+      code: 'const res = await fetch(`/api/habits?user=${userId}`);' },
+    ui3: { basis: "code", file: "lib/stripe.ts", lines: "L1–4",
+      code: '// imported by app/pro/page.tsx, which starts with "use client"\nexport const stripe = new Stripe(\n  "sk_live_51N…Qx",\n);' },
+    api1: { basis: "code", file: "app/api/signup/route.ts", lines: "L8–11",
+      code: 'const hash = await bcrypt.hash(password, 12);\nconst user = await db.user.create({ data: { email, hash } });\nawait track("signup", user.id);\nawait resend.emails.send({ to: email, template: "welcome" });',
+      inside: [["Read email and password from the request", "L6"], ["Scramble the password (bcrypt, 12 rounds)", "L8"], ["Save a new row in Users", "L9"], ["Send a “signup” event to the unresolved service", "L10"], ["Send the welcome email. No error handling", "L11"]] },
+    api2: { basis: "code", file: "app/api/habits/route.ts", lines: "L4–8",
+      code: 'export async function GET(req) {\n  const userId = req.nextUrl.searchParams.get("user");\n  const habits = await db.habit.findMany({ where: { userId } });\n  return Response.json(habits);\n}',
+      note: "No call to getSession() in this file, and middleware.ts only guards /api/checkout.",
+      inside: [["Read the user ID from the web address", "L5"], ["Fetch every habit with that owner", "L6"], ["Send them back", "L7"]] },
+    api3: { basis: "code", file: "app/api/checkout/route.ts", lines: "L5–9",
+      code: 'const session = await getSession(req);\nif (!session) return new Response(null, { status: 401 });\nconst checkout = await stripe.checkout.sessions.create({\n  customer_email: session.user.email, price: PRO_PRICE,\n});',
+      inside: [["Check the login; stop with “401 not allowed” if missing", "L5–6"], ["Ask Stripe for a Pro payment page", "L7"], ["Send the person to it", "L10"]] },
+    api4: { basis: "code", file: "app/api/stripe-webhook/route.ts", lines: "L3–7",
+      code: 'const event = await req.json();\nif (event.type === "checkout.session.completed") {\n  const email = event.data.object.customer_email;\n  await db.user.update({ where: { email }, data: { pro: true } });\n}',
+      note: "No call to stripe.webhooks.constructEvent() anywhere in the repo, so the sender is never verified.",
+      inside: [["Read the message body as-is", "L3"], ["If it says checkout completed, find the user by email", "L4–5"], ["Set pro to true", "L6"]] },
+    db1: { basis: "schema", file: "prisma/schema.prisma", lines: "L10–16",
+      code: 'model User {\n  id        String   @id @default(cuid())\n  email     String   @unique\n  hash      String\n  pro       Boolean  @default(false)\n  createdAt DateTime @default(now())\n}' },
+    db2: { basis: "schema", file: "prisma/schema.prisma", lines: "L18–24",
+      code: 'model Habit {\n  id     String     @id @default(cuid())\n  name   String\n  checks DateTime[]\n  userId String\n  user   User @relation(fields: [userId], references: [id])\n}' },
+    ext1: { basis: "code", file: "app/api/checkout/route.ts", lines: "L7",
+      code: 'stripe.checkout.sessions.create({ ... })',
+      note: "Also receives Stripe’s callbacks at API-04. Package: stripe 17.4.0 (package.json)." },
+    ext2: { basis: "code", file: "lib/email.ts", lines: "L1–2",
+      code: 'import { Resend } from "resend";\nexport const resend = new Resend(process.env.RESEND_KEY);' },
+    ext3: { basis: "unknown", file: "lib/analytics.ts", lines: "L3–6",
+      code: 'export async function track(name, id) {\n  const url = config.get("events.endpoint");\n  await fetch(url, { method: "POST", body: JSON.stringify({ name, id }) });\n}',
+      note: "The address comes from a setting filled in at deploy time, so reading the code can’t prove where this goes. Live traffic shows us.i.posthog.com (product analytics), 1,204 calls in the last 7 days." }
+  };
+  const basisLabel = { code: "Proven from code", schema: "Read from database schema", unknown: "Not provable from code" };
+  const edgeById = Object.fromEntries(edges.map(e => [e.id, e]));
+
+  const journeys = {
+    signup: { title: "Someone signs up", steps: [
+      { node: "ui1", text: "Maya fills in the sign-up form and presses Create account." },
+      { edge: "e1", node: "api1", text: "The page sends her email and password to the Create account route on your server." },
+      { edge: "e2", node: "db1", text: "The server scrambles her password and saves her as a new row in Users." },
+      { edge: "e11", node: "ext3", text: "It sends a “signup” event to a service the code doesn’t name. Live traffic says it’s PostHog, so the pipe stays dashed: observed, not proven." },
+      { edge: "e3", node: "ext2", text: "It asks Resend to send her a welcome email. Measured from live traffic, the whole trip takes about 310 milliseconds." }
+    ]},
+    habits: { title: "Someone opens their habits", steps: [
+      { node: "ui2", text: "Maya opens her dashboard." },
+      { edge: "e4", node: "api2", alarm: true, text: "The page asks Get habits for “user 1042”. Nothing checks that this is really Maya. That’s the red gap on the pipe." },
+      { edge: "e5", node: "db2", text: "The server pulls every habit owned by user 1042 from the Habits table." },
+      { edge: "e5", rev: true, node: "api2", text: "The habits travel back to the server…" },
+      { edge: "e4", rev: true, node: "ui2", text: "…and the page draws them as a checklist with her streaks." }
+    ]},
+    pay: { title: "Someone upgrades to Pro", steps: [
+      { node: "ui3", text: "Maya taps Upgrade to Pro." },
+      { edge: "e7", node: "api3", text: "The request passes through the login check (the valve on the pipe), so the server knows it’s really her." },
+      { edge: "e8", node: "ext1", text: "The server asks Stripe for a payment page and sends Maya there. She pays on Stripe’s site." },
+      { edge: "e9", node: "api4", text: "Stripe calls your server back: the payment succeeded." },
+      { edge: "e10", node: "db1", text: "The server marks Maya as Pro in the Users table. Next time she loads the app, Pro features are on." }
+    ]}
+  };
+
+  function el(tag, attrs, parent, text) {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+
+  // ----- Draw the sheet -----
+  const defs = el("defs", {}, svg);
+  const mk = el("marker", { id: "arrow", viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" }, defs);
+  el("path", { d: "M0 0 L10 5 L0 10 z", fill: "var(--ink)" }, mk);
+
+  const zones = el("g", {}, svg);
+  [["WHAT USERS SEE", 125], ["YOUR SERVER", 385], ["STORED DATA", 645], ["OUTSIDE SERVICES", 885]].forEach(([t, x]) => el("text", { x, y: 40, class: "zone-label" }, zones, t));
+  [255, 515, 765].forEach(x => el("line", { x1: x, y1: 26, x2: x, y2: 52, class: "zone-rule" }, zones));
+
+  const gEdges = el("g", {}, svg);
+  const pipeEls = {};
+  edges.forEach(e => {
+    const p = el("path", { d: e.d, class: "pipe" + (e.relation ? " relation" : "") + (e.unresolved ? " unresolved" : ""), "data-id": e.id }, gEdges);
+    if (!e.relation) p.setAttribute("marker-end", "url(#arrow)");
+    pipeEls[e.id] = p;
+    if (e.label) el("text", { x: e.label[1], y: e.label[2], class: "pipe-label" }, gEdges, e.label[0]);
+  });
+
+  // Login-check valve on the checkout pipe
+  const valve = el("g", { class: "valve-group", "data-edge": "e7" }, svg);
+  el("line", { x1: 255, y1: 462, x2: 255, y2: 449, stroke: "var(--ink)", "stroke-width": 1.4 }, valve);
+  el("rect", { x: 248, y: 441, width: 14, height: 8, class: "valve" }, valve);
+  el("polygon", { points: "243,452 243,472 255,462", class: "valve" }, valve);
+  el("polygon", { points: "267,452 267,472 255,462", class: "valve" }, valve);
+  el("text", { x: 255, y: 487, class: "valve-label" }, valve, "LOGIN CHECK");
+
+  // Missing check on the habits pipe
+  const gap = el("g", { class: "nocheck-group", "data-edge": "e4" }, svg);
+  el("circle", { cx: 255, cy: 282, r: 11, class: "nocheck" }, gap);
+  el("line", { x1: 250, y1: 277, x2: 260, y2: 287, class: "nocheck-x" }, gap);
+  el("line", { x1: 260, y1: 277, x2: 250, y2: 287, class: "nocheck-x" }, gap);
+  el("text", { x: 255, y: 309, class: "nocheck-label" }, gap, "NO CHECK");
+
+  // Title block, like an engineering drawing
+  const tb = el("g", { class: "tb" }, svg);
+  el("rect", { x: 40, y: 528, width: 190, height: 74 }, tb);
+  el("line", { x1: 40, y1: 552, x2: 230, y2: 552 }, tb);
+  el("line", { x1: 40, y1: 577, x2: 230, y2: 577 }, tb);
+  el("line", { x1: 135, y1: 552, x2: 135, y2: 602 }, tb);
+  el("text", { x: 48, y: 545, class: "big" }, tb, "TIDY · SYSTEM SCHEMATIC");
+  el("text", { x: 48, y: 568 }, tb, "REV 14 · 3 PROBLEMS");
+  el("text", { x: 143, y: 568 }, tb, "11 PARTS");
+  el("text", { x: 48, y: 593 }, tb, "SRC  main @ 4f2a91c");
+  el("text", { x: 143, y: 593 }, tb, "38/38 FILES");
+
+  // Nodes
+  const gNodes = el("g", {}, svg);
+  const nodeEls = {};
+  Object.entries(nodes).forEach(([id, n]) => {
+    const g = el("g", { class: "node" + (n.unresolved ? " unresolved" : ""), transform: `translate(${n.x},${n.y})`, tabindex: "0", role: "button", "aria-label": `${n.name}. ${n.sub}${n.flag ? ". Has a problem" : ""}` }, gNodes);
+    el("rect", { class: "body", width: W, height: H, rx: 2 }, g);
+    el("text", { class: "tag", x: 12, y: 19 }, g, n.tag);
+    el("text", { class: "name", x: 12, y: 39 }, g, n.name);
+    el("text", { class: "sub", x: 12, y: 54 }, g, n.sub);
+    if (n.flag) {
+      el("circle", { cx: W - 14, cy: 15, r: 9, class: n.flag.sev === "crit" ? "badge-crit" : "badge-warn" }, g);
+      el("text", { x: W - 14, y: 19.5, class: "badge-mark" }, g, "!");
+    }
+    if (n.unresolved) {
+      el("circle", { cx: W - 14, cy: 15, r: 9, class: "badge-unk" }, g);
+      el("text", { x: W - 14, y: 19.5, class: "badge-mark" }, g, "?");
+    }
+    g.addEventListener("click", () => selectNode(id));
+    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); selectNode(id); } });
+    nodeEls[id] = g;
+  });
+
+  const gDot = el("g", { visibility: "hidden" }, svg);
+  el("circle", { r: 13, class: "dot-halo" }, gDot);
+  el("circle", { r: 6, class: "dot" }, gDot);
+
+  // ----- State helpers -----
+  let runToken = 0;
+  function clearHighlights() {
+    svg.classList.remove("tracing");
+    Object.values(nodeEls).forEach(g => g.classList.remove("sel", "lit", "current"));
+    Object.values(pipeEls).forEach(p => p.classList.remove("lit"));
+    svg.querySelectorAll(".valve-group, .nocheck-group").forEach(g => g.classList.remove("lit"));
+    gDot.setAttribute("visibility", "hidden");
+    document.querySelectorAll(".jbtn").forEach(b => b.setAttribute("aria-pressed", "false"));
+  }
+  function litEdge(id) {
+    pipeEls[id].classList.add("lit");
+    svg.querySelectorAll(`[data-edge="${id}"]`).forEach(g => g.classList.add("lit"));
+  }
+  function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+  // ----- Readout views -----
+  function problems() {
+    return Object.entries(nodes).filter(([, n]) => n.flag).sort((a, b) => (a[1].flag.sev === "crit" ? -1 : 1) - (b[1].flag.sev === "crit" ? -1 : 1));
+  }
+  function showOverview() {
+    runToken++;
+    clearHighlights();
+    const list = problems().map(([id, n]) => `
+      <li><button class="problem" data-node="${id}">
+        <span class="sev ${n.flag.sev}">${n.flag.sev === "crit" ? "Fix now" : "Fix soon"}</span>
+        <strong>${esc(n.flag.title)}</strong>
+        <span class="where">${n.tag} · ${esc(n.name)}</span>
+      </button></li>`).join("");
+    readout.innerHTML = `
+      <div style="display:grid;gap:6px">
+        <span class="eyebrow">Example app</span>
+        <h2>Tidy, a habit tracker</h2>
+        <p class="muted">Built in a weekend with an AI assistant.</p>
+      </div>
+      <div>
+        <h3>In one breath</h3>
+        <p>People sign up, check off daily habits, and can pay $4 a month for Pro. Their data lives in your database. Payments and emails are handled by two outside companies.</p>
+      </div>
+      <div class="chiprow"><span class="chip">3 pages</span><span class="chip">4 server routes</span><span class="chip">2 tables</span><span class="chip">3 outside services</span></div>
+      <div>
+        <h3>How sure is this drawing</h3>
+        <p>10 of 11 parts are proven from the code or database schema. 1 is marked unresolved because the code doesn’t say where it sends data. All 38 files are mapped to a part.</p>
+      </div>
+      <div>
+        <h3>3 things to fix</h3>
+        <ul class="problems">${list}</ul>
+      </div>
+      <p class="hint">Click any part of the drawing to see what it does, or play a journey above to watch data move through the app.</p>`;
+    readout.querySelectorAll(".problem").forEach(b => b.addEventListener("click", () => selectNode(b.dataset.node)));
+  }
+
+  function selectNode(id) {
+    runToken++;
+    clearHighlights();
+    const n = nodes[id];
+    nodeEls[id].classList.add("sel");
+    const conns = edges.filter(e => e.from === id || e.to === id);
+    conns.forEach(e => litEdge(e.id));
+    const links = conns.map(e => {
+      const other = e.from === id ? e.to : e.from;
+      const dir = e.relation ? "linked" : (e.from === id ? "sends to" : "receives from");
+      return `<button class="link" data-node="${other}"><small>${dir}</small>${esc(nodes[other].name)}</button>`;
+    }).join("");
+    const pr = proof[id];
+    const insideHtml = pr.inside ? `<div><h3>Inside, step by step</h3><ol class="inside">${pr.inside.map(([t, l]) => `<li>${esc(t)}<span>${l}</span></li>`).join("")}</ol></div>` : "";
+    const flag = n.flag ? `
+      <div class="flag ${n.flag.sev === "warn" ? "warn" : ""}">
+        <b>${n.flag.sev === "crit" ? "Problem · fix now" : "Problem · fix soon"}</b>
+        <strong>${esc(n.flag.title)}</strong>
+        <span>${esc(n.flag.text)}</span>
+        <span><em>Fix:</em> ${esc(n.flag.fix)}</span>
+      </div>` : "";
+    readout.innerHTML = `
+      <button class="back" id="back">← Whole app</button>
+      <div style="display:grid;gap:6px">
+        <div class="chiprow"><span class="chip">${n.tag}</span></div>
+        <h2>${esc(n.name)}</h2>
+        <span class="route">${esc(n.sub)}</span>
+      </div>
+      <div><h3>In plain English</h3><p>${esc(n.plain)}</p></div>
+      ${flag}
+      ${insideHtml}
+      <div><h3>How we know</h3>
+        <span class="basis ${pr.basis}">${basisLabel[pr.basis]}</span>
+        <div class="evidence">
+          <div class="ev-head"><span>${esc(pr.file)}</span><span>${pr.lines}</span></div>
+          <pre><code>${esc(pr.code)}</code></pre>
+          ${pr.note ? `<p class="ev-note">${esc(pr.note)}</p>` : ""}
+        </div>
+      </div>
+      <div><h3>Connected to</h3><div class="links">${links}</div></div>
+      <div><h3>Lives in</h3><ul class="files">${n.files.map(f => `<li>${esc(f)}</li>`).join("")}</ul></div>`;
+    readout.querySelector("#back").addEventListener("click", showOverview);
+    readout.querySelectorAll(".link").forEach(b => b.addEventListener("click", () => selectNode(b.dataset.node)));
+  }
+
+  // ----- Journeys -----
+  function travel(edgeId, rev, token) {
+    return new Promise(resolve => {
+      const path = pipeEls[edgeId];
+      const len = path.getTotalLength();
+      const dur = reduce ? 0 : 950;
+      gDot.setAttribute("visibility", "visible");
+      const t0 = performance.now();
+      function frame(t) {
+        if (token !== runToken) return resolve(false);
+        const k = dur ? Math.min(1, (t - t0) / dur) : 1;
+        const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        const pt = path.getPointAtLength(len * (rev ? 1 - e : e));
+        gDot.setAttribute("transform", `translate(${pt.x},${pt.y})`);
+        if (k < 1) requestAnimationFrame(frame); else resolve(true);
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+  const wait = (ms, token) => new Promise(r => setTimeout(() => r(token === runToken), reduce ? Math.min(ms, 900) : ms));
+
+  async function playJourney(key) {
+    const token = ++runToken;
+    clearHighlights();
+    const j = journeys[key];
+    document.querySelector(`.jbtn[data-j="${key}"]`).setAttribute("aria-pressed", "true");
+    svg.classList.add("tracing");
+    readout.innerHTML = `
+      <button class="back" id="back">← Whole app</button>
+      <div style="display:grid;gap:6px"><span class="eyebrow">Journey</span><h2>${esc(j.title)}</h2></div>
+      <ol class="steps">${j.steps.map(s => `<li class="${s.alarm ? "alarm" : ""}">${esc(s.text)}</li>`).join("")}</ol>
+      <div class="actions"><button class="btn" id="replay">Replay</button></div>`;
+    readout.querySelector("#back").addEventListener("click", showOverview);
+    readout.querySelector("#replay").addEventListener("click", () => playJourney(key));
+    const lis = readout.querySelectorAll(".steps li");
+
+    for (let i = 0; i < j.steps.length; i++) {
+      const s = j.steps[i];
+      lis.forEach((li, k) => { li.classList.toggle("now", k === i); li.classList.toggle("done", k < i); });
+      if (s.edge) {
+        litEdge(s.edge);
+        const ok = await travel(s.edge, !!s.rev, token);
+        if (!ok) return;
+      }
+      Object.values(nodeEls).forEach(g => g.classList.remove("current"));
+      nodeEls[s.node].classList.add("lit", "current");
+      if (!(await wait(s.alarm ? 2600 : 1700, token))) return;
+    }
+    if (token !== runToken) return;
+    gDot.setAttribute("visibility", "hidden");
+    lis.forEach(li => { li.classList.remove("now"); li.classList.add("done"); });
+  }
+
+  document.querySelectorAll(".jbtn").forEach(b => b.addEventListener("click", () => playJourney(b.dataset.j)));
+  showOverview();
+})();
+</script>

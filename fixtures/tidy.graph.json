@@ -1,0 +1,1247 @@
+{
+  "app": "tidy",
+  "commit": "8fb1d8d",
+  "generatedAt": "2026-11-22T18:22:34.668Z",
+  "analyzer": "plainsight 0.3.0",
+  "stack": {
+    "static": null,
+    "nextAppRouter": true,
+    "nextPagesRouter": false,
+    "prisma": true,
+    "sqlSchema": [],
+    "middleware": "middleware.ts",
+    "middlewareMatchers": [
+      "/api/checkout",
+      "/pro"
+    ]
+  },
+  "nodes": [
+    {
+      "facts": [],
+      "id": "table:User",
+      "kind": "table",
+      "name": "User",
+      "sub": "Table",
+      "file": "prisma/schema.prisma",
+      "line": 10,
+      "ev": {
+        "file": "prisma/schema.prisma",
+        "line": 10,
+        "endLine": 17,
+        "code": "model User {\n  id        String   @id @default(cuid())\n  email     String   @unique\n  hash      String\n  pro       Boolean  @default(false)\n  createdAt DateTime @default(now())\n  habits    Habit[]\n}"
+      },
+      "fields": [
+        "id",
+        "email",
+        "hash",
+        "pro",
+        "createdAt",
+        "habits"
+      ],
+      "explain": [
+        {
+          "text": "A database table with 6 fields: id, email, hash, pro, createdAt and habits.",
+          "evidence": [
+            {
+              "file": "prisma/schema.prisma",
+              "line": 10,
+              "endLine": 17,
+              "code": "model User {\n  id        String   @id @default(cuid())\n  email     String   @unique\n  hash      String\n  pro       Boolean  @default(false)\n  createdAt DateTime @default(now())\n  habits    Habit[]\n}"
+            }
+          ]
+        },
+        {
+          "text": "Used by POST /api/checkout, POST /api/habits/:id/check, POST /api/signup and POST /api/stripe-webhook.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "table:Habit",
+      "kind": "table",
+      "name": "Habit",
+      "sub": "Table",
+      "file": "prisma/schema.prisma",
+      "line": 19,
+      "ev": {
+        "file": "prisma/schema.prisma",
+        "line": 19,
+        "endLine": 25,
+        "code": "model Habit {\n  id     String     @id @default(cuid())\n  name   String\n  checks DateTime[]\n  userId String\n  user   User       @relation(fields: [userId], references: [id])\n}"
+      },
+      "fields": [
+        "id",
+        "name",
+        "checks",
+        "userId",
+        "user"
+      ],
+      "explain": [
+        {
+          "text": "A database table with 5 fields: id, name, checks, userId and user.",
+          "evidence": [
+            {
+              "file": "prisma/schema.prisma",
+              "line": 19,
+              "endLine": 25,
+              "code": "model Habit {\n  id     String     @id @default(cuid())\n  name   String\n  checks DateTime[]\n  userId String\n  user   User       @relation(fields: [userId], references: [id])\n}"
+            }
+          ]
+        },
+        {
+          "text": "Each Habit belongs to one User.",
+          "evidence": [
+            {
+              "file": "prisma/schema.prisma",
+              "line": 24,
+              "code": "user   User       @relation(fields: [userId], references: [id])"
+            }
+          ]
+        },
+        {
+          "text": "Used by POST /api/habits/:id/check and GET /api/habits.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:POST /api/checkout",
+      "kind": "route",
+      "name": "/api/checkout",
+      "sub": "POST",
+      "method": "POST",
+      "file": "app/api/checkout/route.ts",
+      "line": 4,
+      "ev": {
+        "file": "app/api/checkout/route.ts",
+        "line": 4,
+        "endLine": 16,
+        "code": "export async function POST(req: Request) {\n  const session = await getSession(req);\n  if (!session) return new Response(null, { status: 401 });\n\n  const checkout = await stripe.checkout.sessions.create({\n    customer_email: session.user.email,\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in this handler",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "app/api/checkout/route.ts",
+            "line": 5,
+            "endLine": 5,
+            "code": "const session = await getSession(req);"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "Handles POST requests to /api/checkout.",
+          "evidence": [
+            {
+              "file": "app/api/checkout/route.ts",
+              "line": 4,
+              "endLine": 16,
+              "code": "export async function POST(req: Request) {\n  const session = await getSession(req);\n  if (!session) return new Response(null, { status: 401 });\n\n  const checkout = await stripe.checkout.sessions.create({\n    customer_email: session.user.email,\n…"
+            }
+          ]
+        },
+        {
+          "text": "Reads from User.",
+          "evidence": [
+            {
+              "file": "lib/auth.ts",
+              "line": 7,
+              "endLine": 7,
+              "code": "const user = await db.user.findUnique({ where: { id: token } });"
+            }
+          ]
+        },
+        {
+          "text": "Uses Stripe.",
+          "evidence": [
+            {
+              "file": "app/api/checkout/route.ts",
+              "line": 8,
+              "endLine": 13,
+              "code": "const checkout = await stripe.checkout.sessions.create({\n  customer_email: session.user.email,\n  line_items: [{ price: PRO_PRICE, quantity: 1 }],\n  mode: \"subscription\",\n…"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in this handler: it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "app/api/checkout/route.ts",
+              "line": 5,
+              "endLine": 5,
+              "code": "const session = await getSession(req);"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:POST /api/habits/:id/check",
+      "kind": "route",
+      "name": "/api/habits/:id/check",
+      "sub": "POST",
+      "method": "POST",
+      "file": "app/api/habits/[id]/check/route.ts",
+      "line": 4,
+      "ev": {
+        "file": "app/api/habits/[id]/check/route.ts",
+        "line": 4,
+        "endLine": 14,
+        "code": "export async function POST(req: Request, { params }: { params: { id: string } }) {\n  const session = await getSession(req);\n  if (!session) {\n    return new Response(null, { status: 401 });\n  }\n  const habit = await db.habit.update({\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in this handler",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "app/api/habits/[id]/check/route.ts",
+            "line": 5,
+            "endLine": 5,
+            "code": "const session = await getSession(req);"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "Handles POST requests to /api/habits/:id/check.",
+          "evidence": [
+            {
+              "file": "app/api/habits/[id]/check/route.ts",
+              "line": 4,
+              "endLine": 14,
+              "code": "export async function POST(req: Request, { params }: { params: { id: string } }) {\n  const session = await getSession(req);\n  if (!session) {\n    return new Response(null, { status: 401 });\n  }\n  const habit = await db.habit.update({\n…"
+            }
+          ]
+        },
+        {
+          "text": "Reads from User.",
+          "evidence": [
+            {
+              "file": "lib/auth.ts",
+              "line": 7,
+              "endLine": 7,
+              "code": "const user = await db.user.findUnique({ where: { id: token } });"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to Habit.",
+          "evidence": [
+            {
+              "file": "app/api/habits/[id]/check/route.ts",
+              "line": 9,
+              "endLine": 12,
+              "code": "const habit = await db.habit.update({\n  where: { id: params.id, userId: session.user.id },\n  data: { checks: { push: new Date() } },\n});"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in this handler: it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "app/api/habits/[id]/check/route.ts",
+              "line": 5,
+              "endLine": 5,
+              "code": "const session = await getSession(req);"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:GET /api/habits",
+      "kind": "route",
+      "name": "/api/habits",
+      "sub": "GET",
+      "method": "GET",
+      "file": "app/api/habits/route.ts",
+      "line": 4,
+      "ev": {
+        "file": "app/api/habits/route.ts",
+        "line": 4,
+        "endLine": 8,
+        "code": "export async function GET(req: NextRequest) {\n  const userId = req.nextUrl.searchParams.get(\"user\");\n  const habits = await db.habit.findMany({ where: { userId } });\n  return Response.json(habits);\n}"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "Handles GET requests to /api/habits.",
+          "evidence": [
+            {
+              "file": "app/api/habits/route.ts",
+              "line": 4,
+              "endLine": 8,
+              "code": "export async function GET(req: NextRequest) {\n  const userId = req.nextUrl.searchParams.get(\"user\");\n  const habits = await db.habit.findMany({ where: { userId } });\n  return Response.json(habits);\n}"
+            }
+          ]
+        },
+        {
+          "text": "Reads from Habit.",
+          "evidence": [
+            {
+              "file": "app/api/habits/route.ts",
+              "line": 6,
+              "endLine": 6,
+              "code": "const habits = await db.habit.findMany({ where: { userId } });"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in. No login lookup was found in this handler, the functions it calls, or middleware covering this path.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:POST /api/signup",
+      "kind": "route",
+      "name": "/api/signup",
+      "sub": "POST",
+      "method": "POST",
+      "file": "app/api/signup/route.ts",
+      "line": 6,
+      "ev": {
+        "file": "app/api/signup/route.ts",
+        "line": 6,
+        "endLine": 15,
+        "code": "export async function POST(req: Request) {\n  const { email, password } = await req.json();\n\n  const hash = await bcrypt.hash(password, 12);\n  const user = await db.user.create({ data: { email, hash } });\n  await track(\"signup\", user.id);\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "Handles POST requests to /api/signup.",
+          "evidence": [
+            {
+              "file": "app/api/signup/route.ts",
+              "line": 6,
+              "endLine": 15,
+              "code": "export async function POST(req: Request) {\n  const { email, password } = await req.json();\n\n  const hash = await bcrypt.hash(password, 12);\n  const user = await db.user.create({ data: { email, hash } });\n  await track(\"signup\", user.id);\n…"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to User.",
+          "evidence": [
+            {
+              "file": "app/api/signup/route.ts",
+              "line": 10,
+              "endLine": 10,
+              "code": "const user = await db.user.create({ data: { email, hash } });"
+            }
+          ]
+        },
+        {
+          "text": "Uses Resend.",
+          "evidence": [
+            {
+              "file": "app/api/signup/route.ts",
+              "line": 12,
+              "endLine": 12,
+              "code": "await resend.emails.send({ from: \"hi@tidy.app\", to: email, subject: \"Welcome\", html: \"<p>Welcome</p>\" });"
+            }
+          ]
+        },
+        {
+          "text": "Also sends data to an address the code doesn't spell out.",
+          "evidence": [
+            {
+              "file": "app/api/signup/route.ts",
+              "line": 11,
+              "endLine": 11,
+              "code": "await track(\"signup\", user.id);",
+              "note": "calls track()"
+            },
+            {
+              "file": "lib/analytics.ts",
+              "line": 5,
+              "endLine": 5,
+              "code": "await fetch(url, { method: \"POST\", body: JSON.stringify({ name, id }) });"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in. No login lookup was found in this handler, the functions it calls, or middleware covering this path.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:POST /api/stripe-webhook",
+      "kind": "route",
+      "name": "/api/stripe-webhook",
+      "sub": "POST",
+      "method": "POST",
+      "file": "app/api/stripe-webhook/route.ts",
+      "line": 3,
+      "ev": {
+        "file": "app/api/stripe-webhook/route.ts",
+        "line": 3,
+        "endLine": 10,
+        "code": "export async function POST(req: Request) {\n  const event = await req.json();\n  if (event.type === \"checkout.session.completed\") {\n    const email = event.data.object.customer_email;\n    await db.user.update({ where: { email }, data: { pro: true } });\n  }\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "verified": false,
+      "explain": [
+        {
+          "text": "Handles POST requests to /api/stripe-webhook.",
+          "evidence": [
+            {
+              "file": "app/api/stripe-webhook/route.ts",
+              "line": 3,
+              "endLine": 10,
+              "code": "export async function POST(req: Request) {\n  const event = await req.json();\n  if (event.type === \"checkout.session.completed\") {\n    const email = event.data.object.customer_email;\n    await db.user.update({ where: { email }, data: { pro: true } });\n  }\n…"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to User.",
+          "evidence": [
+            {
+              "file": "app/api/stripe-webhook/route.ts",
+              "line": 7,
+              "endLine": 7,
+              "code": "await db.user.update({ where: { email }, data: { pro: true } });"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check a login or verify who sent the message.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/dashboard",
+      "kind": "page",
+      "layout": false,
+      "name": "/dashboard",
+      "route": "/dashboard",
+      "sub": "Page · server-built, interactive parts",
+      "file": "app/dashboard/page.tsx",
+      "line": 3,
+      "ev": {
+        "file": "app/dashboard/page.tsx",
+        "line": 3,
+        "endLine": 10,
+        "code": "export default function DashboardPage() {\n  return (\n    <main>\n      <h1>Your habits</h1>\n…"
+      },
+      "client": true,
+      "pageClient": false,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A page at /dashboard.",
+          "evidence": [
+            {
+              "file": "app/dashboard/page.tsx",
+              "line": 3,
+              "endLine": 10,
+              "code": "export default function DashboardPage() {\n  return (\n    <main>\n      <h1>Your habits</h1>\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server, and some parts of it run in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It sends requests to GET /api/habits and POST /api/habits/*/check.",
+          "evidence": [
+            {
+              "file": "components/HabitList.tsx",
+              "line": 12,
+              "endLine": 12,
+              "code": "const res = await fetch(`/api/habits?user=${userId}`);"
+            },
+            {
+              "file": "components/HabitList.tsx",
+              "line": 18,
+              "endLine": 18,
+              "code": "await fetch(`/api/habits/${habit.id}/check`, { method: \"POST\" });"
+            }
+          ]
+        },
+        {
+          "text": "Anyone can open it. No login check was found in its code or in middleware.",
+          "evidence": []
+        }
+      ],
+      "files": [
+        "app/dashboard/page.tsx",
+        "components/HabitList.tsx"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "layout:/",
+      "kind": "page",
+      "layout": true,
+      "name": "Frame around every page",
+      "route": "/",
+      "sub": "Page · built on the server",
+      "file": "app/layout.tsx",
+      "line": 1,
+      "ev": {
+        "file": "app/layout.tsx",
+        "line": 1,
+        "endLine": 7,
+        "code": "export default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"en\">\n      <body>{children}</body>\n…"
+      },
+      "client": false,
+      "pageClient": false,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "The shared frame (layout) drawn around every page, such as the navigation bar.",
+          "evidence": [
+            {
+              "file": "app/layout.tsx",
+              "line": 1,
+              "endLine": 7,
+              "code": "export default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"en\">\n      <body>{children}</body>\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server before it's sent.",
+          "evidence": []
+        },
+        {
+          "text": "It doesn't send any requests to your server.",
+          "evidence": []
+        }
+      ],
+      "files": [
+        "app/layout.tsx"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/",
+      "kind": "page",
+      "layout": false,
+      "name": "/",
+      "route": "/",
+      "sub": "Page · built on the server",
+      "file": "app/page.tsx",
+      "line": 1,
+      "ev": {
+        "file": "app/page.tsx",
+        "line": 1,
+        "endLine": 9,
+        "code": "export default function Home() {\n  return (\n    <main>\n      <h1>Tidy</h1>\n…"
+      },
+      "client": false,
+      "pageClient": false,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A page at /.",
+          "evidence": [
+            {
+              "file": "app/page.tsx",
+              "line": 1,
+              "endLine": 9,
+              "code": "export default function Home() {\n  return (\n    <main>\n      <h1>Tidy</h1>\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server before it's sent.",
+          "evidence": []
+        },
+        {
+          "text": "It doesn't send any requests to your server.",
+          "evidence": []
+        },
+        {
+          "text": "Anyone can open it. No login check was found in its code or in middleware.",
+          "evidence": []
+        }
+      ],
+      "files": [
+        "app/page.tsx"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/pro",
+      "kind": "page",
+      "layout": false,
+      "name": "/pro",
+      "route": "/pro",
+      "sub": "Page · runs in the browser",
+      "file": "app/pro/page.tsx",
+      "line": 4,
+      "ev": {
+        "file": "app/pro/page.tsx",
+        "line": 4,
+        "endLine": 18,
+        "code": "export default function ProPage() {\n  async function upgrade() {\n    const res = await fetch(\"/api/checkout\", { method: \"POST\" });\n    const { url } = await res.json();\n…"
+      },
+      "client": true,
+      "pageClient": true,
+      "guard": {
+        "status": "checked",
+        "where": "by middleware",
+        "how": "middleware.ts checks the login for \"/pro\"",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "middleware.ts",
+            "line": 13,
+            "endLine": 13,
+            "code": "matcher: [\"/api/checkout\", \"/pro\"],"
+          },
+          {
+            "file": "middleware.ts",
+            "line": 5,
+            "endLine": 5,
+            "code": "const session = await getSession(req);"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A page at /pro.",
+          "evidence": [
+            {
+              "file": "app/pro/page.tsx",
+              "line": 4,
+              "endLine": 18,
+              "code": "export default function ProPage() {\n  async function upgrade() {\n    const res = await fetch(\"/api/checkout\", { method: \"POST\" });\n    const { url } = await res.json();\n…"
+            }
+          ]
+        },
+        {
+          "text": "It runs in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It sends requests to POST /api/checkout.",
+          "evidence": [
+            {
+              "file": "app/pro/page.tsx",
+              "line": 6,
+              "endLine": 6,
+              "code": "const res = await fetch(\"/api/checkout\", { method: \"POST\" });"
+            }
+          ]
+        },
+        {
+          "text": "Only logged-in visitors get it: middleware.ts checks the login for \"/pro\".",
+          "evidence": [
+            {
+              "file": "middleware.ts",
+              "line": 13,
+              "endLine": 13,
+              "code": "matcher: [\"/api/checkout\", \"/pro\"],"
+            },
+            {
+              "file": "middleware.ts",
+              "line": 5,
+              "endLine": 5,
+              "code": "const session = await getSession(req);"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/pro/page.tsx",
+        "lib/stripe.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/signup",
+      "kind": "page",
+      "layout": false,
+      "name": "/signup",
+      "route": "/signup",
+      "sub": "Page · runs in the browser",
+      "file": "app/signup/page.tsx",
+      "line": 5,
+      "ev": {
+        "file": "app/signup/page.tsx",
+        "line": 5,
+        "endLine": 24,
+        "code": "export default function SignupPage() {\n  const [email, setEmail] = useState(\"\");\n  const [password, setPassword] = useState(\"\");\n\n…"
+      },
+      "client": true,
+      "pageClient": true,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A page at /signup.",
+          "evidence": [
+            {
+              "file": "app/signup/page.tsx",
+              "line": 5,
+              "endLine": 24,
+              "code": "export default function SignupPage() {\n  const [email, setEmail] = useState(\"\");\n  const [password, setPassword] = useState(\"\");\n\n…"
+            }
+          ]
+        },
+        {
+          "text": "It runs in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It sends requests to POST /api/signup.",
+          "evidence": [
+            {
+              "file": "app/signup/page.tsx",
+              "line": 10,
+              "endLine": 13,
+              "code": "await fetch(\"/api/signup\", {\n  method: \"POST\",\n  body: JSON.stringify({ email, password }),\n});"
+            }
+          ]
+        },
+        {
+          "text": "Anyone can open it. No login check was found in its code or in middleware.",
+          "evidence": []
+        }
+      ],
+      "files": [
+        "app/signup/page.tsx",
+        "components/Button.tsx"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "service:Stripe",
+      "kind": "service",
+      "name": "Stripe",
+      "sub": "Outside service · payments",
+      "pkg": "stripe",
+      "explain": [
+        {
+          "text": "An outside company, reached through the \"stripe\" package.",
+          "evidence": []
+        },
+        {
+          "text": "Only the route's name says Stripe calls it. That's set in Stripe's dashboard, which isn't in the code.",
+          "evidence": []
+        },
+        {
+          "text": "Called by POST /api/checkout.",
+          "evidence": [
+            {
+              "file": "app/api/checkout/route.ts",
+              "line": 8,
+              "endLine": 13,
+              "code": "const checkout = await stripe.checkout.sessions.create({\n  customer_email: session.user.email,\n  line_items: [{ price: PRO_PRICE, quantity: 1 }],\n  mode: \"subscription\",\n…"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "unknown:1",
+      "kind": "unknown",
+      "name": "Unresolved address",
+      "sub": "Set outside the code",
+      "explain": [
+        {
+          "text": "The code sends data here, but the address comes from config.get(\"events.endpoint\"), which is only known when the app runs.",
+          "evidence": [
+            {
+              "file": "app/api/signup/route.ts",
+              "line": 11,
+              "endLine": 11,
+              "code": "await track(\"signup\", user.id);",
+              "note": "calls track()"
+            },
+            {
+              "file": "lib/analytics.ts",
+              "line": 5,
+              "endLine": 5,
+              "code": "await fetch(url, { method: \"POST\", body: JSON.stringify({ name, id }) });"
+            },
+            {
+              "file": "lib/analytics.ts",
+              "line": 4,
+              "endLine": 4,
+              "code": "const url = config.get(\"events.endpoint\");"
+            }
+          ]
+        },
+        {
+          "text": "It's left unresolved instead of guessed. Connecting live traffic would fill it in.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "service:Resend",
+      "kind": "service",
+      "name": "Resend",
+      "sub": "Outside service · email",
+      "pkg": "resend",
+      "explain": [
+        {
+          "text": "An outside company, reached through the \"resend\" package.",
+          "evidence": []
+        },
+        {
+          "text": "Called by POST /api/signup.",
+          "evidence": [
+            {
+              "file": "app/api/signup/route.ts",
+              "line": 12,
+              "endLine": 12,
+              "code": "await resend.emails.send({ from: \"hi@tidy.app\", to: email, subject: \"Welcome\", html: \"<p>Welcome</p>\" });"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "table:Habit",
+      "to": "table:User",
+      "kind": "relation",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "prisma/schema.prisma",
+          "line": 24,
+          "code": "user   User       @relation(fields: [userId], references: [id])"
+        }
+      ],
+      "label": "each Habit belongs to a User"
+    },
+    {
+      "id": "e2",
+      "from": "route:POST /api/checkout",
+      "to": "table:User",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/auth.ts",
+          "line": 7,
+          "endLine": 7,
+          "code": "const user = await db.user.findUnique({ where: { id: token } });"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "findUnique"
+      ]
+    },
+    {
+      "id": "e3",
+      "from": "route:POST /api/checkout",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/checkout/route.ts",
+          "line": 8,
+          "endLine": 13,
+          "code": "const checkout = await stripe.checkout.sessions.create({\n  customer_email: session.user.email,\n  line_items: [{ price: PRO_PRICE, quantity: 1 }],\n  mode: \"subscription\",\n…"
+        }
+      ],
+      "label": "checkout.sessions.create",
+      "calls": [
+        "checkout.sessions.create"
+      ]
+    },
+    {
+      "id": "e4",
+      "from": "route:POST /api/habits/:id/check",
+      "to": "table:User",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/auth.ts",
+          "line": 7,
+          "endLine": 7,
+          "code": "const user = await db.user.findUnique({ where: { id: token } });"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "findUnique"
+      ]
+    },
+    {
+      "id": "e5",
+      "from": "route:POST /api/habits/:id/check",
+      "to": "table:Habit",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/habits/[id]/check/route.ts",
+          "line": 9,
+          "endLine": 12,
+          "code": "const habit = await db.habit.update({\n  where: { id: params.id, userId: session.user.id },\n  data: { checks: { push: new Date() } },\n});"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update"
+      ]
+    },
+    {
+      "id": "e6",
+      "from": "route:GET /api/habits",
+      "to": "table:Habit",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/habits/route.ts",
+          "line": 6,
+          "endLine": 6,
+          "code": "const habits = await db.habit.findMany({ where: { userId } });"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "findMany"
+      ]
+    },
+    {
+      "id": "e7",
+      "from": "route:POST /api/signup",
+      "to": "table:User",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/signup/route.ts",
+          "line": 10,
+          "endLine": 10,
+          "code": "const user = await db.user.create({ data: { email, hash } });"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "create"
+      ]
+    },
+    {
+      "id": "e8",
+      "from": "route:POST /api/signup",
+      "to": "unknown:1",
+      "kind": "request",
+      "certainty": "unresolved",
+      "evidence": [
+        {
+          "file": "app/api/signup/route.ts",
+          "line": 11,
+          "endLine": 11,
+          "code": "await track(\"signup\", user.id);",
+          "note": "calls track()"
+        },
+        {
+          "file": "lib/analytics.ts",
+          "line": 5,
+          "endLine": 5,
+          "code": "await fetch(url, { method: \"POST\", body: JSON.stringify({ name, id }) });"
+        }
+      ],
+      "label": "POST"
+    },
+    {
+      "id": "e9",
+      "from": "route:POST /api/signup",
+      "to": "service:Resend",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/signup/route.ts",
+          "line": 12,
+          "endLine": 12,
+          "code": "await resend.emails.send({ from: \"hi@tidy.app\", to: email, subject: \"Welcome\", html: \"<p>Welcome</p>\" });"
+        }
+      ],
+      "label": "emails.send",
+      "calls": [
+        "emails.send"
+      ]
+    },
+    {
+      "id": "e10",
+      "from": "route:POST /api/stripe-webhook",
+      "to": "table:User",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/stripe-webhook/route.ts",
+          "line": 7,
+          "endLine": 7,
+          "code": "await db.user.update({ where: { email }, data: { pro: true } });"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update"
+      ]
+    },
+    {
+      "id": "e11",
+      "from": "page:/dashboard",
+      "to": "route:GET /api/habits",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "components/HabitList.tsx",
+          "line": 12,
+          "endLine": 12,
+          "code": "const res = await fetch(`/api/habits?user=${userId}`);"
+        }
+      ],
+      "label": "GET /api/habits"
+    },
+    {
+      "id": "e12",
+      "from": "page:/dashboard",
+      "to": "route:POST /api/habits/:id/check",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "components/HabitList.tsx",
+          "line": 18,
+          "endLine": 18,
+          "code": "await fetch(`/api/habits/${habit.id}/check`, { method: \"POST\" });"
+        }
+      ],
+      "label": "POST /api/habits/*/check"
+    },
+    {
+      "id": "e13",
+      "from": "page:/pro",
+      "to": "route:POST /api/checkout",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/pro/page.tsx",
+          "line": 6,
+          "endLine": 6,
+          "code": "const res = await fetch(\"/api/checkout\", { method: \"POST\" });"
+        }
+      ],
+      "label": "POST /api/checkout"
+    },
+    {
+      "id": "e14",
+      "from": "page:/signup",
+      "to": "route:POST /api/signup",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/signup/page.tsx",
+          "line": 10,
+          "endLine": 13,
+          "code": "await fetch(\"/api/signup\", {\n  method: \"POST\",\n  body: JSON.stringify({ email, password }),\n});"
+        }
+      ],
+      "label": "POST /api/signup"
+    },
+    {
+      "id": "e15",
+      "from": "service:Stripe",
+      "to": "route:POST /api/stripe-webhook",
+      "kind": "callback",
+      "certainty": "inferred",
+      "evidence": [],
+      "label": "calls back",
+      "why": "Only the route's name says Stripe calls it. That's set in Stripe's dashboard, which isn't in the code."
+    }
+  ],
+  "findings": [
+    {
+      "sev": "crit",
+      "node": "route:GET /api/habits",
+      "title": "Anyone can read other people's Habit records",
+      "text": "Which records it uses comes straight from the request, and nothing checks who is asking. Changing a value in the request gets someone else's data.",
+      "evidence": [
+        {
+          "file": "app/api/habits/route.ts",
+          "line": 6,
+          "endLine": 6,
+          "code": "const habits = await db.habit.findMany({ where: { userId } });"
+        }
+      ]
+    },
+    {
+      "sev": "crit",
+      "node": "page:/pro",
+      "file": "lib/stripe.ts",
+      "title": "Stripe secret key is sent to the browser",
+      "text": "lib/stripe.ts contains a Stripe secret key and is imported by code that runs in the browser (/pro). Anyone can open developer tools and copy it.",
+      "evidence": [
+        {
+          "file": "lib/stripe.ts",
+          "line": 3,
+          "endLine": 3,
+          "code": "export const stripe = new Stripe(\"sk_live_DEMO…\");"
+        }
+      ]
+    },
+    {
+      "sev": "warn",
+      "node": "route:POST /api/stripe-webhook",
+      "title": "Accepts messages without checking who sent them",
+      "text": "This webhook changes the database (User) but never verifies a signature. Anyone who finds the address can send a fake message.",
+      "evidence": [
+        {
+          "file": "app/api/stripe-webhook/route.ts",
+          "line": 7,
+          "endLine": 7,
+          "code": "await db.user.update({ where: { email }, data: { pro: true } });"
+        }
+      ]
+    },
+    {
+      "sev": "info",
+      "node": "route:POST /api/signup",
+      "title": "Open to anyone, no login check",
+      "text": "This route uses the database without checking a login. That can be intended (sign-up, public data), so it's listed for review, not as a bug.",
+      "evidence": [
+        {
+          "file": "app/api/signup/route.ts",
+          "line": 6,
+          "endLine": 15,
+          "code": "export async function POST(req: Request) {\n  const { email, password } = await req.json();\n\n  const hash = await bcrypt.hash(password, 12);\n  const user = await db.user.create({ data: { email, hash } });\n  await track(\"signup\", user.id);\n…"
+        }
+      ]
+    },
+    {
+      "sev": "info",
+      "node": "route:POST /api/signup",
+      "title": "If an unresolved address fails, the request fails after data was saved",
+      "text": "The call to an unresolved address isn't wrapped in error handling and happens after the User write. A failure there shows the user an error even though the record already exists.",
+      "evidence": [
+        {
+          "file": "app/api/signup/route.ts",
+          "line": 10,
+          "endLine": 10,
+          "code": "const user = await db.user.create({ data: { email, hash } });"
+        },
+        {
+          "file": "app/api/signup/route.ts",
+          "line": 11,
+          "endLine": 11,
+          "code": "await track(\"signup\", user.id);",
+          "note": "calls track()"
+        },
+        {
+          "file": "lib/analytics.ts",
+          "line": 5,
+          "endLine": 5,
+          "code": "await fetch(url, { method: \"POST\", body: JSON.stringify({ name, id }) });"
+        }
+      ]
+    },
+    {
+      "sev": "info",
+      "node": "route:POST /api/signup",
+      "title": "If Resend fails, the request fails after data was saved",
+      "text": "The call to Resend isn't wrapped in error handling and happens after the User write. A failure there shows the user an error even though the record already exists.",
+      "evidence": [
+        {
+          "file": "app/api/signup/route.ts",
+          "line": 10,
+          "endLine": 10,
+          "code": "const user = await db.user.create({ data: { email, hash } });"
+        },
+        {
+          "file": "app/api/signup/route.ts",
+          "line": 12,
+          "endLine": 12,
+          "code": "await resend.emails.send({ from: \"hi@tidy.app\", to: email, subject: \"Welcome\", html: \"<p>Welcome</p>\" });"
+        }
+      ]
+    }
+  ],
+  "unknowns": [
+    {
+      "node": "unknown:1",
+      "expr": "url",
+      "source": "config.get(\"events.endpoint\")",
+      "evidence": [
+        {
+          "file": "app/api/signup/route.ts",
+          "line": 11,
+          "endLine": 11,
+          "code": "await track(\"signup\", user.id);",
+          "note": "calls track()"
+        },
+        {
+          "file": "lib/analytics.ts",
+          "line": 5,
+          "endLine": 5,
+          "code": "await fetch(url, { method: \"POST\", body: JSON.stringify({ name, id }) });"
+        },
+        {
+          "file": "lib/analytics.ts",
+          "line": 4,
+          "endLine": 4,
+          "code": "const url = config.get(\"events.endpoint\");"
+        }
+      ]
+    }
+  ],
+  "coverage": {
+    "sourceFiles": 20,
+    "mapped": 19,
+    "tooling": [],
+    "tests": [],
+    "docs": [],
+    "unmapped": [
+      "components/OldBanner.tsx"
+    ],
+    "schema": "prisma/schema.prisma"
+  },
+  "limits": [
+    "Reads TypeScript/JavaScript structure only. It does not run the code.",
+    "Understands Next.js routes and pages, Prisma, Drizzle (pgTable/mysqlTable/sqliteTable schemas, select/insert/update/delete, joins and db.query with `with`), Supabase, and the service packages in its list. Other libraries show up as plain code, not as parts.",
+    "Calls made through require(), dynamic import(), or values passed around as arguments may be missed.",
+    "Regex-style middleware matchers are not evaluated."
+  ],
+  "elapsedMs": 63
+}

@@ -1,0 +1,24 @@
+{
+  "name": "plainsight-cli",
+  "version": "0.3.0",
+  "description": "See what you built. Plainsight draws your Next.js app as a living schematic and finds the security holes, with every claim linked to the line of code that proves it.",
+  "type": "module",
+  "bin": { "plainsight": "bin/plainsight.mjs" },
+  "exports": { ".": "./src/analyze.mjs", "./report": "./src/report.mjs" },
+  "files": ["bin/", "src/", "viewer/template.html", "README.md", "LICENSE", "CHANGELOG.md"],
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "demo": "node bin/plainsight.mjs fixtures/tidy --out plainsight-report.html --open",
+    "site": "node viewer/build.mjs docs/demo.html fixtures/tidy.graph.json:sample real/saas-starter.graph.json real/nsp.graph.json"
+  },
+  "dependencies": {
+    "elkjs": "0.9.3",
+    "typescript": "5.6.3"
+  },
+  "keywords": ["nextjs", "security", "static-analysis", "architecture", "diagram", "supabase", "prisma", "drizzle", "vibe-coding", "ai-generated-code", "code-review", "cli"],
+  "homepage": "https://github.com/HonorYourExperiences/plainsight#readme",
+  "bugs": { "url": "https://github.com/HonorYourExperiences/plainsight/issues" },
+  "repository": { "type": "git", "url": "git+https://github.com/HonorYourExperiences/plainsight.git" },
+  "license": "MIT"
+}

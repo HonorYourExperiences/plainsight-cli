@@ -1,0 +1,60 @@
+name: Plainsight
+description: Draw your Next.js app as a schematic and block pull requests that open security holes. Every finding links to the code that proves it.
+author: HonorYourExperiences
+branding:
+  icon: eye
+  color: blue
+inputs:
+  path:
+    description: Folder of the app to analyze (for a monorepo, e.g. apps/web)
+    default: "."
+  fail-on:
+    description: 'Fail the check on findings at this level or worse: "crit" (Fix now), "warn" (Fix soon) or "none"'
+    default: crit
+  report-name:
+    description: Name of the uploaded report artifact
+    default: plainsight-report
+outputs:
+  report:
+    description: Path to the HTML report
+    value: ${{ steps.run.outputs.report }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - name: Install Plainsight
+      shell: bash
+      run: cd "$GITHUB_ACTION_PATH" && npm ci --omit=dev --no-audit --no-fund --silent
+    - name: Run Plainsight
+      id: run
+      shell: bash
+      env:
+        PS_PATH: ${{ inputs.path }}
+        PS_FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        work=$(mktemp -d "$RUNNER_TEMP/plainsight.XXXXXX")
+        out="$work/plainsight-report.html"
+        md="$work/plainsight-summary.md"
+        args=("$PS_PATH" --out "$out" --markdown "$md")
+        if [ "$PS_FAIL_ON" != "none" ]; then args+=(--fail-on "$PS_FAIL_ON"); fi
+        set +e
+        node "$GITHUB_ACTION_PATH/bin/plainsight.mjs" "${args[@]}"
+        code=$?
+        set -e
+        [ -f "$md" ] && cat "$md" >> "$GITHUB_STEP_SUMMARY"
+        echo "report=$out" >> "$GITHUB_OUTPUT"
+        echo "code=$code" >> "$GITHUB_OUTPUT"
+    - name: Upload report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.report-name }}
+        path: ${{ steps.run.outputs.report }}
+        if-no-files-found: ignore
+    - name: Result
+      shell: bash
+      env:
+        PS_CODE: ${{ steps.run.outputs.code }}
+      run: exit "${PS_CODE:-0}"

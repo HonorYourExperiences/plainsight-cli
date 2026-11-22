@@ -1,0 +1,41 @@
+name: release
+# Push a tag like v0.3.0 to test, publish plainsight-cli to npm and create the GitHub release.
+# Publishing uses npm trusted publishing (set up once on npmjs.com, no secret needed). If you use a granular
+# access token instead, save it as the NPM_TOKEN repository secret.
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+  id-token: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.14
+          registry-url: https://registry.npmjs.org
+      - name: npm 11.5.1+ (trusted publishing needs it, with Node 22.14+)
+        run: npm install -g npm@11.6.2
+      - run: npm ci
+      - run: npm test
+      - name: Check the tag matches package.json
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  github-release:
+    # separate job, so "Re-run failed jobs" can retry the release without publishing to npm twice
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: GitHub release from the changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" '$0 ~ "^## "v {f=1; next} /^## / && f {exit} f' CHANGELOG.md > notes.md
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "Plainsight $v" --notes-file notes.md

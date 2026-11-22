@@ -1,0 +1,11 @@
+node_modules/
+viewer/dist/
+# third-party repo cloned only for testing; re-clone with the command in README
+real/nextjs-subscription-payments/
+real/dub/
+plainsight-report.html
+plainsight.json
+*.tgz
+reports/
+real/*/
+real/mb.graph.json

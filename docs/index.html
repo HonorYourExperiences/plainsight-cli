@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plainsight</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2026%2026%22%20width%3D%22256%22%20height%3D%22256%22%3E%3Ctitle%3EPlainsight%3C/title%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%2226%22%20height%3D%2226%22%20rx%3D%224%22%20fill%3D%22%23050E18%22/%3E%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%2220%22%20height%3D%2220%22%20fill%3D%22none%22%20stroke%3D%22%235CE1FF%22%20stroke-width%3D%221.8%22/%3E%3Cpath%20d%3D%22M8.5%2017.5c0-2.6%201.8-3.5%204.5-3.5s4.5-.9%204.5-3.5-1.8-3.5-4.5-3.5%22%20fill%3D%22none%22%20stroke%3D%22%23E4F2FA%22%20stroke-width%3D%221.9%22%20stroke-linecap%3D%22round%22/%3E%3Ccircle%20cx%3D%228.5%22%20cy%3D%2217.5%22%20r%3D%221.9%22%20fill%3D%22%23FF4D5E%22/%3E%3C/svg%3E">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="See what you built. Plainsight draws your Next.js app as a living schematic and finds the security holes, with every claim linked to the line of code that proves it.">
+<meta property="og:title" content="Plainsight: see what you built">
+<meta property="og:description" content="One command draws your Next.js app as a schematic and finds the holes AI-written code tends to have. Every claim links to the code. Local, free, MIT.">
+<meta property="og:image" content="img/hologram.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a drafting table at night. One column of sections on a faint blueprint grid; the product's own hologram light (cyan) is the accent, red is reserved for real problems. Deliberately dark, like the hologram. */
+:root {
+  --ground: #050E18;      /* the room */
+  --plate: #0A1A2A;       /* raised surfaces: code, cards */
+  --line: #1C3550;        /* rules and borders */
+  --ink: #E4F2FA;         /* text */
+  --dim: #8FA9BC;         /* secondary text */
+  --beam: #5CE1FF;        /* hologram light, links, focus */
+  --alarm: #FF4D5E;       /* Fix now */
+  --amber: #FFB547;       /* Fix soon, inferred */
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--ground); }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 17px/1.6 var(--f-body);
+  background-image: linear-gradient(rgba(92,225,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(92,225,255,.035) 1px, transparent 1px);
+  background-size: 24px 24px; }
+a { color: var(--beam); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--beam); outline-offset: 3px; }
+img { max-width: 100%; height: auto; display: block; }
+code, pre, .mono { font-family: var(--f-mono); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--beam); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(30px, 4.2vw, 44px); line-height: 1.05; letter-spacing: .01em; font-weight: 700; }
+h3 { font-size: 21px; font-weight: 600; letter-spacing: .01em; }
+p { margin: 0; }
+.lede { color: var(--dim); max-width: 62ch; }
+
+/* top bar */
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 18px; }
+.mark { display: inline-flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 700; font-size: 21px; letter-spacing: .02em; color: var(--ink); text-decoration: none; }
+.mark svg { width: 26px; height: 26px; }
+.bar nav { display: flex; gap: 22px; font-size: 15px; }
+.bar nav a { color: var(--dim); text-decoration: none; }
+.bar nav a:hover { color: var(--ink); }
+
+/* hero */
+.hero { padding-block: 48px 28px; display: grid; gap: 22px; }
+.hero h1 { font-size: clamp(48px, 8.4vw, 104px); line-height: .92; font-weight: 700; letter-spacing: .005em; }
+.hero h1 span { color: var(--beam); text-shadow: 0 0 28px rgba(92,225,255,.45); }
+.hero .lede { font-size: 19px; }
+.install { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 6px; }
+.cmd { display: inline-flex; align-items: center; gap: 14px; padding: 12px 12px 12px 18px; border: 1px solid var(--beam); background: rgba(92,225,255,.06); font-family: var(--f-mono); font-size: 17px; box-shadow: 0 0 24px rgba(92,225,255,.15); max-width: 100%; }
+.cmd .p { color: var(--beam); }
+.cmd button { font: 500 12px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; padding: 8px 12px; border: 1px solid var(--line); background: var(--plate); color: var(--ink); cursor: pointer; }
+.cmd button:hover { border-color: var(--beam); }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 18px; font: 600 15px var(--f-body); text-decoration: none; border: 1px solid var(--line); color: var(--ink); background: var(--plate); }
+.btn:hover { border-color: var(--beam); }
+.btn.primary { background: var(--beam); color: var(--ground); border-color: var(--beam); }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font-family: var(--f-mono); font-size: 13px; color: var(--dim); }
+.facts b { color: var(--ink); font-weight: 500; }
+.shot { border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(92,225,255,.06); }
+.hero .shot { margin-top: 18px; }
+.caption { font-family: var(--f-mono); font-size: 12.5px; color: var(--dim); margin-top: 10px; }
+
+section { padding-block: 72px; border-top: 1px solid var(--line); }
+.head { display: grid; gap: 14px; margin-bottom: 34px; }
+
+/* findings: the receipts are the content */
+.finds { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.find { border: 1px solid var(--line); background: var(--plate); display: grid; grid-template-rows: auto auto 1fr auto; min-width: 0; }
+.find .sev { justify-self: start; margin: 16px 16px 0; font: 600 11px var(--f-mono); letter-spacing: .12em; padding: 3px 8px; }
+.sev.crit { background: var(--alarm); color: #fff; }
+.sev.warn { background: var(--amber); color: #201400; }
+.find h3 { margin: 10px 16px 0; }
+.find p { margin: 8px 16px 16px; color: var(--dim); font-size: 15.5px; }
+.receipt { border-top: 1px solid var(--line); background: #06121F; min-width: 0; }
+.receipt .where { display: flex; justify-content: space-between; gap: 10px; padding: 8px 14px; font: 12px var(--f-mono); color: var(--dim); border-bottom: 1px solid var(--line); }
+.receipt pre { margin: 0; padding: 12px 14px; font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; color: #CFE6F3; }
+.receipt mark { background: rgba(255,77,94,.22); color: #FFD9DD; padding: 0 2px; }
+
+/* how it works: a real sequence, so the steps are numbered */
+.steps { display: grid; gap: 28px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); counter-reset: s; }
+.step { display: grid; gap: 8px; align-content: start; }
+.step::before { counter-increment: s; content: "0" counter(s); font: 500 13px var(--f-mono); color: var(--beam); letter-spacing: .1em; }
+.step p { color: var(--dim); font-size: 16px; }
+
+.split { display: grid; gap: 36px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: center; }
+.split ul { margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.split li { padding-left: 20px; position: relative; color: var(--dim); }
+.split li::before { content: ""; position: absolute; left: 0; top: .62em; width: 8px; height: 8px; border: 1.5px solid var(--beam); }
+.split li b { color: var(--ink); font-weight: 600; }
+
+/* certainty legend: the four labels every pipe carries */
+.legend { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 8px; }
+.legend div { background: var(--plate); padding: 18px; display: grid; gap: 8px; align-content: start; }
+.legend svg { width: 64px; height: 10px; }
+.legend strong { font-family: var(--f-display); font-size: 19px; }
+.legend span { color: var(--dim); font-size: 15px; }
+.limits { margin-top: 30px; display: grid; gap: 10px; color: var(--dim); max-width: 75ch; font-size: 16px; }
+.limits b { color: var(--ink); }
+
+.code { border: 1px solid var(--line); background: var(--plate); overflow-x: auto; }
+.code pre { margin: 0; padding: 18px 20px; font-size: 14px; line-height: 1.6; color: #CFE6F3; }
+.code .c { color: #6F8CA3; }
+.code .k { color: var(--beam); }
+
+.cta { text-align: left; display: grid; gap: 18px; justify-items: start; }
+footer { border-top: 1px solid var(--line); padding-block: 28px 40px; font-size: 14px; color: var(--dim); display: flex; flex-wrap: wrap; gap: 10px 26px; }
+footer a { color: var(--dim); }
+
+@media (max-width: 820px) {
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .bar nav { display: none; }
+  section { padding-block: 56px; }
+  .cmd { font-size: 15px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero h1 span { animation: glow 3.2s ease-in-out infinite alternate; }
+  @keyframes glow { to { text-shadow: 0 0 44px rgba(92,225,255,.7); } }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="bar">
+    <a class="mark" href="#top" aria-label="Plainsight home">
+      <svg viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" fill="none" stroke="#5CE1FF" stroke-width="2"/><path d="M8 18c0-3 2-4 5-4s5-1 5-4-2-4-5-4" fill="none" stroke="#E4F2FA" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="18" r="1.8" fill="#FF4D5E"/></svg>
+      Plainsight
+    </a>
+    <nav aria-label="Sections">
+      <a href="#finds">What it finds</a>
+      <a href="#how">How it works</a>
+      <a href="#ci">CI</a>
+      <a href="https://github.com/HonorYourExperiences/plainsight">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <span class="eyebrow">For apps you built with AI</span>
+      <h1>See what<br>you <span>built.</span></h1>
+      <p class="lede">Plainsight reads your Next.js app and draws it as a living schematic: every page, route, table and outside service, and the pipes between them. It finds the security holes AI-written code tends to have, and links every box, line and sentence to the code that proves it.</p>
+      <div class="install">
+        <div class="cmd"><span><span class="p">$</span> npx plainsight-cli</span><button type="button" id="copy" aria-label="Copy the command">Copy</button></div>
+        <a class="btn primary" href="demo.html">Open the live demo</a>
+      </div>
+      <div class="facts"><span><b>1–4 s</b> on real apps</span><span><b>0</b> bytes uploaded</span><span><b>1</b> offline HTML report</span><span><b>MIT</b> licensed</span></div>
+      <figure style="margin:0">
+        <img class="shot" src="img/hologram.jpg" width="2880" height="1720" alt="Plainsight's hologram of a sample app: a pulse sent from the /dashboard page stops in red at GET /api/habits, with the alert 'Anyone can read other people's Habit records'.">
+        <figcaption class="caption">Run from /dashboard: the pulse stops at the first problem it reaches. app/api/habits/route.ts:6</figcaption>
+      </figure>
+    </div>
+
+    <section id="finds">
+      <div class="head">
+        <span class="eyebrow">What it finds</span>
+        <h2>The bugs that work fine in the demo.</h2>
+        <p class="lede">Each finding is a plain sentence about what can happen, with the exact lines from the entry point to the problem. These three come from Plainsight's test apps; the first and last are in the live demo.</p>
+      </div>
+      <div class="finds">
+        <article class="find">
+          <span class="sev crit">FIX NOW</span>
+          <h3>Anyone can read other people's Habit records</h3>
+          <p>Which records it returns comes straight from the request, and nothing checks who is asking.</p>
+          <div class="receipt"><div class="where"><span>app/api/habits/route.ts</span><span>L5–6</span></div><pre>const userId = req.nextUrl.searchParams.get("user");
+const habits = await db.habit.findMany({ where: { <mark>userId</mark> } });</pre></div>
+        </article>
+        <article class="find">
+          <span class="sev crit">FIX NOW</span>
+          <h3>Logged-out visitors pass the ownership check</h3>
+          <p>Logged out, <code>session?.user.id</code> is undefined. Prisma drops undefined filters, so the check matches any post.</p>
+          <div class="receipt"><div class="where"><span>app/api/posts/[id]/route.ts</span><span>L11–12</span></div><pre>const session = await getServerSession();
+const count = await legacy.post.count({ where: { id: postId, authorId: <mark>session?.user.id</mark> } });</pre></div>
+        </article>
+        <article class="find">
+          <span class="sev warn">FIX SOON</span>
+          <h3>Accepts messages without checking who sent them</h3>
+          <p>The webhook changes your database but never verifies Stripe's signature, so anyone who finds the address can make any account Pro.</p>
+          <div class="receipt"><div class="where"><span>app/api/stripe-webhook/route.ts</span><span>L4–7</span></div><pre><mark>const event = await req.json();</mark>
+if (event.type === "checkout.session.completed") {
+  const email = event.data.object.customer_email;
+  await db.user.update({ where: { email }, data: { pro: true } });</pre></div>
+        </article>
+      </div>
+      <p class="caption" style="margin-top:18px">Also: secret keys bundled into the browser, login checks that only cover one case, calls to routes that don't exist, and outside calls that can fail after data was saved.</p>
+    </section>
+
+    <section id="how">
+      <div class="head">
+        <span class="eyebrow">How it works</span>
+        <h2>It reads the code. It never guesses.</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><h3>Reads your app</h3><p>The TypeScript compiler follows every page, route, server action and helper across files: Prisma, Drizzle, Supabase, Stripe and other SDKs, wrappers and middleware.</p></div>
+        <div class="step"><h3>Draws what it found</h3><p>Parts become towers, pipes become light flowing the way the data goes. Turn it, pull the layers apart, or switch to a flat map. Big apps get Overview, Groups and Every part.</p></div>
+        <div class="step"><h3>Shows its receipts</h3><p>Click anything: a plain-English explanation, and the lines of code behind every sentence. Trace upstream or downstream, or press Run and watch where a request goes.</p></div>
+      </div>
+      <div class="split" style="margin-top:56px">
+        <div>
+          <h3 style="font-size:28px">Every claim opens to the code.</h3>
+          <ul>
+            <li><b>Findings in order</b>, page to route to query, so you see how the problem is reached.</li>
+            <li><b>Plain English</b> for every part: what it is, what it calls, whether it checks the login.</li>
+            <li><b>Coverage</b> of what was read, left out and unreachable, so you know what the drawing covers.</li>
+          </ul>
+        </div>
+        <img class="shot" src="img/finding.jpg" width="2880" height="1720" alt="A selected route shows its Fix now finding with the code behind it, while the hologram highlights the page that calls it and the table it reads." loading="lazy">
+      </div>
+    </section>
+
+    <section id="honest">
+      <div class="head">
+        <span class="eyebrow">Accurate, not decorated</span>
+        <h2>Every pipe says how sure it is.</h2>
+        <p class="lede">A wrong "Fix now" is worse than none, so Plainsight labels what the code can't prove instead of drawing it as fact.</p>
+      </div>
+      <div class="legend">
+        <div><svg viewBox="0 0 64 10" aria-hidden="true"><line x1="0" y1="5" x2="64" y2="5" stroke="#5CE1FF" stroke-width="2.5"/></svg><strong>Proven</strong><span>Traced in your code, with the lines to show for it.</span></div>
+        <div><svg viewBox="0 0 64 10" aria-hidden="true"><line x1="0" y1="5" x2="64" y2="5" stroke="#7FD9A8" stroke-width="2.5"/></svg><strong>Library</strong><span>Known behavior of a library you use, such as Supabase running a call only for the logged-in user.</span></div>
+        <div><svg viewBox="0 0 64 10" aria-hidden="true"><line x1="0" y1="5" x2="64" y2="5" stroke="#FFB547" stroke-width="2.5" stroke-dasharray="7 5"/></svg><strong>Inferred</strong><span>Likely, but set outside the code, such as Stripe calling your webhook.</span></div>
+        <div><svg viewBox="0 0 64 10" aria-hidden="true"><line x1="0" y1="5" x2="64" y2="5" stroke="#FF7A88" stroke-width="2.5" stroke-dasharray="2 5"/></svg><strong>Unresolved</strong><span>The code doesn't say, such as an address read from a setting at runtime.</span></div>
+      </div>
+      <div class="limits">
+        <p><b>What it can't see yet.</b> Plainsight reads structure and never runs your app. A check done after a lookup isn't recognised, login helpers with unusual names show as "no login check", and it reads Next.js and plain static sites only, for now.</p>
+        <p><b>Tested by hand</b> on taxonomy, saas-starter, ai-chatbot, chatbot-ui, nextjs-subscription-payments and dub. Every pattern is a regression test.</p>
+      </div>
+    </section>
+
+    <section id="big">
+      <div class="split">
+        <div>
+          <span class="eyebrow">Big apps</span>
+          <h2 style="margin-top:14px">The load-bearing code is the skyline.</h2>
+          <p class="lede" style="margin-top:16px">Parts stand as tall as the number of pipes coming in. Side view shows at a glance what everything depends on, and Overview, Groups and Every part keep a thousand files readable.</p>
+        </div>
+        <img class="shot" src="img/skyline.jpg" width="2880" height="1720" alt="Side view of the saas-starter app: three layers, with the most-used tables and modules standing tallest." loading="lazy">
+      </div>
+    </section>
+
+    <section id="ci">
+      <div class="head">
+        <span class="eyebrow">In CI</span>
+        <h2>Block pull requests that open a hole.</h2>
+        <p class="lede">The GitHub Action fails the check on "Fix now" findings, writes the findings table into the run summary, and attaches the report.</p>
+      </div>
+      <div class="code"><pre><span class="c"># .github/workflows/plainsight.yml</span>
+<span class="k">on</span>: [pull_request]
+<span class="k">jobs</span>:
+  <span class="k">plainsight</span>:
+    <span class="k">runs-on</span>: ubuntu-latest
+    <span class="k">steps</span>:
+      - <span class="k">uses</span>: actions/checkout@v4
+      - <span class="k">uses</span>: HonorYourExperiences/plainsight@v0.3.0
+        <span class="k">with</span>:
+          <span class="k">fail-on</span>: crit   <span class="c"># crit, warn or none</span></pre></div>
+    </section>
+
+    <section class="cta">
+      <span class="eyebrow">Local, free, MIT</span>
+      <h2>Your code never leaves your machine.</h2>
+      <p class="lede">No account, no upload, no telemetry. The report is one HTML file that works offline.</p>
+      <div class="install">
+        <div class="cmd"><span><span class="p">$</span> npx plainsight-cli</span><button type="button" id="copy2" aria-label="Copy the command">Copy</button></div>
+        <a class="btn" href="https://github.com/HonorYourExperiences/plainsight">Read the code on GitHub</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Plainsight 0.3.0</span>
+    <a href="demo.html">Live demo</a>
+    <a href="https://github.com/HonorYourExperiences/plainsight#readme">Docs</a>
+    <a href="https://github.com/HonorYourExperiences/plainsight/blob/main/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/HonorYourExperiences/plainsight/issues">Report a wrong finding</a>
+  </footer>
+</div>
+<script>
+  for (const id of ["copy", "copy2"]) {
+    const b = document.getElementById(id);
+    b.addEventListener("click", () => {
+      const done = () => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1600); };
+      const fallback = () => { const r = document.createRange(); r.selectNodeContents(b.previousElementSibling); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Selected"; };
+      try { navigator.clipboard.writeText("npx plainsight-cli").then(done, fallback); } catch { fallback(); }
+    });
+  }
+</script>
+</body>
+</html>

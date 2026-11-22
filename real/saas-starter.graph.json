@@ -1,0 +1,4822 @@
+{
+  "app": "saas-starter",
+  "commit": "6e33e58",
+  "generatedAt": "2026-11-22T18:22:33.600Z",
+  "analyzer": "plainsight 0.3.0",
+  "stack": {
+    "static": null,
+    "nextAppRouter": true,
+    "nextPagesRouter": false,
+    "prisma": false,
+    "sqlSchema": [],
+    "middleware": "middleware.ts",
+    "middlewareMatchers": [
+      "/((?!api|_next/static|_next/image|favicon.ico).*)"
+    ]
+  },
+  "nodes": [
+    {
+      "facts": [],
+      "id": "table:users",
+      "kind": "table",
+      "name": "users",
+      "sub": "Table",
+      "file": "lib/db/schema.ts",
+      "line": 11,
+      "ev": {
+        "file": "lib/db/schema.ts",
+        "line": 11,
+        "endLine": 20,
+        "code": "export const users = pgTable('users', {\n  id: serial('id').primaryKey(),\n  name: varchar('name', { length: 100 }),\n  email: varchar('email', { length: 255 }).notNull().unique(),\n  passwordHash: text('password_hash').notNull(),\n  role: varchar('role', { length: 20 }).notNull().default('member'),\n  createdAt: timestamp('created_at').notNull().defaultNow(),\n  updatedAt: timestamp('updated_at').notNull().defaultNow(),\n  deletedAt: timestamp('deleted_at'),\n});"
+      },
+      "fields": [
+        "id",
+        "name",
+        "email",
+        "passwordHash",
+        "role",
+        "createdAt",
+        "updatedAt",
+        "deletedAt"
+      ],
+      "explain": [
+        {
+          "text": "A database table with 8 fields: id, name, email, passwordHash, role, createdAt, updatedAt and deletedAt.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 11,
+              "endLine": 20,
+              "code": "export const users = pgTable('users', {\n  id: serial('id').primaryKey(),\n  name: varchar('name', { length: 100 }),\n  email: varchar('email', { length: 255 }).notNull().unique(),\n  passwordHash: text('password_hash').notNull(),\n  role: varchar('role', { length: 20 }).notNull().default('member'),\n  createdAt: timestamp('created_at').notNull().defaultNow(),\n  updatedAt: timestamp('updated_at').notNull().defaultNow(),\n  deletedAt: timestamp('deleted_at'),\n});"
+            }
+          ]
+        },
+        {
+          "text": "Used by GET /api/stripe/checkout, GET /api/team, GET /api/user, signIn(), signUp(), signOut(), updatePassword(), deleteAccount(), updateAccount(), removeTeamMember(), inviteTeamMember(), checkoutAction(), page /dashboard/activity and page Frame around every page.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "table:teams",
+      "kind": "table",
+      "name": "teams",
+      "sub": "Table",
+      "file": "lib/db/schema.ts",
+      "line": 22,
+      "ev": {
+        "file": "lib/db/schema.ts",
+        "line": 22,
+        "endLine": 32,
+        "code": "export const teams = pgTable('teams', {\n  id: serial('id').primaryKey(),\n  name: varchar('name', { length: 100 }).notNull(),\n  createdAt: timestamp('created_at').notNull().defaultNow(),\n  updatedAt: timestamp('updated_at').notNull().defaultNow(),\n  stripeCustomerId: text('stripe_customer_id').unique(),\n  stripeSubscriptionId: text('stripe_subscription_id').unique(),\n  stripeProductId: text('stripe_product_id'),\n  planName: varchar('plan_name', { length: 50 }),\n  subscriptionStatus: varchar('subscription_status', { length: 20 }),\n});"
+      },
+      "fields": [
+        "id",
+        "name",
+        "createdAt",
+        "updatedAt",
+        "stripeCustomerId",
+        "stripeSubscriptionId",
+        "stripeProductId",
+        "planName",
+        "subscriptionStatus"
+      ],
+      "explain": [
+        {
+          "text": "A database table with 9 fields: id, name, createdAt, updatedAt, stripeCustomerId, stripeSubscriptionId, stripeProductId, planName and subscriptionStatus.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 22,
+              "endLine": 32,
+              "code": "export const teams = pgTable('teams', {\n  id: serial('id').primaryKey(),\n  name: varchar('name', { length: 100 }).notNull(),\n  createdAt: timestamp('created_at').notNull().defaultNow(),\n  updatedAt: timestamp('updated_at').notNull().defaultNow(),\n  stripeCustomerId: text('stripe_customer_id').unique(),\n  stripeSubscriptionId: text('stripe_subscription_id').unique(),\n  stripeProductId: text('stripe_product_id'),\n  planName: varchar('plan_name', { length: 50 }),\n  subscriptionStatus: varchar('subscription_status', { length: 20 }),\n});"
+            }
+          ]
+        },
+        {
+          "text": "Used by GET /api/stripe/checkout, POST /api/stripe/webhook, GET /api/team, signIn() and signUp().",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "table:teamMembers",
+      "kind": "table",
+      "name": "teamMembers",
+      "sub": "Table",
+      "file": "lib/db/schema.ts",
+      "line": 34,
+      "ev": {
+        "file": "lib/db/schema.ts",
+        "line": 34,
+        "endLine": 44,
+        "code": "export const teamMembers = pgTable('team_members', {\n  id: serial('id').primaryKey(),\n  userId: integer('user_id')\n    .notNull()\n    .references(() => users.id),\n  teamId: integer('team_id')\n    .notNull()\n    .references(() => teams.id),\n  role: varchar('role', { length: 50 }).notNull(),\n  joinedAt: timestamp('joined_at').notNull().defaultNow(),\n});"
+      },
+      "fields": [
+        "id",
+        "userId",
+        "teamId",
+        "role",
+        "joinedAt"
+      ],
+      "explain": [
+        {
+          "text": "A database table with 5 fields: id, userId, teamId, role and joinedAt.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 34,
+              "endLine": 44,
+              "code": "export const teamMembers = pgTable('team_members', {\n  id: serial('id').primaryKey(),\n  userId: integer('user_id')\n    .notNull()\n    .references(() => users.id),\n  teamId: integer('team_id')\n    .notNull()\n    .references(() => teams.id),\n  role: varchar('role', { length: 50 }).notNull(),\n  joinedAt: timestamp('joined_at').notNull().defaultNow(),\n});"
+            }
+          ]
+        },
+        {
+          "text": "Each teamMembers belongs to one users.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 36,
+              "code": "userId: integer('user_id') .notNull() .references(() => users.id)"
+            }
+          ]
+        },
+        {
+          "text": "Each teamMembers belongs to one teams.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 39,
+              "code": "teamId: integer('team_id') .notNull() .references(() => teams.id)"
+            }
+          ]
+        },
+        {
+          "text": "Used by GET /api/stripe/checkout, GET /api/team, signIn(), signUp(), signOut(), updatePassword(), deleteAccount(), updateAccount(), removeTeamMember(), inviteTeamMember() and page Frame around every page.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "table:activityLogs",
+      "kind": "table",
+      "name": "activityLogs",
+      "sub": "Table",
+      "file": "lib/db/schema.ts",
+      "line": 46,
+      "ev": {
+        "file": "lib/db/schema.ts",
+        "line": 46,
+        "endLine": 55,
+        "code": "export const activityLogs = pgTable('activity_logs', {\n  id: serial('id').primaryKey(),\n  teamId: integer('team_id')\n    .notNull()\n    .references(() => teams.id),\n  userId: integer('user_id').references(() => users.id),\n  action: text('action').notNull(),\n  timestamp: timestamp('timestamp').notNull().defaultNow(),\n  ipAddress: varchar('ip_address', { length: 45 }),\n});"
+      },
+      "fields": [
+        "id",
+        "teamId",
+        "userId",
+        "action",
+        "timestamp",
+        "ipAddress"
+      ],
+      "explain": [
+        {
+          "text": "A database table with 6 fields: id, teamId, userId, action, timestamp and ipAddress.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 46,
+              "endLine": 55,
+              "code": "export const activityLogs = pgTable('activity_logs', {\n  id: serial('id').primaryKey(),\n  teamId: integer('team_id')\n    .notNull()\n    .references(() => teams.id),\n  userId: integer('user_id').references(() => users.id),\n  action: text('action').notNull(),\n  timestamp: timestamp('timestamp').notNull().defaultNow(),\n  ipAddress: varchar('ip_address', { length: 45 }),\n});"
+            }
+          ]
+        },
+        {
+          "text": "Each activityLogs belongs to one teams.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 48,
+              "code": "teamId: integer('team_id') .notNull() .references(() => teams.id)"
+            }
+          ]
+        },
+        {
+          "text": "Each activityLogs belongs to one users.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 51,
+              "code": "userId: integer('user_id').references(() => users.id)"
+            }
+          ]
+        },
+        {
+          "text": "Used by signIn(), signUp(), signOut(), updatePassword(), deleteAccount(), updateAccount(), removeTeamMember() and inviteTeamMember().",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "table:invitations",
+      "kind": "table",
+      "name": "invitations",
+      "sub": "Table",
+      "file": "lib/db/schema.ts",
+      "line": 57,
+      "ev": {
+        "file": "lib/db/schema.ts",
+        "line": 57,
+        "endLine": 69,
+        "code": "export const invitations = pgTable('invitations', {\n  id: serial('id').primaryKey(),\n  teamId: integer('team_id')\n    .notNull()\n    .references(() => teams.id),\n  email: varchar('email', { length: 255 }).notNull(),\n  role: varchar('role', { length: 50 }).notNull(),\n  invitedBy: integer('invited_by')\n    .notNull()\n    .references(() => users.id),\n  invitedAt: timestamp('invited_at').notNull().defaultNow(),\n  status: varchar('status', { length: 20 }).notNull().default('pending'),\n…"
+      },
+      "fields": [
+        "id",
+        "teamId",
+        "email",
+        "role",
+        "invitedBy",
+        "invitedAt",
+        "status"
+      ],
+      "explain": [
+        {
+          "text": "A database table with 7 fields: id, teamId, email, role, invitedBy, invitedAt and status.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 57,
+              "endLine": 69,
+              "code": "export const invitations = pgTable('invitations', {\n  id: serial('id').primaryKey(),\n  teamId: integer('team_id')\n    .notNull()\n    .references(() => teams.id),\n  email: varchar('email', { length: 255 }).notNull(),\n  role: varchar('role', { length: 50 }).notNull(),\n  invitedBy: integer('invited_by')\n    .notNull()\n    .references(() => users.id),\n  invitedAt: timestamp('invited_at').notNull().defaultNow(),\n  status: varchar('status', { length: 20 }).notNull().default('pending'),\n…"
+            }
+          ]
+        },
+        {
+          "text": "Each invitations belongs to one teams.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 59,
+              "code": "teamId: integer('team_id') .notNull() .references(() => teams.id)"
+            }
+          ]
+        },
+        {
+          "text": "Each invitations belongs to one users.",
+          "evidence": [
+            {
+              "file": "lib/db/schema.ts",
+              "line": 64,
+              "code": "invitedBy: integer('invited_by') .notNull() .references(() => users.id)"
+            }
+          ]
+        },
+        {
+          "text": "Used by signUp() and inviteTeamMember().",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:GET /api/stripe/checkout",
+      "kind": "route",
+      "name": "/api/stripe/checkout",
+      "sub": "GET",
+      "method": "GET",
+      "file": "app/api/stripe/checkout/route.ts",
+      "line": 9,
+      "ev": {
+        "file": "app/api/stripe/checkout/route.ts",
+        "line": 9,
+        "endLine": 97,
+        "code": "export async function GET(request: NextRequest) {\n  const searchParams = request.nextUrl.searchParams;\n  const sessionId = searchParams.get('session_id');\n\n  if (!sessionId) {\n    return NextResponse.redirect(new URL('/pricing', request.url));\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "Handles GET requests to /api/stripe/checkout.",
+          "evidence": [
+            {
+              "file": "app/api/stripe/checkout/route.ts",
+              "line": 9,
+              "endLine": 97,
+              "code": "export async function GET(request: NextRequest) {\n  const searchParams = request.nextUrl.searchParams;\n  const sessionId = searchParams.get('session_id');\n\n  if (!sessionId) {\n    return NextResponse.redirect(new URL('/pricing', request.url));\n…"
+            }
+          ]
+        },
+        {
+          "text": "Reads from users and teamMembers.",
+          "evidence": [
+            {
+              "file": "app/api/stripe/checkout/route.ts",
+              "line": 57,
+              "endLine": 59,
+              "code": "const user = await db\n  .select()\n  .from(users)"
+            },
+            {
+              "file": "app/api/stripe/checkout/route.ts",
+              "line": 67,
+              "endLine": 71,
+              "code": "const userTeam = await db\n  .select({\n    teamId: teamMembers.teamId,\n  })\n…"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to teams.",
+          "evidence": [
+            {
+              "file": "app/api/stripe/checkout/route.ts",
+              "line": 79,
+              "endLine": 80,
+              "code": "await db\n  .update(teams)"
+            }
+          ]
+        },
+        {
+          "text": "Uses Stripe.",
+          "evidence": [
+            {
+              "file": "app/api/stripe/checkout/route.ts",
+              "line": 18,
+              "endLine": 20,
+              "code": "const session = await stripe.checkout.sessions.retrieve(sessionId, {\n  expand: ['customer', 'subscription'],\n});"
+            },
+            {
+              "file": "app/api/stripe/checkout/route.ts",
+              "line": 36,
+              "endLine": 38,
+              "code": "const subscription = await stripe.subscriptions.retrieve(subscriptionId, {\n  expand: ['items.data.price.product'],\n});"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in. No login lookup was found in this handler, the functions it calls, or middleware covering this path.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:POST /api/stripe/webhook",
+      "kind": "route",
+      "name": "/api/stripe/webhook",
+      "sub": "POST",
+      "method": "POST",
+      "file": "app/api/stripe/webhook/route.ts",
+      "line": 7,
+      "ev": {
+        "file": "app/api/stripe/webhook/route.ts",
+        "line": 7,
+        "endLine": 34,
+        "code": "export async function POST(request: NextRequest) {\n  const payload = await request.text();\n  const signature = request.headers.get('stripe-signature') as string;\n\n  let event: Stripe.Event;\n\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "verified": true,
+      "explain": [
+        {
+          "text": "Handles POST requests to /api/stripe/webhook.",
+          "evidence": [
+            {
+              "file": "app/api/stripe/webhook/route.ts",
+              "line": 7,
+              "endLine": 34,
+              "code": "export async function POST(request: NextRequest) {\n  const payload = await request.text();\n  const signature = request.headers.get('stripe-signature') as string;\n\n  let event: Stripe.Event;\n\n…"
+            }
+          ]
+        },
+        {
+          "text": "Reads from teams.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 40,
+              "endLine": 42,
+              "code": "const result = await db\n  .select()\n  .from(teams)"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to teams.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 58,
+              "endLine": 59,
+              "code": "await db\n  .update(teams)"
+            }
+          ]
+        },
+        {
+          "text": "Uses Stripe.",
+          "evidence": [
+            {
+              "file": "app/api/stripe/webhook/route.ts",
+              "line": 14,
+              "endLine": 14,
+              "code": "event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);"
+            }
+          ]
+        },
+        {
+          "text": "It verifies the sender's signature.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:GET /api/team",
+      "kind": "route",
+      "name": "/api/team",
+      "sub": "GET",
+      "method": "GET",
+      "file": "app/api/team/route.ts",
+      "line": 3,
+      "ev": {
+        "file": "app/api/team/route.ts",
+        "line": 3,
+        "endLine": 6,
+        "code": "export async function GET() {\n  const team = await getTeamForUser();\n  return Response.json(team);\n}"
+      },
+      "guard": {
+        "status": "unenforced",
+        "how": "calls getUser() but never stops the request when nobody is logged in",
+        "evidence": [
+          {
+            "file": "app/api/team/route.ts",
+            "line": 4,
+            "endLine": 4,
+            "code": "const team = await getTeamForUser();",
+            "note": "calls getTeamForUser()"
+          },
+          {
+            "file": "lib/db/queries.ts",
+            "line": 103,
+            "endLine": 103,
+            "code": "const user = await getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "Handles GET requests to /api/team.",
+          "evidence": [
+            {
+              "file": "app/api/team/route.ts",
+              "line": 3,
+              "endLine": 6,
+              "code": "export async function GET() {\n  const team = await getTeamForUser();\n  return Response.json(team);\n}"
+            }
+          ]
+        },
+        {
+          "text": "Reads from users, teamMembers and teams.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 26,
+              "endLine": 28,
+              "code": "const user = await db\n  .select()\n  .from(users)"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 108,
+              "endLine": 127,
+              "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 108,
+              "endLine": 127,
+              "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 108,
+              "endLine": 127,
+              "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
+            }
+          ]
+        },
+        {
+          "text": "It calls getUser() but never stops the request when nobody is logged in.",
+          "evidence": [
+            {
+              "file": "app/api/team/route.ts",
+              "line": 4,
+              "endLine": 4,
+              "code": "const team = await getTeamForUser();",
+              "note": "calls getTeamForUser()"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 103,
+              "endLine": 103,
+              "code": "const user = await getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:GET /api/user",
+      "kind": "route",
+      "name": "/api/user",
+      "sub": "GET",
+      "method": "GET",
+      "file": "app/api/user/route.ts",
+      "line": 3,
+      "ev": {
+        "file": "app/api/user/route.ts",
+        "line": 3,
+        "endLine": 6,
+        "code": "export async function GET() {\n  const user = await getUser();\n  return Response.json(user);\n}"
+      },
+      "guard": {
+        "status": "unenforced",
+        "how": "calls getUser() but never stops the request when nobody is logged in",
+        "evidence": [
+          {
+            "file": "app/api/user/route.ts",
+            "line": 4,
+            "endLine": 4,
+            "code": "const user = await getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "Handles GET requests to /api/user.",
+          "evidence": [
+            {
+              "file": "app/api/user/route.ts",
+              "line": 3,
+              "endLine": 6,
+              "code": "export async function GET() {\n  const user = await getUser();\n  return Response.json(user);\n}"
+            }
+          ]
+        },
+        {
+          "text": "Reads from users.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 26,
+              "endLine": 28,
+              "code": "const user = await db\n  .select()\n  .from(users)"
+            }
+          ]
+        },
+        {
+          "text": "It calls getUser() but never stops the request when nobody is logged in.",
+          "evidence": [
+            {
+              "file": "app/api/user/route.ts",
+              "line": 4,
+              "endLine": 4,
+              "code": "const user = await getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:signIn() app/(login)/actions.ts",
+      "kind": "action",
+      "name": "signIn()",
+      "sub": "Server action",
+      "file": "app/(login)/actions.ts",
+      "line": 52,
+      "ev": {
+        "file": "app/(login)/actions.ts",
+        "line": 52,
+        "endLine": 101,
+        "code": "export const signIn = validatedAction(signInSchema, async (data, formData) => {\n  const { email, password } = data;\n\n  const userWithTeam = await db\n    .select({\n      user: users,\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in app/(login)/actions.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 52,
+              "endLine": 101,
+              "code": "export const signIn = validatedAction(signInSchema, async (data, formData) => {\n  const { email, password } = data;\n\n  const userWithTeam = await db\n    .select({\n      user: users,\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /sign-in and page /sign-up.",
+          "evidence": [
+            {
+              "file": "app/(login)/sign-in/page.tsx",
+              "line": 7,
+              "endLine": 7,
+              "code": "<Login mode=\"signin\" />",
+              "note": "renders <Login>"
+            },
+            {
+              "file": "app/(login)/login.tsx",
+              "line": 19,
+              "endLine": 19,
+              "code": "mode === 'signin' ? signIn : signUp,"
+            },
+            {
+              "file": "app/(login)/sign-up/page.tsx",
+              "line": 7,
+              "endLine": 7,
+              "code": "<Login mode=\"signup\" />",
+              "note": "renders <Login>"
+            },
+            {
+              "file": "app/(login)/login.tsx",
+              "line": 19,
+              "endLine": 19,
+              "code": "mode === 'signin' ? signIn : signUp,"
+            }
+          ]
+        },
+        {
+          "text": "Reads from teams, teamMembers and users.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 55,
+              "endLine": 62,
+              "code": "const userWithTeam = await db\n  .select({\n    user: users,\n    team: teams\n…"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 55,
+              "endLine": 61,
+              "code": "const userWithTeam = await db\n  .select({\n    user: users,\n    team: teams\n…"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 55,
+              "endLine": 60,
+              "code": "const userWithTeam = await db\n  .select({\n    user: users,\n    team: teams\n…"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 26,
+              "endLine": 28,
+              "code": "const user = await db\n  .select()\n  .from(users)"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to activityLogs.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 44,
+              "endLine": 44,
+              "code": "await db.insert(activityLogs).values(newActivity);"
+            }
+          ]
+        },
+        {
+          "text": "Uses Stripe (through createCheckoutSession()).",
+          "evidence": [
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 27,
+              "endLine": 44,
+              "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:signUp() app/(login)/actions.ts",
+      "kind": "action",
+      "name": "signUp()",
+      "sub": "Server action",
+      "file": "app/(login)/actions.ts",
+      "line": 109,
+      "ev": {
+        "file": "app/(login)/actions.ts",
+        "line": 109,
+        "endLine": 222,
+        "code": "export const signUp = validatedAction(signUpSchema, async (data, formData) => {\n  const { email, password, inviteId } = data;\n\n  const existingUser = await db\n    .select()\n    .from(users)\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in app/(login)/actions.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 109,
+              "endLine": 222,
+              "code": "export const signUp = validatedAction(signUpSchema, async (data, formData) => {\n  const { email, password, inviteId } = data;\n\n  const existingUser = await db\n    .select()\n    .from(users)\n…"
+            }
+          ]
+        },
+        {
+          "text": "No page in the app triggers it.",
+          "evidence": []
+        },
+        {
+          "text": "Reads from users, invitations and teams.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 112,
+              "endLine": 114,
+              "code": "const existingUser = await db\n  .select()\n  .from(users)"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 26,
+              "endLine": 28,
+              "code": "const user = await db\n  .select()\n  .from(users)"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 150,
+              "endLine": 152,
+              "code": "const [invitation] = await db\n  .select()\n  .from(invitations)"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 173,
+              "endLine": 175,
+              "code": "[createdTeam] = await db\n  .select()\n  .from(teams)"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to users, invitations, activityLogs, teams and teamMembers.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 134,
+              "endLine": 134,
+              "code": "const [createdUser] = await db.insert(users).values(newUser).returning();"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 166,
+              "endLine": 167,
+              "code": "await db\n  .update(invitations)"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 44,
+              "endLine": 44,
+              "code": "await db.insert(activityLogs).values(newActivity);"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 187,
+              "endLine": 187,
+              "code": "[createdTeam] = await db.insert(teams).values(newTeam).returning();"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 210,
+              "endLine": 210,
+              "code": "db.insert(teamMembers).values(newTeamMember),"
+            }
+          ]
+        },
+        {
+          "text": "Uses Stripe (through createCheckoutSession()).",
+          "evidence": [
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 27,
+              "endLine": 44,
+              "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:signOut() app/(login)/actions.ts",
+      "kind": "action",
+      "name": "signOut()",
+      "sub": "Server action",
+      "file": "app/(login)/actions.ts",
+      "line": 224,
+      "ev": {
+        "file": "app/(login)/actions.ts",
+        "line": 224,
+        "endLine": 229,
+        "code": "export async function signOut() {\n  const user = (await getUser()) as User;\n  const userWithTeam = await getUserWithTeam(user.id);\n  await logActivity(userWithTeam?.teamId, user.id, ActivityType.SIGN_OUT);\n  (await cookies()).delete('session');\n}"
+      },
+      "guard": {
+        "status": "unenforced",
+        "how": "calls getUser() but never stops the request when nobody is logged in",
+        "evidence": [
+          {
+            "file": "app/(login)/actions.ts",
+            "line": 225,
+            "endLine": 225,
+            "code": "const user = (await getUser()) as User;"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in app/(login)/actions.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 224,
+              "endLine": 229,
+              "code": "export async function signOut() {\n  const user = (await getUser()) as User;\n  const userWithTeam = await getUserWithTeam(user.id);\n  await logActivity(userWithTeam?.teamId, user.id, ActivityType.SIGN_OUT);\n  (await cookies()).delete('session');\n}"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from Frame around pages in (dashboard).",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 102,
+              "endLine": 102,
+              "code": "<Header />",
+              "note": "renders <Header>"
+            },
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 91,
+              "endLine": 91,
+              "code": "<UserMenu />",
+              "note": "renders <UserMenu>"
+            },
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 27,
+              "endLine": 27,
+              "code": "await signOut();"
+            }
+          ]
+        },
+        {
+          "text": "Reads from users and teamMembers.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 26,
+              "endLine": 28,
+              "code": "const user = await db\n  .select()\n  .from(users)"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 73,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 74,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to activityLogs.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 44,
+              "endLine": 44,
+              "code": "await db.insert(activityLogs).values(newActivity);"
+            }
+          ]
+        },
+        {
+          "text": "It calls getUser() but never stops the request when nobody is logged in.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 225,
+              "endLine": 225,
+              "code": "const user = (await getUser()) as User;"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:updatePassword() app/(login)/actions.ts",
+      "kind": "action",
+      "name": "updatePassword()",
+      "sub": "Server action",
+      "file": "app/(login)/actions.ts",
+      "line": 239,
+      "ev": {
+        "file": "app/(login)/actions.ts",
+        "line": 239,
+        "endLine": 288,
+        "code": "async (data, _, user) => {\n  const { currentPassword, newPassword, confirmPassword } = data;\n\n  const isPasswordValid = await comparePasswords(\n    currentPassword,\n    user.passwordHash\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in validatedActionWithUser()",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "app/(login)/actions.ts",
+            "line": 237,
+            "endLine": 289,
+            "code": "export const updatePassword = validatedActionWithUser(\n  updatePasswordSchema,\n…",
+            "note": "runs inside validatedActionWithUser()"
+          },
+          {
+            "file": "lib/auth/middleware.ts",
+            "line": 42,
+            "endLine": 42,
+            "code": "const user = await getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in app/(login)/actions.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 239,
+              "endLine": 288,
+              "code": "async (data, _, user) => {\n  const { currentPassword, newPassword, confirmPassword } = data;\n\n  const isPasswordValid = await comparePasswords(\n    currentPassword,\n    user.passwordHash\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /dashboard/security.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/security/page.tsx",
+              "line": 29,
+              "endLine": 29,
+              "code": ">(updatePassword, {});"
+            }
+          ]
+        },
+        {
+          "text": "Reads from teamMembers and users.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 74,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 73,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to users and activityLogs.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 278,
+              "endLine": 279,
+              "code": "db\n  .update(users)"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 44,
+              "endLine": 44,
+              "code": "await db.insert(activityLogs).values(newActivity);"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in validatedActionWithUser(): it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 237,
+              "endLine": 289,
+              "code": "export const updatePassword = validatedActionWithUser(\n  updatePasswordSchema,\n…",
+              "note": "runs inside validatedActionWithUser()"
+            },
+            {
+              "file": "lib/auth/middleware.ts",
+              "line": 42,
+              "endLine": 42,
+              "code": "const user = await getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:deleteAccount() app/(login)/actions.ts",
+      "kind": "action",
+      "name": "deleteAccount()",
+      "sub": "Server action",
+      "file": "app/(login)/actions.ts",
+      "line": 297,
+      "ev": {
+        "file": "app/(login)/actions.ts",
+        "line": 297,
+        "endLine": 338,
+        "code": "async (data, _, user) => {\n  const { password } = data;\n\n  const isPasswordValid = await comparePasswords(password, user.passwordHash);\n  if (!isPasswordValid) {\n    return {\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in validatedActionWithUser()",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "app/(login)/actions.ts",
+            "line": 295,
+            "endLine": 339,
+            "code": "export const deleteAccount = validatedActionWithUser(\n  deleteAccountSchema,\n…",
+            "note": "runs inside validatedActionWithUser()"
+          },
+          {
+            "file": "lib/auth/middleware.ts",
+            "line": 42,
+            "endLine": 42,
+            "code": "const user = await getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in app/(login)/actions.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 297,
+              "endLine": 338,
+              "code": "async (data, _, user) => {\n  const { password } = data;\n\n  const isPasswordValid = await comparePasswords(password, user.passwordHash);\n  if (!isPasswordValid) {\n    return {\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /dashboard/security.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/security/page.tsx",
+              "line": 34,
+              "endLine": 34,
+              "code": ">(deleteAccount, {});"
+            }
+          ]
+        },
+        {
+          "text": "Reads from teamMembers and users.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 74,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 73,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to activityLogs, users and teamMembers.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 44,
+              "endLine": 44,
+              "code": "await db.insert(activityLogs).values(newActivity);"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 317,
+              "endLine": 318,
+              "code": "await db\n  .update(users)"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 326,
+              "endLine": 327,
+              "code": "await db\n  .delete(teamMembers)"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in validatedActionWithUser(): it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 295,
+              "endLine": 339,
+              "code": "export const deleteAccount = validatedActionWithUser(\n  deleteAccountSchema,\n…",
+              "note": "runs inside validatedActionWithUser()"
+            },
+            {
+              "file": "lib/auth/middleware.ts",
+              "line": 42,
+              "endLine": 42,
+              "code": "const user = await getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:updateAccount() app/(login)/actions.ts",
+      "kind": "action",
+      "name": "updateAccount()",
+      "sub": "Server action",
+      "file": "app/(login)/actions.ts",
+      "line": 348,
+      "ev": {
+        "file": "app/(login)/actions.ts",
+        "line": 348,
+        "endLine": 358,
+        "code": "async (data, _, user) => {\n  const { name, email } = data;\n  const userWithTeam = await getUserWithTeam(user.id);\n\n  await Promise.all([\n    db.update(users).set({ name, email }).where(eq(users.id, user.id)),\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in validatedActionWithUser()",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "app/(login)/actions.ts",
+            "line": 346,
+            "endLine": 359,
+            "code": "export const updateAccount = validatedActionWithUser(\n  updateAccountSchema,\n…",
+            "note": "runs inside validatedActionWithUser()"
+          },
+          {
+            "file": "lib/auth/middleware.ts",
+            "line": 42,
+            "endLine": 42,
+            "code": "const user = await getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in app/(login)/actions.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 348,
+              "endLine": 358,
+              "code": "async (data, _, user) => {\n  const { name, email } = data;\n  const userWithTeam = await getUserWithTeam(user.id);\n\n  await Promise.all([\n    db.update(users).set({ name, email }).where(eq(users.id, user.id)),\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /dashboard/general.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/general/page.tsx",
+              "line": 77,
+              "endLine": 77,
+              "code": "updateAccount,"
+            }
+          ]
+        },
+        {
+          "text": "Reads from teamMembers and users.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 74,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 73,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to users and activityLogs.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 353,
+              "endLine": 353,
+              "code": "db.update(users).set({ name, email }).where(eq(users.id, user.id)),"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 44,
+              "endLine": 44,
+              "code": "await db.insert(activityLogs).values(newActivity);"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in validatedActionWithUser(): it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 346,
+              "endLine": 359,
+              "code": "export const updateAccount = validatedActionWithUser(\n  updateAccountSchema,\n…",
+              "note": "runs inside validatedActionWithUser()"
+            },
+            {
+              "file": "lib/auth/middleware.ts",
+              "line": 42,
+              "endLine": 42,
+              "code": "const user = await getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:removeTeamMember() app/(login)/actions.ts",
+      "kind": "action",
+      "name": "removeTeamMember()",
+      "sub": "Server action",
+      "file": "app/(login)/actions.ts",
+      "line": 367,
+      "ev": {
+        "file": "app/(login)/actions.ts",
+        "line": 367,
+        "endLine": 391,
+        "code": "async (data, _, user) => {\n  const { memberId } = data;\n  const userWithTeam = await getUserWithTeam(user.id);\n\n  if (!userWithTeam?.teamId) {\n    return { error: 'User is not part of a team' };\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in validatedActionWithUser()",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "app/(login)/actions.ts",
+            "line": 365,
+            "endLine": 392,
+            "code": "export const removeTeamMember = validatedActionWithUser(\n  removeTeamMemberSchema,\n…",
+            "note": "runs inside validatedActionWithUser()"
+          },
+          {
+            "file": "lib/auth/middleware.ts",
+            "line": 42,
+            "endLine": 42,
+            "code": "const user = await getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in app/(login)/actions.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 367,
+              "endLine": 391,
+              "code": "async (data, _, user) => {\n  const { memberId } = data;\n  const userWithTeam = await getUserWithTeam(user.id);\n\n  if (!userWithTeam?.teamId) {\n    return { error: 'User is not part of a team' };\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /dashboard.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 280,
+              "endLine": 280,
+              "code": "<TeamMembers />",
+              "note": "renders <TeamMembers>"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 101,
+              "endLine": 101,
+              "code": ">(removeTeamMember, {});"
+            }
+          ]
+        },
+        {
+          "text": "Reads from teamMembers and users.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 74,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 73,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to teamMembers and activityLogs.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 375,
+              "endLine": 376,
+              "code": "await db\n  .delete(teamMembers)"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 44,
+              "endLine": 44,
+              "code": "await db.insert(activityLogs).values(newActivity);"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in validatedActionWithUser(): it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 365,
+              "endLine": 392,
+              "code": "export const removeTeamMember = validatedActionWithUser(\n  removeTeamMemberSchema,\n…",
+              "note": "runs inside validatedActionWithUser()"
+            },
+            {
+              "file": "lib/auth/middleware.ts",
+              "line": 42,
+              "endLine": 42,
+              "code": "const user = await getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:inviteTeamMember() app/(login)/actions.ts",
+      "kind": "action",
+      "name": "inviteTeamMember()",
+      "sub": "Server action",
+      "file": "app/(login)/actions.ts",
+      "line": 401,
+      "ev": {
+        "file": "app/(login)/actions.ts",
+        "line": 401,
+        "endLine": 458,
+        "code": "async (data, _, user) => {\n  const { email, role } = data;\n  const userWithTeam = await getUserWithTeam(user.id);\n\n  if (!userWithTeam?.teamId) {\n    return { error: 'User is not part of a team' };\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in validatedActionWithUser()",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "app/(login)/actions.ts",
+            "line": 399,
+            "endLine": 459,
+            "code": "export const inviteTeamMember = validatedActionWithUser(\n  inviteTeamMemberSchema,\n…",
+            "note": "runs inside validatedActionWithUser()"
+          },
+          {
+            "file": "lib/auth/middleware.ts",
+            "line": 42,
+            "endLine": 42,
+            "code": "const user = await getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in app/(login)/actions.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 401,
+              "endLine": 458,
+              "code": "async (data, _, user) => {\n  const { email, role } = data;\n  const userWithTeam = await getUserWithTeam(user.id);\n\n  if (!userWithTeam?.teamId) {\n    return { error: 'User is not part of a team' };\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /dashboard.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 283,
+              "endLine": 283,
+              "code": "<InviteTeamMember />",
+              "note": "renders <InviteTeamMember>"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 196,
+              "endLine": 196,
+              "code": ">(inviteTeamMember, {});"
+            }
+          ]
+        },
+        {
+          "text": "Reads from teamMembers, users and invitations.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 74,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 409,
+              "endLine": 412,
+              "code": "const existingMember = await db\n  .select()\n  .from(users)\n  .leftJoin(teamMembers, eq(users.id, teamMembers.userId))"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 68,
+              "endLine": 73,
+              "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 409,
+              "endLine": 411,
+              "code": "const existingMember = await db\n  .select()\n  .from(users)"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 423,
+              "endLine": 425,
+              "code": "const existingInvitation = await db\n  .select()\n  .from(invitations)"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to invitations and activityLogs.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 440,
+              "endLine": 440,
+              "code": "await db.insert(invitations).values({"
+            },
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 44,
+              "endLine": 44,
+              "code": "await db.insert(activityLogs).values(newActivity);"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in validatedActionWithUser(): it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "app/(login)/actions.ts",
+              "line": 399,
+              "endLine": 459,
+              "code": "export const inviteTeamMember = validatedActionWithUser(\n  inviteTeamMemberSchema,\n…",
+              "note": "runs inside validatedActionWithUser()"
+            },
+            {
+              "file": "lib/auth/middleware.ts",
+              "line": 42,
+              "endLine": 42,
+              "code": "const user = await getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:checkoutAction() lib/payments/actions.ts",
+      "kind": "action",
+      "name": "checkoutAction()",
+      "sub": "Server action",
+      "file": "lib/payments/actions.ts",
+      "line": 7,
+      "ev": {
+        "file": "lib/payments/actions.ts",
+        "line": 7,
+        "endLine": 10,
+        "code": "export const checkoutAction = withTeam(async (formData, team) => {\n  const priceId = formData.get('priceId') as string;\n  await createCheckoutSession({ team: team, priceId });\n});"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in withTeam()",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "lib/payments/actions.ts",
+            "line": 7,
+            "endLine": 10,
+            "code": "export const checkoutAction = withTeam(async (formData, team) => {\n  const priceId = formData.get('priceId') as string;\n…",
+            "note": "runs inside withTeam()"
+          },
+          {
+            "file": "lib/auth/middleware.ts",
+            "line": 63,
+            "endLine": 63,
+            "code": "const user = await getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in lib/payments/actions.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "lib/payments/actions.ts",
+              "line": 7,
+              "endLine": 10,
+              "code": "export const checkoutAction = withTeam(async (formData, team) => {\n  const priceId = formData.get('priceId') as string;\n  await createCheckoutSession({ team: team, priceId });\n});"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /pricing.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/pricing/page.tsx",
+              "line": 24,
+              "endLine": 35,
+              "code": "<PricingCard\n  name={basePlan?.name || 'Base'}\n…",
+              "note": "renders <PricingCard>"
+            },
+            {
+              "file": "app/(dashboard)/pricing/page.tsx",
+              "line": 88,
+              "endLine": 88,
+              "code": "<form action={checkoutAction}>"
+            }
+          ]
+        },
+        {
+          "text": "Reads from users.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 26,
+              "endLine": 28,
+              "code": "const user = await db\n  .select()\n  .from(users)"
+            }
+          ]
+        },
+        {
+          "text": "Uses Stripe (through createCheckoutSession()).",
+          "evidence": [
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 27,
+              "endLine": 44,
+              "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in withTeam(): it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "lib/payments/actions.ts",
+              "line": 7,
+              "endLine": 10,
+              "code": "export const checkoutAction = withTeam(async (formData, team) => {\n  const priceId = formData.get('priceId') as string;\n…",
+              "note": "runs inside withTeam()"
+            },
+            {
+              "file": "lib/auth/middleware.ts",
+              "line": 63,
+              "endLine": 63,
+              "code": "const user = await getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:customerPortalAction() lib/payments/actions.ts",
+      "kind": "action",
+      "name": "customerPortalAction()",
+      "sub": "Server action",
+      "file": "lib/payments/actions.ts",
+      "line": 12,
+      "ev": {
+        "file": "lib/payments/actions.ts",
+        "line": 12,
+        "endLine": 15,
+        "code": "export const customerPortalAction = withTeam(async (_, team) => {\n  const portalSession = await createCustomerPortalSession(team);\n  redirect(portalSession.url);\n});"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in withTeam()",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "lib/payments/actions.ts",
+            "line": 12,
+            "endLine": 15,
+            "code": "export const customerPortalAction = withTeam(async (_, team) => {\n  const portalSession = await createCustomerPortalSession(team);\n…",
+            "note": "runs inside withTeam()"
+          },
+          {
+            "file": "lib/auth/middleware.ts",
+            "line": 63,
+            "endLine": 63,
+            "code": "const user = await getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in lib/payments/actions.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "lib/payments/actions.ts",
+              "line": 12,
+              "endLine": 15,
+              "code": "export const customerPortalAction = withTeam(async (_, team) => {\n  const portalSession = await createCustomerPortalSession(team);\n  redirect(portalSession.url);\n});"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /dashboard.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 277,
+              "endLine": 277,
+              "code": "<ManageSubscription />",
+              "note": "renders <ManageSubscription>"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 63,
+              "endLine": 63,
+              "code": "<form action={customerPortalAction}>"
+            }
+          ]
+        },
+        {
+          "text": "Uses Stripe (through createCustomerPortalSession()).",
+          "evidence": [
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 55,
+              "endLine": 55,
+              "code": "const configurations = await stripe.billingPortal.configurations.list();"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 60,
+              "endLine": 60,
+              "code": "const product = await stripe.products.retrieve(team.stripeProductId);"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 65,
+              "endLine": 68,
+              "code": "const prices = await stripe.prices.list({\n  product: product.id,\n  active: true\n});"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 73,
+              "endLine": 107,
+              "code": "configuration = await stripe.billingPortal.configurations.create({\n  business_profile: {\n    headline: 'Manage your subscription'\n  },\n…"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 85,
+              "endLine": 85,
+              "code": "prices: prices.data.map((price) => price.id)"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 110,
+              "endLine": 114,
+              "code": "return stripe.billingPortal.sessions.create({\n  customer: team.stripeCustomerId,\n  return_url: `${process.env.BASE_URL}/dashboard`,\n  configuration: configuration.id\n…"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in withTeam(): it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "lib/payments/actions.ts",
+              "line": 12,
+              "endLine": 15,
+              "code": "export const customerPortalAction = withTeam(async (_, team) => {\n  const portalSession = await createCustomerPortalSession(team);\n…",
+              "note": "runs inside withTeam()"
+            },
+            {
+              "file": "lib/auth/middleware.ts",
+              "line": 63,
+              "endLine": 63,
+              "code": "const user = await getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/dashboard/activity",
+      "kind": "page",
+      "layout": false,
+      "name": "/dashboard/activity",
+      "route": "/dashboard/activity",
+      "sub": "Page · built on the server",
+      "file": "app/(dashboard)/dashboard/activity/page.tsx",
+      "line": 71,
+      "ev": {
+        "file": "app/(dashboard)/dashboard/activity/page.tsx",
+        "line": 71,
+        "endLine": 126,
+        "code": "export default async function ActivityPage() {\n  const logs = await getActivityLogs();\n\n  return (\n…"
+      },
+      "client": false,
+      "pageClient": false,
+      "guard": {
+        "status": "checked",
+        "where": "in getActivityLogs()",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "app/(dashboard)/dashboard/activity/page.tsx",
+            "line": 72,
+            "endLine": 72,
+            "code": "const logs = await getActivityLogs();",
+            "note": "calls getActivityLogs()"
+          },
+          {
+            "file": "lib/db/queries.ts",
+            "line": 82,
+            "endLine": 82,
+            "code": "const user = await getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A page at /dashboard/activity.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/activity/page.tsx",
+              "line": 71,
+              "endLine": 126,
+              "code": "export default async function ActivityPage() {\n  const logs = await getActivityLogs();\n\n  return (\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server before it's sent.",
+          "evidence": []
+        },
+        {
+          "text": "It doesn't send any requests to your server.",
+          "evidence": []
+        },
+        {
+          "text": "While building the page, the server reads users.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 26,
+              "endLine": 28,
+              "code": "const user = await db\n  .select()\n  .from(users)"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 87,
+              "endLine": 96,
+              "code": "return await db\n  .select({\n    id: activityLogs.id,\n    action: activityLogs.action,\n…"
+            }
+          ]
+        },
+        {
+          "text": "Only logged-in visitors get it: it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/activity/page.tsx",
+              "line": 72,
+              "endLine": 72,
+              "code": "const logs = await getActivityLogs();",
+              "note": "calls getActivityLogs()"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 82,
+              "endLine": 82,
+              "code": "const user = await getUser();"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/(dashboard)/dashboard/activity/page.tsx",
+        "components/ui/card.tsx",
+        "lib/db/schema.ts",
+        "lib/db/queries.ts",
+        "lib/utils.ts",
+        "lib/db/drizzle.ts",
+        "lib/auth/session.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/dashboard/general",
+      "kind": "page",
+      "layout": false,
+      "name": "/dashboard/general",
+      "route": "/dashboard/general",
+      "sub": "Page · runs in the browser",
+      "file": "app/(dashboard)/dashboard/general/page.tsx",
+      "line": 75,
+      "ev": {
+        "file": "app/(dashboard)/dashboard/general/page.tsx",
+        "line": 75,
+        "endLine": 121,
+        "code": "export default function GeneralPage() {\n  const [state, formAction, isPending] = useActionState<ActionState, FormData>(\n    updateAccount,\n    {}\n…"
+      },
+      "client": true,
+      "pageClient": true,
+      "guard": {
+        "status": "checked",
+        "where": "by middleware",
+        "how": "middleware.ts sends visitors without a session cookie away from /dashboard",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "middleware.ts",
+            "line": 12,
+            "endLine": 14,
+            "code": "if (isProtectedRoute && !sessionCookie) {\n  return NextResponse.redirect(new URL('/sign-in', request.url));\n}"
+          },
+          {
+            "file": "middleware.ts",
+            "line": 47,
+            "endLine": 47,
+            "code": "matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A page at /dashboard/general.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/general/page.tsx",
+              "line": 75,
+              "endLine": 121,
+              "code": "export default function GeneralPage() {\n  const [state, formAction, isPending] = useActionState<ActionState, FormData>(\n    updateAccount,\n    {}\n…"
+            }
+          ]
+        },
+        {
+          "text": "It runs in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It sends requests to GET.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/general/page.tsx",
+              "line": 94,
+              "endLine": 94,
+              "code": "<AccountFormWithData state={state} />",
+              "note": "renders <AccountFormWithData>"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/general/page.tsx",
+              "line": 65,
+              "endLine": 65,
+              "code": "const { data: user } = useSWR<User>('/api/user', fetcher);",
+              "note": "hands fetcher() to other code"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/general/page.tsx",
+              "line": 14,
+              "endLine": 14,
+              "code": "const fetcher = (url: string) => fetch(url).then((res) => res.json());"
+            }
+          ]
+        },
+        {
+          "text": "It triggers server actions: updateAccount().",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/general/page.tsx",
+              "line": 77,
+              "endLine": 77,
+              "code": "updateAccount,"
+            }
+          ]
+        },
+        {
+          "text": "Only logged-in visitors get it: middleware.ts sends visitors without a session cookie away from /dashboard.",
+          "evidence": [
+            {
+              "file": "middleware.ts",
+              "line": 12,
+              "endLine": 14,
+              "code": "if (isProtectedRoute && !sessionCookie) {\n  return NextResponse.redirect(new URL('/sign-in', request.url));\n}"
+            },
+            {
+              "file": "middleware.ts",
+              "line": 47,
+              "endLine": 47,
+              "code": "matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/(dashboard)/dashboard/general/page.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/card.tsx",
+        "components/ui/label.tsx",
+        "app/(login)/actions.ts",
+        "lib/db/schema.ts",
+        "lib/utils.ts",
+        "lib/db/drizzle.ts",
+        "lib/auth/session.ts",
+        "lib/payments/stripe.ts",
+        "lib/db/queries.ts",
+        "lib/auth/middleware.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "layout:/dashboard (dashboard)",
+      "kind": "page",
+      "layout": true,
+      "name": "Frame around pages in (dashboard) under /dashboard",
+      "route": "/dashboard",
+      "sub": "Page · runs in the browser",
+      "file": "app/(dashboard)/dashboard/layout.tsx",
+      "line": 9,
+      "ev": {
+        "file": "app/(dashboard)/dashboard/layout.tsx",
+        "line": 9,
+        "endLine": 73,
+        "code": "export default function DashboardLayout({\n  children\n}: {\n  children: React.ReactNode;\n…"
+      },
+      "client": true,
+      "pageClient": true,
+      "guard": {
+        "status": "checked",
+        "where": "by middleware",
+        "how": "middleware.ts sends visitors without a session cookie away from /dashboard",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "middleware.ts",
+            "line": 12,
+            "endLine": 14,
+            "code": "if (isProtectedRoute && !sessionCookie) {\n  return NextResponse.redirect(new URL('/sign-in', request.url));\n}"
+          },
+          {
+            "file": "middleware.ts",
+            "line": 47,
+            "endLine": 47,
+            "code": "matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "The shared frame (layout) drawn around every page under /dashboard, such as the navigation bar.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/layout.tsx",
+              "line": 9,
+              "endLine": 73,
+              "code": "export default function DashboardLayout({\n  children\n}: {\n  children: React.ReactNode;\n…"
+            }
+          ]
+        },
+        {
+          "text": "It runs in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It doesn't send any requests to your server.",
+          "evidence": []
+        },
+        {
+          "text": "Only logged-in visitors get it: middleware.ts sends visitors without a session cookie away from /dashboard.",
+          "evidence": [
+            {
+              "file": "middleware.ts",
+              "line": 12,
+              "endLine": 14,
+              "code": "if (isProtectedRoute && !sessionCookie) {\n  return NextResponse.redirect(new URL('/sign-in', request.url));\n}"
+            },
+            {
+              "file": "middleware.ts",
+              "line": 47,
+              "endLine": 47,
+              "code": "matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/(dashboard)/dashboard/layout.tsx",
+        "components/ui/button.tsx",
+        "lib/utils.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/dashboard",
+      "kind": "page",
+      "layout": false,
+      "name": "/dashboard",
+      "route": "/dashboard",
+      "sub": "Page · runs in the browser",
+      "file": "app/(dashboard)/dashboard/page.tsx",
+      "line": 272,
+      "ev": {
+        "file": "app/(dashboard)/dashboard/page.tsx",
+        "line": 272,
+        "endLine": 287,
+        "code": "export default function SettingsPage() {\n  return (\n    <section className=\"flex-1 p-4 lg:p-8\">\n      <h1 className=\"text-lg lg:text-2xl font-medium mb-6\">Team Settings</h1>\n…"
+      },
+      "client": true,
+      "pageClient": true,
+      "guard": {
+        "status": "checked",
+        "where": "by middleware",
+        "how": "middleware.ts sends visitors without a session cookie away from /dashboard",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "middleware.ts",
+            "line": 12,
+            "endLine": 14,
+            "code": "if (isProtectedRoute && !sessionCookie) {\n  return NextResponse.redirect(new URL('/sign-in', request.url));\n}"
+          },
+          {
+            "file": "middleware.ts",
+            "line": 47,
+            "endLine": 47,
+            "code": "matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A page at /dashboard.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 272,
+              "endLine": 287,
+              "code": "export default function SettingsPage() {\n  return (\n    <section className=\"flex-1 p-4 lg:p-8\">\n      <h1 className=\"text-lg lg:text-2xl font-medium mb-6\">Team Settings</h1>\n…"
+            }
+          ]
+        },
+        {
+          "text": "It runs in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It sends requests to GET.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 277,
+              "endLine": 277,
+              "code": "<ManageSubscription />",
+              "note": "renders <ManageSubscription>"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 41,
+              "endLine": 41,
+              "code": "const { data: teamData } = useSWR<TeamDataWithMembers>('/api/team', fetcher);",
+              "note": "hands fetcher() to other code"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 28,
+              "endLine": 28,
+              "code": "const fetcher = (url: string) => fetch(url).then((res) => res.json());"
+            }
+          ]
+        },
+        {
+          "text": "It triggers server actions: customerPortalAction(), removeTeamMember() and inviteTeamMember().",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 277,
+              "endLine": 277,
+              "code": "<ManageSubscription />",
+              "note": "renders <ManageSubscription>"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 63,
+              "endLine": 63,
+              "code": "<form action={customerPortalAction}>"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 280,
+              "endLine": 280,
+              "code": "<TeamMembers />",
+              "note": "renders <TeamMembers>"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 101,
+              "endLine": 101,
+              "code": ">(removeTeamMember, {});"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 283,
+              "endLine": 283,
+              "code": "<InviteTeamMember />",
+              "note": "renders <InviteTeamMember>"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/page.tsx",
+              "line": 196,
+              "endLine": 196,
+              "code": ">(inviteTeamMember, {});"
+            }
+          ]
+        },
+        {
+          "text": "Only logged-in visitors get it: middleware.ts sends visitors without a session cookie away from /dashboard.",
+          "evidence": [
+            {
+              "file": "middleware.ts",
+              "line": 12,
+              "endLine": 14,
+              "code": "if (isProtectedRoute && !sessionCookie) {\n  return NextResponse.redirect(new URL('/sign-in', request.url));\n}"
+            },
+            {
+              "file": "middleware.ts",
+              "line": 47,
+              "endLine": 47,
+              "code": "matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/(dashboard)/dashboard/page.tsx",
+        "components/ui/button.tsx",
+        "components/ui/avatar.tsx",
+        "components/ui/card.tsx",
+        "lib/payments/actions.ts",
+        "lib/db/schema.ts",
+        "app/(login)/actions.ts",
+        "components/ui/input.tsx",
+        "components/ui/radio-group.tsx",
+        "components/ui/label.tsx",
+        "lib/utils.ts",
+        "lib/payments/stripe.ts",
+        "lib/auth/middleware.ts",
+        "lib/db/drizzle.ts",
+        "lib/auth/session.ts",
+        "lib/db/queries.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/dashboard/security",
+      "kind": "page",
+      "layout": false,
+      "name": "/dashboard/security",
+      "route": "/dashboard/security",
+      "sub": "Page · runs in the browser",
+      "file": "app/(dashboard)/dashboard/security/page.tsx",
+      "line": 25,
+      "ev": {
+        "file": "app/(dashboard)/dashboard/security/page.tsx",
+        "line": 25,
+        "endLine": 167,
+        "code": "export default function SecurityPage() {\n  const [passwordState, passwordAction, isPasswordPending] = useActionState<\n    PasswordState,\n    FormData\n…"
+      },
+      "client": true,
+      "pageClient": true,
+      "guard": {
+        "status": "checked",
+        "where": "by middleware",
+        "how": "middleware.ts sends visitors without a session cookie away from /dashboard",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "middleware.ts",
+            "line": 12,
+            "endLine": 14,
+            "code": "if (isProtectedRoute && !sessionCookie) {\n  return NextResponse.redirect(new URL('/sign-in', request.url));\n}"
+          },
+          {
+            "file": "middleware.ts",
+            "line": 47,
+            "endLine": 47,
+            "code": "matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A page at /dashboard/security.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/security/page.tsx",
+              "line": 25,
+              "endLine": 167,
+              "code": "export default function SecurityPage() {\n  const [passwordState, passwordAction, isPasswordPending] = useActionState<\n    PasswordState,\n    FormData\n…"
+            }
+          ]
+        },
+        {
+          "text": "It runs in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It triggers server actions: updatePassword() and deleteAccount().",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/security/page.tsx",
+              "line": 29,
+              "endLine": 29,
+              "code": ">(updatePassword, {});"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/security/page.tsx",
+              "line": 34,
+              "endLine": 34,
+              "code": ">(deleteAccount, {});"
+            }
+          ]
+        },
+        {
+          "text": "Only logged-in visitors get it: middleware.ts sends visitors without a session cookie away from /dashboard.",
+          "evidence": [
+            {
+              "file": "middleware.ts",
+              "line": 12,
+              "endLine": 14,
+              "code": "if (isProtectedRoute && !sessionCookie) {\n  return NextResponse.redirect(new URL('/sign-in', request.url));\n}"
+            },
+            {
+              "file": "middleware.ts",
+              "line": 47,
+              "endLine": 47,
+              "code": "matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/(dashboard)/dashboard/security/page.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/card.tsx",
+        "components/ui/label.tsx",
+        "app/(login)/actions.ts",
+        "lib/utils.ts",
+        "lib/db/drizzle.ts",
+        "lib/db/schema.ts",
+        "lib/auth/session.ts",
+        "lib/payments/stripe.ts",
+        "lib/db/queries.ts",
+        "lib/auth/middleware.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "layout:/ (dashboard)",
+      "kind": "page",
+      "layout": true,
+      "name": "Frame around pages in (dashboard)",
+      "route": "/",
+      "sub": "Page · runs in the browser",
+      "file": "app/(dashboard)/layout.tsx",
+      "line": 99,
+      "ev": {
+        "file": "app/(dashboard)/layout.tsx",
+        "line": 99,
+        "endLine": 106,
+        "code": "export default function Layout({ children }: { children: React.ReactNode }) {\n  return (\n    <section className=\"flex flex-col min-h-screen\">\n      <Header />\n…"
+      },
+      "client": true,
+      "pageClient": true,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "The shared frame (layout) drawn around every page, such as the navigation bar.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 99,
+              "endLine": 106,
+              "code": "export default function Layout({ children }: { children: React.ReactNode }) {\n  return (\n    <section className=\"flex flex-col min-h-screen\">\n      <Header />\n…"
+            }
+          ]
+        },
+        {
+          "text": "It runs in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It sends requests to GET.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 102,
+              "endLine": 102,
+              "code": "<Header />",
+              "note": "renders <Header>"
+            },
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 91,
+              "endLine": 91,
+              "code": "<UserMenu />",
+              "note": "renders <UserMenu>"
+            },
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 23,
+              "endLine": 23,
+              "code": "const { data: user } = useSWR<User>('/api/user', fetcher);",
+              "note": "hands fetcher() to other code"
+            },
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 19,
+              "endLine": 19,
+              "code": "const fetcher = (url: string) => fetch(url).then((res) => res.json());"
+            }
+          ]
+        },
+        {
+          "text": "It triggers server actions: signOut().",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 102,
+              "endLine": 102,
+              "code": "<Header />",
+              "note": "renders <Header>"
+            },
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 91,
+              "endLine": 91,
+              "code": "<UserMenu />",
+              "note": "renders <UserMenu>"
+            },
+            {
+              "file": "app/(dashboard)/layout.tsx",
+              "line": 27,
+              "endLine": 27,
+              "code": "await signOut();"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/(dashboard)/layout.tsx",
+        "components/ui/button.tsx",
+        "components/ui/dropdown-menu.tsx",
+        "components/ui/avatar.tsx",
+        "app/(login)/actions.ts",
+        "lib/db/schema.ts",
+        "lib/utils.ts",
+        "lib/db/drizzle.ts",
+        "lib/auth/session.ts",
+        "lib/payments/stripe.ts",
+        "lib/db/queries.ts",
+        "lib/auth/middleware.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/",
+      "kind": "page",
+      "layout": false,
+      "name": "/",
+      "route": "/",
+      "sub": "Page · server-built, interactive parts",
+      "file": "app/(dashboard)/page.tsx",
+      "line": 5,
+      "ev": {
+        "file": "app/(dashboard)/page.tsx",
+        "line": 5,
+        "endLine": 130,
+        "code": "export default function HomePage() {\n  return (\n    <main>\n      <section className=\"py-20\">\n…"
+      },
+      "client": true,
+      "pageClient": false,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A page at /.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/page.tsx",
+              "line": 5,
+              "endLine": 130,
+              "code": "export default function HomePage() {\n  return (\n    <main>\n      <section className=\"py-20\">\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server, and some parts of it run in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It doesn't send any requests to your server.",
+          "evidence": []
+        },
+        {
+          "text": "Anyone can open it. No login check was found in its code or in middleware.",
+          "evidence": []
+        }
+      ],
+      "files": [
+        "app/(dashboard)/page.tsx",
+        "components/ui/button.tsx",
+        "app/(dashboard)/terminal.tsx",
+        "lib/utils.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/pricing",
+      "kind": "page",
+      "layout": false,
+      "name": "/pricing",
+      "route": "/pricing",
+      "sub": "Page · server-built, interactive parts",
+      "file": "app/(dashboard)/pricing/page.tsx",
+      "line": 9,
+      "ev": {
+        "file": "app/(dashboard)/pricing/page.tsx",
+        "line": 9,
+        "endLine": 51,
+        "code": "export default async function PricingPage() {\n  const [prices, products] = await Promise.all([\n    getStripePrices(),\n    getStripeProducts(),\n…"
+      },
+      "client": true,
+      "pageClient": false,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A page at /pricing.",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/pricing/page.tsx",
+              "line": 9,
+              "endLine": 51,
+              "code": "export default async function PricingPage() {\n  const [prices, products] = await Promise.all([\n    getStripePrices(),\n    getStripeProducts(),\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server, and some parts of it run in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It triggers server actions: checkoutAction().",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/pricing/page.tsx",
+              "line": 24,
+              "endLine": 35,
+              "code": "<PricingCard\n  name={basePlan?.name || 'Base'}\n…",
+              "note": "renders <PricingCard>"
+            },
+            {
+              "file": "app/(dashboard)/pricing/page.tsx",
+              "line": 88,
+              "endLine": 88,
+              "code": "<form action={checkoutAction}>"
+            }
+          ]
+        },
+        {
+          "text": "Anyone can open it. No login check was found in its code or in middleware.",
+          "evidence": []
+        }
+      ],
+      "files": [
+        "app/(dashboard)/pricing/page.tsx",
+        "lib/payments/actions.ts",
+        "lib/payments/stripe.ts",
+        "app/(dashboard)/pricing/submit-button.tsx",
+        "lib/auth/middleware.ts",
+        "lib/db/schema.ts",
+        "lib/db/queries.ts",
+        "components/ui/button.tsx",
+        "lib/db/drizzle.ts",
+        "lib/auth/session.ts",
+        "lib/utils.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/sign-in",
+      "kind": "page",
+      "layout": false,
+      "name": "/sign-in",
+      "route": "/sign-in",
+      "sub": "Page · server-built, interactive parts",
+      "file": "app/(login)/sign-in/page.tsx",
+      "line": 4,
+      "ev": {
+        "file": "app/(login)/sign-in/page.tsx",
+        "line": 4,
+        "endLine": 10,
+        "code": "export default function SignInPage() {\n  return (\n    <Suspense>\n      <Login mode=\"signin\" />\n…"
+      },
+      "client": true,
+      "pageClient": false,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A page at /sign-in.",
+          "evidence": [
+            {
+              "file": "app/(login)/sign-in/page.tsx",
+              "line": 4,
+              "endLine": 10,
+              "code": "export default function SignInPage() {\n  return (\n    <Suspense>\n      <Login mode=\"signin\" />\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server, and some parts of it run in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It triggers server actions: signIn().",
+          "evidence": [
+            {
+              "file": "app/(login)/sign-in/page.tsx",
+              "line": 7,
+              "endLine": 7,
+              "code": "<Login mode=\"signin\" />",
+              "note": "renders <Login>"
+            },
+            {
+              "file": "app/(login)/login.tsx",
+              "line": 19,
+              "endLine": 19,
+              "code": "mode === 'signin' ? signIn : signUp,"
+            }
+          ]
+        },
+        {
+          "text": "Anyone can open it. No login check was found in its code or in middleware.",
+          "evidence": []
+        }
+      ],
+      "files": [
+        "app/(login)/sign-in/page.tsx",
+        "app/(login)/login.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx",
+        "app/(login)/actions.ts",
+        "lib/auth/middleware.ts",
+        "lib/utils.ts",
+        "lib/db/drizzle.ts",
+        "lib/db/schema.ts",
+        "lib/auth/session.ts",
+        "lib/payments/stripe.ts",
+        "lib/db/queries.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/sign-up",
+      "kind": "page",
+      "layout": false,
+      "name": "/sign-up",
+      "route": "/sign-up",
+      "sub": "Page · server-built, interactive parts",
+      "file": "app/(login)/sign-up/page.tsx",
+      "line": 4,
+      "ev": {
+        "file": "app/(login)/sign-up/page.tsx",
+        "line": 4,
+        "endLine": 10,
+        "code": "export default function SignUpPage() {\n  return (\n    <Suspense>\n      <Login mode=\"signup\" />\n…"
+      },
+      "client": true,
+      "pageClient": false,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A page at /sign-up.",
+          "evidence": [
+            {
+              "file": "app/(login)/sign-up/page.tsx",
+              "line": 4,
+              "endLine": 10,
+              "code": "export default function SignUpPage() {\n  return (\n    <Suspense>\n      <Login mode=\"signup\" />\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server, and some parts of it run in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It triggers server actions: signIn().",
+          "evidence": [
+            {
+              "file": "app/(login)/sign-up/page.tsx",
+              "line": 7,
+              "endLine": 7,
+              "code": "<Login mode=\"signup\" />",
+              "note": "renders <Login>"
+            },
+            {
+              "file": "app/(login)/login.tsx",
+              "line": 19,
+              "endLine": 19,
+              "code": "mode === 'signin' ? signIn : signUp,"
+            }
+          ]
+        },
+        {
+          "text": "Anyone can open it. No login check was found in its code or in middleware.",
+          "evidence": []
+        }
+      ],
+      "files": [
+        "app/(login)/sign-up/page.tsx",
+        "app/(login)/login.tsx",
+        "components/ui/button.tsx",
+        "components/ui/input.tsx",
+        "components/ui/label.tsx",
+        "app/(login)/actions.ts",
+        "lib/auth/middleware.ts",
+        "lib/utils.ts",
+        "lib/db/drizzle.ts",
+        "lib/db/schema.ts",
+        "lib/auth/session.ts",
+        "lib/payments/stripe.ts",
+        "lib/db/queries.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "layout:/",
+      "kind": "page",
+      "layout": true,
+      "name": "Frame around every page",
+      "route": "/",
+      "sub": "Page · built on the server",
+      "file": "app/layout.tsx",
+      "line": 18,
+      "ev": {
+        "file": "app/layout.tsx",
+        "line": 18,
+        "endLine": 44,
+        "code": "export default function RootLayout({\n  children\n}: {\n  children: React.ReactNode;\n…"
+      },
+      "client": false,
+      "pageClient": false,
+      "guard": {
+        "status": "unenforced",
+        "how": "calls getUser() but never stops the request when nobody is logged in",
+        "evidence": [
+          {
+            "file": "app/layout.tsx",
+            "line": 34,
+            "endLine": 34,
+            "code": "'/api/user': getUser(),"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "The shared frame (layout) drawn around every page, such as the navigation bar.",
+          "evidence": [
+            {
+              "file": "app/layout.tsx",
+              "line": 18,
+              "endLine": 44,
+              "code": "export default function RootLayout({\n  children\n}: {\n  children: React.ReactNode;\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server before it's sent.",
+          "evidence": []
+        },
+        {
+          "text": "It doesn't send any requests to your server.",
+          "evidence": []
+        },
+        {
+          "text": "While building the page, the server reads users and reads teamMembers.",
+          "evidence": [
+            {
+              "file": "lib/db/queries.ts",
+              "line": 26,
+              "endLine": 28,
+              "code": "const user = await db\n  .select()\n  .from(users)"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 108,
+              "endLine": 127,
+              "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
+            }
+          ]
+        },
+        {
+          "text": "It looks up who's logged in, but shows the page to everyone.",
+          "evidence": [
+            {
+              "file": "app/layout.tsx",
+              "line": 34,
+              "endLine": 34,
+              "code": "'/api/user': getUser(),"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/layout.tsx",
+        "lib/db/queries.ts",
+        "lib/db/drizzle.ts",
+        "lib/db/schema.ts",
+        "lib/auth/session.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "service:Stripe",
+      "kind": "service",
+      "name": "Stripe",
+      "sub": "Outside service · payments",
+      "pkg": "stripe",
+      "explain": [
+        {
+          "text": "An outside company, reached through the \"stripe\" package.",
+          "evidence": []
+        },
+        {
+          "text": "Only the route's name says Stripe calls it. That's set in Stripe's dashboard, which isn't in the code.",
+          "evidence": []
+        },
+        {
+          "text": "Called by GET /api/stripe/checkout, POST /api/stripe/webhook, signIn(), signUp(), checkoutAction(), customerPortalAction() and /pricing.",
+          "evidence": [
+            {
+              "file": "app/api/stripe/checkout/route.ts",
+              "line": 18,
+              "endLine": 20,
+              "code": "const session = await stripe.checkout.sessions.retrieve(sessionId, {\n  expand: ['customer', 'subscription'],\n});"
+            },
+            {
+              "file": "app/api/stripe/checkout/route.ts",
+              "line": 36,
+              "endLine": 38,
+              "code": "const subscription = await stripe.subscriptions.retrieve(subscriptionId, {\n  expand: ['items.data.price.product'],\n});"
+            },
+            {
+              "file": "app/api/stripe/webhook/route.ts",
+              "line": 14,
+              "endLine": 14,
+              "code": "event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 27,
+              "endLine": 44,
+              "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 27,
+              "endLine": 44,
+              "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 27,
+              "endLine": 44,
+              "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 55,
+              "endLine": 55,
+              "code": "const configurations = await stripe.billingPortal.configurations.list();"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 60,
+              "endLine": 60,
+              "code": "const product = await stripe.products.retrieve(team.stripeProductId);"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 65,
+              "endLine": 68,
+              "code": "const prices = await stripe.prices.list({\n  product: product.id,\n  active: true\n});"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 73,
+              "endLine": 107,
+              "code": "configuration = await stripe.billingPortal.configurations.create({\n  business_profile: {\n    headline: 'Manage your subscription'\n  },\n…"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 85,
+              "endLine": 85,
+              "code": "prices: prices.data.map((price) => price.id)"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 110,
+              "endLine": 114,
+              "code": "return stripe.billingPortal.sessions.create({\n  customer: team.stripeCustomerId,\n  return_url: `${process.env.BASE_URL}/dashboard`,\n  configuration: configuration.id\n…"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 150,
+              "endLine": 154,
+              "code": "const prices = await stripe.prices.list({\n  expand: ['data.product'],\n  active: true,\n  type: 'recurring'\n…"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 156,
+              "endLine": 164,
+              "code": "return prices.data.map((price) => ({\n  id: price.id,\n  productId:\n    typeof price.product === 'string' ? price.product : price.product.id,\n…"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 168,
+              "endLine": 171,
+              "code": "const products = await stripe.products.list({\n  active: true,\n  expand: ['data.default_price']\n});"
+            },
+            {
+              "file": "lib/payments/stripe.ts",
+              "line": 173,
+              "endLine": 181,
+              "code": "return products.data.map((product) => ({\n  id: product.id,\n  name: product.name,\n  description: product.description,\n…"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "unknown:1",
+      "kind": "unknown",
+      "name": "Unresolved address",
+      "sub": "Built at runtime",
+      "explain": [
+        {
+          "text": "The code sends data to an address built at runtime (url).",
+          "evidence": [
+            {
+              "file": "app/(dashboard)/dashboard/general/page.tsx",
+              "line": 94,
+              "endLine": 94,
+              "code": "<AccountFormWithData state={state} />",
+              "note": "renders <AccountFormWithData>"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/general/page.tsx",
+              "line": 65,
+              "endLine": 65,
+              "code": "const { data: user } = useSWR<User>('/api/user', fetcher);",
+              "note": "hands fetcher() to other code"
+            },
+            {
+              "file": "app/(dashboard)/dashboard/general/page.tsx",
+              "line": 14,
+              "endLine": 14,
+              "code": "const fetcher = (url: string) => fetch(url).then((res) => res.json());"
+            }
+          ]
+        },
+        {
+          "text": "It's left unresolved instead of guessed. Connecting live traffic would fill it in.",
+          "evidence": []
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "table:teamMembers",
+      "to": "table:users",
+      "kind": "relation",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/schema.ts",
+          "line": 36,
+          "code": "userId: integer('user_id') .notNull() .references(() => users.id)"
+        }
+      ],
+      "label": "each teamMembers belongs to a users"
+    },
+    {
+      "id": "e2",
+      "from": "table:teamMembers",
+      "to": "table:teams",
+      "kind": "relation",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/schema.ts",
+          "line": 39,
+          "code": "teamId: integer('team_id') .notNull() .references(() => teams.id)"
+        }
+      ],
+      "label": "each teamMembers belongs to a teams"
+    },
+    {
+      "id": "e3",
+      "from": "table:activityLogs",
+      "to": "table:teams",
+      "kind": "relation",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/schema.ts",
+          "line": 48,
+          "code": "teamId: integer('team_id') .notNull() .references(() => teams.id)"
+        }
+      ],
+      "label": "each activityLogs belongs to a teams"
+    },
+    {
+      "id": "e4",
+      "from": "table:activityLogs",
+      "to": "table:users",
+      "kind": "relation",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/schema.ts",
+          "line": 51,
+          "code": "userId: integer('user_id').references(() => users.id)"
+        }
+      ],
+      "label": "each activityLogs belongs to a users"
+    },
+    {
+      "id": "e5",
+      "from": "table:invitations",
+      "to": "table:teams",
+      "kind": "relation",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/schema.ts",
+          "line": 59,
+          "code": "teamId: integer('team_id') .notNull() .references(() => teams.id)"
+        }
+      ],
+      "label": "each invitations belongs to a teams"
+    },
+    {
+      "id": "e6",
+      "from": "table:invitations",
+      "to": "table:users",
+      "kind": "relation",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/schema.ts",
+          "line": 64,
+          "code": "invitedBy: integer('invited_by') .notNull() .references(() => users.id)"
+        }
+      ],
+      "label": "each invitations belongs to a users"
+    },
+    {
+      "id": "e7",
+      "from": "route:GET /api/stripe/checkout",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/stripe/checkout/route.ts",
+          "line": 18,
+          "endLine": 20,
+          "code": "const session = await stripe.checkout.sessions.retrieve(sessionId, {\n  expand: ['customer', 'subscription'],\n});"
+        },
+        {
+          "file": "app/api/stripe/checkout/route.ts",
+          "line": 36,
+          "endLine": 38,
+          "code": "const subscription = await stripe.subscriptions.retrieve(subscriptionId, {\n  expand: ['items.data.price.product'],\n});"
+        }
+      ],
+      "label": "checkout.sessions.retrieve, subscriptions.retrieve",
+      "calls": [
+        "checkout.sessions.retrieve",
+        "subscriptions.retrieve"
+      ]
+    },
+    {
+      "id": "e8",
+      "from": "route:GET /api/stripe/checkout",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/stripe/checkout/route.ts",
+          "line": 57,
+          "endLine": 59,
+          "code": "const user = await db\n  .select()\n  .from(users)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e9",
+      "from": "route:GET /api/stripe/checkout",
+      "to": "table:teamMembers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/stripe/checkout/route.ts",
+          "line": 67,
+          "endLine": 71,
+          "code": "const userTeam = await db\n  .select({\n    teamId: teamMembers.teamId,\n  })\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e10",
+      "from": "route:GET /api/stripe/checkout",
+      "to": "table:teams",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/stripe/checkout/route.ts",
+          "line": 79,
+          "endLine": 80,
+          "code": "await db\n  .update(teams)"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update"
+      ]
+    },
+    {
+      "id": "e11",
+      "from": "route:POST /api/stripe/webhook",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/stripe/webhook/route.ts",
+          "line": 14,
+          "endLine": 14,
+          "code": "event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);"
+        }
+      ],
+      "label": "webhooks.constructEvent",
+      "calls": [
+        "webhooks.constructEvent"
+      ]
+    },
+    {
+      "id": "e12",
+      "from": "route:POST /api/stripe/webhook",
+      "to": "table:teams",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 40,
+          "endLine": 42,
+          "code": "const result = await db\n  .select()\n  .from(teams)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e13",
+      "from": "route:POST /api/stripe/webhook",
+      "to": "table:teams",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 58,
+          "endLine": 59,
+          "code": "await db\n  .update(teams)"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update"
+      ]
+    },
+    {
+      "id": "e14",
+      "from": "route:GET /api/team",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 26,
+          "endLine": 28,
+          "code": "const user = await db\n  .select()\n  .from(users)"
+        },
+        {
+          "file": "lib/db/queries.ts",
+          "line": 108,
+          "endLine": 127,
+          "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select",
+        "findFirst"
+      ]
+    },
+    {
+      "id": "e15",
+      "from": "route:GET /api/team",
+      "to": "table:teamMembers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 108,
+          "endLine": 127,
+          "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "findFirst"
+      ]
+    },
+    {
+      "id": "e16",
+      "from": "route:GET /api/team",
+      "to": "table:teams",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 108,
+          "endLine": 127,
+          "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "findFirst"
+      ]
+    },
+    {
+      "id": "e17",
+      "from": "route:GET /api/user",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 26,
+          "endLine": 28,
+          "code": "const user = await db\n  .select()\n  .from(users)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e18",
+      "from": "action:signIn() app/(login)/actions.ts",
+      "to": "table:teams",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 55,
+          "endLine": 62,
+          "code": "const userWithTeam = await db\n  .select({\n    user: users,\n    team: teams\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e19",
+      "from": "action:signIn() app/(login)/actions.ts",
+      "to": "table:teamMembers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 55,
+          "endLine": 61,
+          "code": "const userWithTeam = await db\n  .select({\n    user: users,\n    team: teams\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e20",
+      "from": "action:signIn() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 55,
+          "endLine": 60,
+          "code": "const userWithTeam = await db\n  .select({\n    user: users,\n    team: teams\n…"
+        },
+        {
+          "file": "lib/db/queries.ts",
+          "line": 26,
+          "endLine": 28,
+          "code": "const user = await db\n  .select()\n  .from(users)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e21",
+      "from": "action:signIn() app/(login)/actions.ts",
+      "to": "table:activityLogs",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 44,
+          "endLine": 44,
+          "code": "await db.insert(activityLogs).values(newActivity);"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e22",
+      "from": "action:signIn() app/(login)/actions.ts",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 27,
+          "endLine": 44,
+          "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+        }
+      ],
+      "label": "checkout.sessions.create",
+      "calls": [
+        "checkout.sessions.create"
+      ],
+      "via": [
+        "createCheckoutSession()"
+      ]
+    },
+    {
+      "id": "e23",
+      "from": "action:signUp() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 112,
+          "endLine": 114,
+          "code": "const existingUser = await db\n  .select()\n  .from(users)"
+        },
+        {
+          "file": "lib/db/queries.ts",
+          "line": 26,
+          "endLine": 28,
+          "code": "const user = await db\n  .select()\n  .from(users)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e24",
+      "from": "action:signUp() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 134,
+          "endLine": 134,
+          "code": "const [createdUser] = await db.insert(users).values(newUser).returning();"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e25",
+      "from": "action:signUp() app/(login)/actions.ts",
+      "to": "table:invitations",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 150,
+          "endLine": 152,
+          "code": "const [invitation] = await db\n  .select()\n  .from(invitations)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e26",
+      "from": "action:signUp() app/(login)/actions.ts",
+      "to": "table:invitations",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 166,
+          "endLine": 167,
+          "code": "await db\n  .update(invitations)"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update"
+      ]
+    },
+    {
+      "id": "e27",
+      "from": "action:signUp() app/(login)/actions.ts",
+      "to": "table:activityLogs",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 44,
+          "endLine": 44,
+          "code": "await db.insert(activityLogs).values(newActivity);"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e28",
+      "from": "action:signUp() app/(login)/actions.ts",
+      "to": "table:teams",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 173,
+          "endLine": 175,
+          "code": "[createdTeam] = await db\n  .select()\n  .from(teams)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e29",
+      "from": "action:signUp() app/(login)/actions.ts",
+      "to": "table:teams",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 187,
+          "endLine": 187,
+          "code": "[createdTeam] = await db.insert(teams).values(newTeam).returning();"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e30",
+      "from": "action:signUp() app/(login)/actions.ts",
+      "to": "table:teamMembers",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 210,
+          "endLine": 210,
+          "code": "db.insert(teamMembers).values(newTeamMember),"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e31",
+      "from": "action:signUp() app/(login)/actions.ts",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 27,
+          "endLine": 44,
+          "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+        }
+      ],
+      "label": "checkout.sessions.create",
+      "calls": [
+        "checkout.sessions.create"
+      ],
+      "via": [
+        "createCheckoutSession()"
+      ]
+    },
+    {
+      "id": "e32",
+      "from": "action:signOut() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 26,
+          "endLine": 28,
+          "code": "const user = await db\n  .select()\n  .from(users)"
+        },
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 73,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e33",
+      "from": "action:signOut() app/(login)/actions.ts",
+      "to": "table:teamMembers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 74,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e34",
+      "from": "action:signOut() app/(login)/actions.ts",
+      "to": "table:activityLogs",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 44,
+          "endLine": 44,
+          "code": "await db.insert(activityLogs).values(newActivity);"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e35",
+      "from": "action:updatePassword() app/(login)/actions.ts",
+      "to": "table:teamMembers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 74,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e36",
+      "from": "action:updatePassword() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 73,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e37",
+      "from": "action:updatePassword() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 278,
+          "endLine": 279,
+          "code": "db\n  .update(users)"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update"
+      ]
+    },
+    {
+      "id": "e38",
+      "from": "action:updatePassword() app/(login)/actions.ts",
+      "to": "table:activityLogs",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 44,
+          "endLine": 44,
+          "code": "await db.insert(activityLogs).values(newActivity);"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e39",
+      "from": "action:deleteAccount() app/(login)/actions.ts",
+      "to": "table:teamMembers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 74,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e40",
+      "from": "action:deleteAccount() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 73,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e41",
+      "from": "action:deleteAccount() app/(login)/actions.ts",
+      "to": "table:activityLogs",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 44,
+          "endLine": 44,
+          "code": "await db.insert(activityLogs).values(newActivity);"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e42",
+      "from": "action:deleteAccount() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 317,
+          "endLine": 318,
+          "code": "await db\n  .update(users)"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update"
+      ]
+    },
+    {
+      "id": "e43",
+      "from": "action:deleteAccount() app/(login)/actions.ts",
+      "to": "table:teamMembers",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 326,
+          "endLine": 327,
+          "code": "await db\n  .delete(teamMembers)"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "delete"
+      ]
+    },
+    {
+      "id": "e44",
+      "from": "action:updateAccount() app/(login)/actions.ts",
+      "to": "table:teamMembers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 74,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e45",
+      "from": "action:updateAccount() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 73,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e46",
+      "from": "action:updateAccount() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 353,
+          "endLine": 353,
+          "code": "db.update(users).set({ name, email }).where(eq(users.id, user.id)),"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update"
+      ]
+    },
+    {
+      "id": "e47",
+      "from": "action:updateAccount() app/(login)/actions.ts",
+      "to": "table:activityLogs",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 44,
+          "endLine": 44,
+          "code": "await db.insert(activityLogs).values(newActivity);"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e48",
+      "from": "action:removeTeamMember() app/(login)/actions.ts",
+      "to": "table:teamMembers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 74,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e49",
+      "from": "action:removeTeamMember() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 73,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e50",
+      "from": "action:removeTeamMember() app/(login)/actions.ts",
+      "to": "table:teamMembers",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 375,
+          "endLine": 376,
+          "code": "await db\n  .delete(teamMembers)"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "delete"
+      ]
+    },
+    {
+      "id": "e51",
+      "from": "action:removeTeamMember() app/(login)/actions.ts",
+      "to": "table:activityLogs",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 44,
+          "endLine": 44,
+          "code": "await db.insert(activityLogs).values(newActivity);"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e52",
+      "from": "action:inviteTeamMember() app/(login)/actions.ts",
+      "to": "table:teamMembers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 74,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        },
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 409,
+          "endLine": 412,
+          "code": "const existingMember = await db\n  .select()\n  .from(users)\n  .leftJoin(teamMembers, eq(users.id, teamMembers.userId))"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e53",
+      "from": "action:inviteTeamMember() app/(login)/actions.ts",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 68,
+          "endLine": 73,
+          "code": "const result = await db\n  .select({\n    user: users,\n    teamId: teamMembers.teamId\n…"
+        },
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 409,
+          "endLine": 411,
+          "code": "const existingMember = await db\n  .select()\n  .from(users)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e54",
+      "from": "action:inviteTeamMember() app/(login)/actions.ts",
+      "to": "table:invitations",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 423,
+          "endLine": 425,
+          "code": "const existingInvitation = await db\n  .select()\n  .from(invitations)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e55",
+      "from": "action:inviteTeamMember() app/(login)/actions.ts",
+      "to": "table:invitations",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 440,
+          "endLine": 440,
+          "code": "await db.insert(invitations).values({"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e56",
+      "from": "action:inviteTeamMember() app/(login)/actions.ts",
+      "to": "table:activityLogs",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 44,
+          "endLine": 44,
+          "code": "await db.insert(activityLogs).values(newActivity);"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "insert"
+      ]
+    },
+    {
+      "id": "e57",
+      "from": "action:checkoutAction() lib/payments/actions.ts",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 26,
+          "endLine": 28,
+          "code": "const user = await db\n  .select()\n  .from(users)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e58",
+      "from": "action:checkoutAction() lib/payments/actions.ts",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 27,
+          "endLine": 44,
+          "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+        }
+      ],
+      "label": "checkout.sessions.create",
+      "calls": [
+        "checkout.sessions.create"
+      ],
+      "via": [
+        "createCheckoutSession()"
+      ]
+    },
+    {
+      "id": "e59",
+      "from": "action:customerPortalAction() lib/payments/actions.ts",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 55,
+          "endLine": 55,
+          "code": "const configurations = await stripe.billingPortal.configurations.list();"
+        },
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 60,
+          "endLine": 60,
+          "code": "const product = await stripe.products.retrieve(team.stripeProductId);"
+        },
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 65,
+          "endLine": 68,
+          "code": "const prices = await stripe.prices.list({\n  product: product.id,\n  active: true\n});"
+        },
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 73,
+          "endLine": 107,
+          "code": "configuration = await stripe.billingPortal.configurations.create({\n  business_profile: {\n    headline: 'Manage your subscription'\n  },\n…"
+        },
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 85,
+          "endLine": 85,
+          "code": "prices: prices.data.map((price) => price.id)"
+        },
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 110,
+          "endLine": 114,
+          "code": "return stripe.billingPortal.sessions.create({\n  customer: team.stripeCustomerId,\n  return_url: `${process.env.BASE_URL}/dashboard`,\n  configuration: configuration.id\n…"
+        }
+      ],
+      "label": "billingPortal.configurations.list, products.retrieve +4",
+      "calls": [
+        "billingPortal.configurations.list",
+        "products.retrieve",
+        "prices.list",
+        "billingPortal.configurations.create",
+        "data.map",
+        "billingPortal.sessions.create"
+      ],
+      "via": [
+        "createCustomerPortalSession()"
+      ]
+    },
+    {
+      "id": "e60",
+      "from": "page:/dashboard/activity",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 26,
+          "endLine": 28,
+          "code": "const user = await db\n  .select()\n  .from(users)"
+        },
+        {
+          "file": "lib/db/queries.ts",
+          "line": 87,
+          "endLine": 96,
+          "code": "return await db\n  .select({\n    id: activityLogs.id,\n    action: activityLogs.action,\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e61",
+      "from": "page:/dashboard/general",
+      "to": "action:updateAccount() app/(login)/actions.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/dashboard/general/page.tsx",
+          "line": 77,
+          "endLine": 77,
+          "code": "updateAccount,"
+        }
+      ],
+      "label": "hands updateAccount() to a form or button"
+    },
+    {
+      "id": "e62",
+      "from": "page:/dashboard/general",
+      "to": "unknown:1",
+      "kind": "request",
+      "certainty": "unresolved",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/dashboard/general/page.tsx",
+          "line": 94,
+          "endLine": 94,
+          "code": "<AccountFormWithData state={state} />",
+          "note": "renders <AccountFormWithData>"
+        },
+        {
+          "file": "app/(dashboard)/dashboard/general/page.tsx",
+          "line": 65,
+          "endLine": 65,
+          "code": "const { data: user } = useSWR<User>('/api/user', fetcher);",
+          "note": "hands fetcher() to other code"
+        },
+        {
+          "file": "app/(dashboard)/dashboard/general/page.tsx",
+          "line": 14,
+          "endLine": 14,
+          "code": "const fetcher = (url: string) => fetch(url).then((res) => res.json());"
+        }
+      ],
+      "label": "GET"
+    },
+    {
+      "id": "e63",
+      "from": "page:/dashboard",
+      "to": "unknown:1",
+      "kind": "request",
+      "certainty": "unresolved",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/dashboard/page.tsx",
+          "line": 277,
+          "endLine": 277,
+          "code": "<ManageSubscription />",
+          "note": "renders <ManageSubscription>"
+        },
+        {
+          "file": "app/(dashboard)/dashboard/page.tsx",
+          "line": 41,
+          "endLine": 41,
+          "code": "const { data: teamData } = useSWR<TeamDataWithMembers>('/api/team', fetcher);",
+          "note": "hands fetcher() to other code"
+        },
+        {
+          "file": "app/(dashboard)/dashboard/page.tsx",
+          "line": 28,
+          "endLine": 28,
+          "code": "const fetcher = (url: string) => fetch(url).then((res) => res.json());"
+        }
+      ],
+      "label": "GET"
+    },
+    {
+      "id": "e64",
+      "from": "page:/dashboard",
+      "to": "action:customerPortalAction() lib/payments/actions.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/dashboard/page.tsx",
+          "line": 277,
+          "endLine": 277,
+          "code": "<ManageSubscription />",
+          "note": "renders <ManageSubscription>"
+        },
+        {
+          "file": "app/(dashboard)/dashboard/page.tsx",
+          "line": 63,
+          "endLine": 63,
+          "code": "<form action={customerPortalAction}>"
+        }
+      ],
+      "label": "hands customerPortalAction() to a form or button"
+    },
+    {
+      "id": "e65",
+      "from": "page:/dashboard",
+      "to": "action:removeTeamMember() app/(login)/actions.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/dashboard/page.tsx",
+          "line": 280,
+          "endLine": 280,
+          "code": "<TeamMembers />",
+          "note": "renders <TeamMembers>"
+        },
+        {
+          "file": "app/(dashboard)/dashboard/page.tsx",
+          "line": 101,
+          "endLine": 101,
+          "code": ">(removeTeamMember, {});"
+        }
+      ],
+      "label": "hands removeTeamMember() to a form or button"
+    },
+    {
+      "id": "e66",
+      "from": "page:/dashboard",
+      "to": "action:inviteTeamMember() app/(login)/actions.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/dashboard/page.tsx",
+          "line": 283,
+          "endLine": 283,
+          "code": "<InviteTeamMember />",
+          "note": "renders <InviteTeamMember>"
+        },
+        {
+          "file": "app/(dashboard)/dashboard/page.tsx",
+          "line": 196,
+          "endLine": 196,
+          "code": ">(inviteTeamMember, {});"
+        }
+      ],
+      "label": "hands inviteTeamMember() to a form or button"
+    },
+    {
+      "id": "e67",
+      "from": "page:/dashboard/security",
+      "to": "action:updatePassword() app/(login)/actions.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/dashboard/security/page.tsx",
+          "line": 29,
+          "endLine": 29,
+          "code": ">(updatePassword, {});"
+        }
+      ],
+      "label": "hands updatePassword() to a form or button"
+    },
+    {
+      "id": "e68",
+      "from": "page:/dashboard/security",
+      "to": "action:deleteAccount() app/(login)/actions.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/dashboard/security/page.tsx",
+          "line": 34,
+          "endLine": 34,
+          "code": ">(deleteAccount, {});"
+        }
+      ],
+      "label": "hands deleteAccount() to a form or button"
+    },
+    {
+      "id": "e69",
+      "from": "layout:/ (dashboard)",
+      "to": "unknown:1",
+      "kind": "request",
+      "certainty": "unresolved",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/layout.tsx",
+          "line": 102,
+          "endLine": 102,
+          "code": "<Header />",
+          "note": "renders <Header>"
+        },
+        {
+          "file": "app/(dashboard)/layout.tsx",
+          "line": 91,
+          "endLine": 91,
+          "code": "<UserMenu />",
+          "note": "renders <UserMenu>"
+        },
+        {
+          "file": "app/(dashboard)/layout.tsx",
+          "line": 23,
+          "endLine": 23,
+          "code": "const { data: user } = useSWR<User>('/api/user', fetcher);",
+          "note": "hands fetcher() to other code"
+        },
+        {
+          "file": "app/(dashboard)/layout.tsx",
+          "line": 19,
+          "endLine": 19,
+          "code": "const fetcher = (url: string) => fetch(url).then((res) => res.json());"
+        }
+      ],
+      "label": "GET"
+    },
+    {
+      "id": "e70",
+      "from": "layout:/ (dashboard)",
+      "to": "action:signOut() app/(login)/actions.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/layout.tsx",
+          "line": 102,
+          "endLine": 102,
+          "code": "<Header />",
+          "note": "renders <Header>"
+        },
+        {
+          "file": "app/(dashboard)/layout.tsx",
+          "line": 91,
+          "endLine": 91,
+          "code": "<UserMenu />",
+          "note": "renders <UserMenu>"
+        },
+        {
+          "file": "app/(dashboard)/layout.tsx",
+          "line": 27,
+          "endLine": 27,
+          "code": "await signOut();"
+        }
+      ],
+      "label": "calls signOut()"
+    },
+    {
+      "id": "e71",
+      "from": "page:/pricing",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 150,
+          "endLine": 154,
+          "code": "const prices = await stripe.prices.list({\n  expand: ['data.product'],\n  active: true,\n  type: 'recurring'\n…"
+        },
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 156,
+          "endLine": 164,
+          "code": "return prices.data.map((price) => ({\n  id: price.id,\n  productId:\n    typeof price.product === 'string' ? price.product : price.product.id,\n…"
+        },
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 168,
+          "endLine": 171,
+          "code": "const products = await stripe.products.list({\n  active: true,\n  expand: ['data.default_price']\n});"
+        },
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 173,
+          "endLine": 181,
+          "code": "return products.data.map((product) => ({\n  id: product.id,\n  name: product.name,\n  description: product.description,\n…"
+        }
+      ],
+      "label": "prices.list, data.map +1",
+      "calls": [
+        "prices.list",
+        "data.map",
+        "products.list"
+      ],
+      "via": [
+        "getStripeProducts()"
+      ]
+    },
+    {
+      "id": "e72",
+      "from": "page:/pricing",
+      "to": "action:checkoutAction() lib/payments/actions.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/pricing/page.tsx",
+          "line": 24,
+          "endLine": 35,
+          "code": "<PricingCard\n  name={basePlan?.name || 'Base'}\n…",
+          "note": "renders <PricingCard>"
+        },
+        {
+          "file": "app/(dashboard)/pricing/page.tsx",
+          "line": 88,
+          "endLine": 88,
+          "code": "<form action={checkoutAction}>"
+        }
+      ],
+      "label": "hands checkoutAction() to a form or button"
+    },
+    {
+      "id": "e73",
+      "from": "page:/sign-in",
+      "to": "action:signIn() app/(login)/actions.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/sign-in/page.tsx",
+          "line": 7,
+          "endLine": 7,
+          "code": "<Login mode=\"signin\" />",
+          "note": "renders <Login>"
+        },
+        {
+          "file": "app/(login)/login.tsx",
+          "line": 19,
+          "endLine": 19,
+          "code": "mode === 'signin' ? signIn : signUp,"
+        }
+      ],
+      "label": "hands signIn() to a form or button"
+    },
+    {
+      "id": "e74",
+      "from": "page:/sign-up",
+      "to": "action:signIn() app/(login)/actions.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/(login)/sign-up/page.tsx",
+          "line": 7,
+          "endLine": 7,
+          "code": "<Login mode=\"signup\" />",
+          "note": "renders <Login>"
+        },
+        {
+          "file": "app/(login)/login.tsx",
+          "line": 19,
+          "endLine": 19,
+          "code": "mode === 'signin' ? signIn : signUp,"
+        }
+      ],
+      "label": "hands signIn() to a form or button"
+    },
+    {
+      "id": "e75",
+      "from": "layout:/",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 26,
+          "endLine": 28,
+          "code": "const user = await db\n  .select()\n  .from(users)"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e76",
+      "from": "layout:/",
+      "to": "table:teamMembers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 108,
+          "endLine": 127,
+          "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "findFirst"
+      ]
+    },
+    {
+      "id": "e77",
+      "from": "service:Stripe",
+      "to": "route:POST /api/stripe/webhook",
+      "kind": "callback",
+      "certainty": "inferred",
+      "evidence": [],
+      "label": "calls back",
+      "why": "Only the route's name says Stripe calls it. That's set in Stripe's dashboard, which isn't in the code."
+    }
+  ],
+  "findings": [
+    {
+      "sev": "warn",
+      "node": "action:signOut() app/(login)/actions.ts",
+      "title": "Looks up the login but doesn't act on it",
+      "text": "calls getUser() but never stops the request when nobody is logged in, and it changes data",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 225,
+          "endLine": 225,
+          "code": "const user = (await getUser()) as User;"
+        }
+      ]
+    },
+    {
+      "sev": "info",
+      "node": "route:GET /api/stripe/checkout",
+      "title": "Looks up users, teamMembers, teams records by what the request sends, without a login",
+      "text": "That's normal for sign-up, sign-in, tracking and payment return flows, which is what this looks like from its name. Check it only returns or changes what it should.",
+      "evidence": [
+        {
+          "file": "app/api/stripe/checkout/route.ts",
+          "line": 57,
+          "endLine": 59,
+          "code": "const user = await db\n  .select()\n  .from(users)"
+        },
+        {
+          "file": "app/api/stripe/checkout/route.ts",
+          "line": 67,
+          "endLine": 71,
+          "code": "const userTeam = await db\n  .select({\n    teamId: teamMembers.teamId,\n  })\n…"
+        },
+        {
+          "file": "app/api/stripe/checkout/route.ts",
+          "line": 79,
+          "endLine": 80,
+          "code": "await db\n  .update(teams)"
+        }
+      ]
+    },
+    {
+      "sev": "info",
+      "node": "route:GET /api/team",
+      "title": "Looks up the login but doesn't act on it",
+      "text": "calls getUser() but never stops the request when nobody is logged in",
+      "evidence": [
+        {
+          "file": "app/api/team/route.ts",
+          "line": 4,
+          "endLine": 4,
+          "code": "const team = await getTeamForUser();",
+          "note": "calls getTeamForUser()"
+        },
+        {
+          "file": "lib/db/queries.ts",
+          "line": 103,
+          "endLine": 103,
+          "code": "const user = await getUser();"
+        }
+      ]
+    },
+    {
+      "sev": "info",
+      "node": "route:GET /api/user",
+      "title": "Looks up the login but doesn't act on it",
+      "text": "calls getUser() but never stops the request when nobody is logged in",
+      "evidence": [
+        {
+          "file": "app/api/user/route.ts",
+          "line": 4,
+          "endLine": 4,
+          "code": "const user = await getUser();"
+        }
+      ]
+    },
+    {
+      "sev": "info",
+      "node": "action:signIn() app/(login)/actions.ts",
+      "title": "Looks up users records by what the request sends, without a login",
+      "text": "That's normal for sign-up, sign-in, tracking and payment return flows, which is what this looks like from its name. Check it only returns or changes what it should.",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 55,
+          "endLine": 60,
+          "code": "const userWithTeam = await db\n  .select({\n    user: users,\n    team: teams\n…"
+        }
+      ]
+    },
+    {
+      "sev": "info",
+      "node": "action:signIn() app/(login)/actions.ts",
+      "title": "If Stripe fails, the request fails after data was saved",
+      "text": "The call to Stripe isn't wrapped in error handling and happens after the activityLogs write. A failure there shows the user an error even though the record already exists.",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 91,
+          "endLine": 91,
+          "code": "logActivity(foundTeam?.id, foundUser.id, ActivityType.SIGN_IN)",
+          "note": "calls logActivity()"
+        },
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 44,
+          "endLine": 44,
+          "code": "await db.insert(activityLogs).values(newActivity);"
+        },
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 97,
+          "endLine": 97,
+          "code": "return createCheckoutSession({ team: foundTeam, priceId });",
+          "note": "calls createCheckoutSession()"
+        },
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 27,
+          "endLine": 44,
+          "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+        }
+      ]
+    },
+    {
+      "sev": "info",
+      "node": "action:signUp() app/(login)/actions.ts",
+      "title": "Looks up users, invitations records by what the request sends, without a login",
+      "text": "That's normal for sign-up, sign-in, tracking and payment return flows, which is what this looks like from its name. Check it only returns or changes what it should.",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 112,
+          "endLine": 114,
+          "code": "const existingUser = await db\n  .select()\n  .from(users)"
+        },
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 150,
+          "endLine": 152,
+          "code": "const [invitation] = await db\n  .select()\n  .from(invitations)"
+        },
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 166,
+          "endLine": 167,
+          "code": "await db\n  .update(invitations)"
+        }
+      ]
+    },
+    {
+      "sev": "info",
+      "node": "action:signUp() app/(login)/actions.ts",
+      "title": "If Stripe fails, the request fails after data was saved",
+      "text": "The call to Stripe isn't wrapped in error handling and happens after the users write. A failure there shows the user an error even though the record already exists.",
+      "evidence": [
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 134,
+          "endLine": 134,
+          "code": "const [createdUser] = await db.insert(users).values(newUser).returning();"
+        },
+        {
+          "file": "app/(login)/actions.ts",
+          "line": 218,
+          "endLine": 218,
+          "code": "return createCheckoutSession({ team: createdTeam, priceId });",
+          "note": "calls createCheckoutSession()"
+        },
+        {
+          "file": "lib/payments/stripe.ts",
+          "line": 27,
+          "endLine": 44,
+          "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
+        }
+      ]
+    }
+  ],
+  "unknowns": [
+    {
+      "node": "unknown:1",
+      "expr": "url",
+      "evidence": [
+        {
+          "file": "app/(dashboard)/dashboard/general/page.tsx",
+          "line": 94,
+          "endLine": 94,
+          "code": "<AccountFormWithData state={state} />",
+          "note": "renders <AccountFormWithData>"
+        },
+        {
+          "file": "app/(dashboard)/dashboard/general/page.tsx",
+          "line": 65,
+          "endLine": 65,
+          "code": "const { data: user } = useSWR<User>('/api/user', fetcher);",
+          "note": "hands fetcher() to other code"
+        },
+        {
+          "file": "app/(dashboard)/dashboard/general/page.tsx",
+          "line": 14,
+          "endLine": 14,
+          "code": "const fetcher = (url: string) => fetch(url).then((res) => res.json());"
+        }
+      ]
+    }
+  ],
+  "coverage": {
+    "sourceFiles": 42,
+    "mapped": 37,
+    "tooling": [
+      "drizzle.config.ts",
+      "next.config.ts",
+      "postcss.config.mjs"
+    ],
+    "tests": [],
+    "docs": [],
+    "unmapped": [
+      "lib/db/seed.ts",
+      "lib/db/setup.ts"
+    ],
+    "schema": null
+  },
+  "limits": [
+    "Reads TypeScript/JavaScript structure only. It does not run the code.",
+    "Understands Next.js routes and pages, Prisma, Drizzle (pgTable/mysqlTable/sqliteTable schemas, select/insert/update/delete, joins and db.query with `with`), Supabase, and the service packages in its list. Other libraries show up as plain code, not as parts.",
+    "Calls made through require(), dynamic import(), or values passed around as arguments may be missed.",
+    "Regex-style middleware matchers are not evaluated."
+  ],
+  "elapsedMs": 174,
+  "source": "nextjs/saas-starter"
+}

@@ -1,0 +1,3168 @@
+{
+  "app": "nextjs-subscription-payments",
+  "commit": "bdd0813",
+  "generatedAt": "2026-11-22T18:22:34.193Z",
+  "analyzer": "plainsight 0.3.0",
+  "stack": {
+    "static": null,
+    "nextAppRouter": true,
+    "nextPagesRouter": false,
+    "prisma": false,
+    "sqlSchema": [
+      "schema.sql",
+      "supabase/migrations/20230530034630_init.sql"
+    ],
+    "middleware": "middleware.ts",
+    "middlewareMatchers": [
+      "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"
+    ]
+  },
+  "nodes": [
+    {
+      "facts": [],
+      "id": "table:users",
+      "kind": "table",
+      "name": "users",
+      "sub": "Table",
+      "file": "schema.sql",
+      "line": 5,
+      "ev": {
+        "file": "schema.sql",
+        "line": 5,
+        "endLine": 14,
+        "code": "create table users (\n                         \n  id uuid references auth.users not null primary key,\n  full_name text,\n  avatar_url text,\n                                                           \n  billing_address jsonb,\n                                                \n  payment_method jsonb\n);"
+      },
+      "fields": [
+        "id",
+        "full_name",
+        "avatar_url",
+        "billing_address",
+        "payment_method"
+      ],
+      "external": [
+        {
+          "field": "id",
+          "to": "auth.users",
+          "line": 5,
+          "code": "id uuid references auth.users not null primary key"
+        }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "Can view own user data.",
+            "for": "select",
+            "ev": {
+              "file": "schema.sql",
+              "line": 16,
+              "code": "create policy \"Can view own user data.\" on users for select using (auth.uid() = id);"
+            }
+          },
+          {
+            "name": "Can update own user data.",
+            "for": "update",
+            "ev": {
+              "file": "schema.sql",
+              "line": 17,
+              "code": "create policy \"Can update own user data.\" on users for update using (auth.uid() = id);"
+            }
+          }
+        ],
+        "enabled": true,
+        "ev": {
+          "file": "supabase/migrations/20230530034630_init.sql",
+          "line": 15,
+          "code": "alter table users enable row level security"
+        }
+      },
+      "explain": [
+        {
+          "text": "A database table with 5 fields: id, full_name, avatar_url, billing_address and payment_method.",
+          "evidence": [
+            {
+              "file": "schema.sql",
+              "line": 5,
+              "endLine": 14,
+              "code": "create table users (\n                         \n  id uuid references auth.users not null primary key,\n  full_name text,\n  avatar_url text,\n                                                           \n  billing_address jsonb,\n                                                \n  payment_method jsonb\n);"
+            }
+          ]
+        },
+        {
+          "text": "Each row is tied to a login account in Supabase's built-in users list (through id).",
+          "evidence": [
+            {
+              "file": "schema.sql",
+              "line": 5,
+              "code": "id uuid references auth.users not null primary key"
+            }
+          ]
+        },
+        {
+          "text": "Row-level security is on. The database itself only allows: \"Can view own user data.\" (select) and \"Can update own user data.\" (update).",
+          "evidence": [
+            {
+              "file": "supabase/migrations/20230530034630_init.sql",
+              "line": 15,
+              "code": "alter table users enable row level security"
+            },
+            {
+              "file": "schema.sql",
+              "line": 16,
+              "code": "create policy \"Can view own user data.\" on users for select using (auth.uid() = id);"
+            },
+            {
+              "file": "schema.sql",
+              "line": 17,
+              "code": "create policy \"Can update own user data.\" on users for update using (auth.uid() = id);"
+            }
+          ]
+        },
+        {
+          "text": "POST /api/webhooks uses the admin key here, which skips row-level security.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 15,
+              "endLine": 18,
+              "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+            }
+          ]
+        },
+        {
+          "text": "Used by POST /api/webhooks and page /account.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "table:customers",
+      "kind": "table",
+      "name": "customers",
+      "sub": "Table",
+      "file": "schema.sql",
+      "line": 38,
+      "ev": {
+        "file": "schema.sql",
+        "line": 38,
+        "endLine": 43,
+        "code": "create table customers (\n                         \n  id uuid references auth.users not null primary key,\n                                                                            \n  stripe_customer_id text\n);"
+      },
+      "fields": [
+        "id",
+        "stripe_customer_id"
+      ],
+      "external": [
+        {
+          "field": "id",
+          "to": "auth.users",
+          "line": 38,
+          "code": "id uuid references auth.users not null primary key"
+        }
+      ],
+      "rls": {
+        "policies": [],
+        "enabled": true,
+        "ev": {
+          "file": "supabase/migrations/20230530034630_init.sql",
+          "line": 44,
+          "code": "alter table customers enable row level security"
+        }
+      },
+      "explain": [
+        {
+          "text": "A database table with 2 fields: id and stripe_customer_id.",
+          "evidence": [
+            {
+              "file": "schema.sql",
+              "line": 38,
+              "endLine": 43,
+              "code": "create table customers (\n                         \n  id uuid references auth.users not null primary key,\n                                                                            \n  stripe_customer_id text\n);"
+            }
+          ]
+        },
+        {
+          "text": "Each row is tied to a login account in Supabase's built-in users list (through id).",
+          "evidence": [
+            {
+              "file": "schema.sql",
+              "line": 38,
+              "code": "id uuid references auth.users not null primary key"
+            }
+          ]
+        },
+        {
+          "text": "Row-level security is on with no policies, so the public key can't read or change any row.",
+          "evidence": [
+            {
+              "file": "supabase/migrations/20230530034630_init.sql",
+              "line": 44,
+              "code": "alter table customers enable row level security"
+            }
+          ]
+        },
+        {
+          "text": "POST /api/webhooks, checkoutWithStripe() and createStripePortal() use the admin key here, which skips row-level security.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 15,
+              "endLine": 18,
+              "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+            }
+          ]
+        },
+        {
+          "text": "Used by POST /api/webhooks, checkoutWithStripe() and createStripePortal().",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "table:products",
+      "kind": "table",
+      "name": "products",
+      "sub": "Table",
+      "file": "schema.sql",
+      "line": 51,
+      "ev": {
+        "file": "schema.sql",
+        "line": 51,
+        "endLine": 64,
+        "code": "create table products (\n                                            \n  id text primary key,\n                                                             \n  active boolean,\n                                                                                                                                                                                   \n  name text,\n                                                                                                                                                                                              \n  description text,\n                                                                                   \n  image text,\n                                                                                                          \n…"
+      },
+      "fields": [
+        "id",
+        "active",
+        "name",
+        "description",
+        "image",
+        "metadata"
+      ],
+      "external": [],
+      "rls": {
+        "policies": [
+          {
+            "name": "Allow public read-only access.",
+            "for": "select",
+            "ev": {
+              "file": "schema.sql",
+              "line": 66,
+              "code": "create policy \"Allow public read-only access.\" on products for select using (true);"
+            }
+          }
+        ],
+        "enabled": true,
+        "ev": {
+          "file": "supabase/migrations/20230530034630_init.sql",
+          "line": 65,
+          "code": "alter table products enable row level security"
+        }
+      },
+      "explain": [
+        {
+          "text": "A database table with 6 fields: id, active, name, description, image and metadata.",
+          "evidence": [
+            {
+              "file": "schema.sql",
+              "line": 51,
+              "endLine": 64,
+              "code": "create table products (\n                                            \n  id text primary key,\n                                                             \n  active boolean,\n                                                                                                                                                                                   \n  name text,\n                                                                                                                                                                                              \n  description text,\n                                                                                   \n  image text,\n                                                                                                          \n…"
+            }
+          ]
+        },
+        {
+          "text": "Row-level security is on. The database itself only allows: \"Allow public read-only access.\" (select).",
+          "evidence": [
+            {
+              "file": "supabase/migrations/20230530034630_init.sql",
+              "line": 65,
+              "code": "alter table products enable row level security"
+            },
+            {
+              "file": "schema.sql",
+              "line": 66,
+              "code": "create policy \"Allow public read-only access.\" on products for select using (true);"
+            }
+          ]
+        },
+        {
+          "text": "POST /api/webhooks uses the admin key here, which skips row-level security.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 15,
+              "endLine": 18,
+              "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+            }
+          ]
+        },
+        {
+          "text": "Used by POST /api/webhooks and page /.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "table:prices",
+      "kind": "table",
+      "name": "prices",
+      "sub": "Table",
+      "file": "schema.sql",
+      "line": 74,
+      "ev": {
+        "file": "schema.sql",
+        "line": 74,
+        "endLine": 97,
+        "code": "create table prices (\n                                           \n  id text primary key,\n                                                     \n  product_id text references products, \n                                                     \n  active boolean,\n                                      \n  description text,\n                                                                                                                                                \n  unit_amount bigint,\n                                                  \n…"
+      },
+      "fields": [
+        "id",
+        "product_id",
+        "active",
+        "description",
+        "unit_amount",
+        "currency",
+        "type",
+        "interval",
+        "interval_count",
+        "trial_period_days",
+        "metadata"
+      ],
+      "external": [],
+      "rls": {
+        "policies": [
+          {
+            "name": "Allow public read-only access.",
+            "for": "select",
+            "ev": {
+              "file": "schema.sql",
+              "line": 99,
+              "code": "create policy \"Allow public read-only access.\" on prices for select using (true);"
+            }
+          }
+        ],
+        "enabled": true,
+        "ev": {
+          "file": "supabase/migrations/20230530034630_init.sql",
+          "line": 98,
+          "code": "alter table prices enable row level security"
+        }
+      },
+      "explain": [
+        {
+          "text": "A database table with 11 fields: id, product_id, active, description, unit_amount, currency, type, interval, interval_count, trial_period_days and metadata.",
+          "evidence": [
+            {
+              "file": "schema.sql",
+              "line": 74,
+              "endLine": 97,
+              "code": "create table prices (\n                                           \n  id text primary key,\n                                                     \n  product_id text references products, \n                                                     \n  active boolean,\n                                      \n  description text,\n                                                                                                                                                \n  unit_amount bigint,\n                                                  \n…"
+            }
+          ]
+        },
+        {
+          "text": "Each prices belongs to one products.",
+          "evidence": [
+            {
+              "file": "schema.sql",
+              "line": 76,
+              "code": "product_id text references products"
+            }
+          ]
+        },
+        {
+          "text": "Row-level security is on. The database itself only allows: \"Allow public read-only access.\" (select).",
+          "evidence": [
+            {
+              "file": "supabase/migrations/20230530034630_init.sql",
+              "line": 98,
+              "code": "alter table prices enable row level security"
+            },
+            {
+              "file": "schema.sql",
+              "line": 99,
+              "code": "create policy \"Allow public read-only access.\" on prices for select using (true);"
+            }
+          ]
+        },
+        {
+          "text": "POST /api/webhooks uses the admin key here, which skips row-level security.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 15,
+              "endLine": 18,
+              "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+            }
+          ]
+        },
+        {
+          "text": "Used by POST /api/webhooks.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "table:subscriptions",
+      "kind": "table",
+      "name": "subscriptions",
+      "sub": "Table",
+      "file": "schema.sql",
+      "line": 106,
+      "ev": {
+        "file": "schema.sql",
+        "line": 106,
+        "endLine": 136,
+        "code": "create table subscriptions (\n                                                \n  id text primary key,\n  user_id uuid references auth.users not null,\n                                                                                  \n  status subscription_status,\n                                                                                                          \n  metadata jsonb,\n                                                    \n  price_id text references prices,\n                                                                                                                                      \n  quantity integer,\n…"
+      },
+      "fields": [
+        "id",
+        "user_id",
+        "status",
+        "metadata",
+        "price_id",
+        "quantity",
+        "cancel_at_period_end",
+        "created",
+        "current_period_start",
+        "current_period_end",
+        "ended_at",
+        "cancel_at",
+        "canceled_at",
+        "trial_start",
+        "trial_end"
+      ],
+      "external": [
+        {
+          "field": "user_id",
+          "to": "auth.users",
+          "line": 108,
+          "code": "user_id uuid references auth.users not null"
+        }
+      ],
+      "rls": {
+        "policies": [
+          {
+            "name": "Can only view own subs data.",
+            "for": "select",
+            "ev": {
+              "file": "schema.sql",
+              "line": 138,
+              "code": "create policy \"Can only view own subs data.\" on subscriptions for select using (auth.uid() = user_id);"
+            }
+          }
+        ],
+        "enabled": true,
+        "ev": {
+          "file": "supabase/migrations/20230530034630_init.sql",
+          "line": 137,
+          "code": "alter table subscriptions enable row level security"
+        }
+      },
+      "explain": [
+        {
+          "text": "A database table with 15 fields: id, user_id, status, metadata, price_id, quantity, cancel_at_period_end, created, current_period_start, current_period_end, ended_at, cancel_at, canceled_at, trial_start and trial_end.",
+          "evidence": [
+            {
+              "file": "schema.sql",
+              "line": 106,
+              "endLine": 136,
+              "code": "create table subscriptions (\n                                                \n  id text primary key,\n  user_id uuid references auth.users not null,\n                                                                                  \n  status subscription_status,\n                                                                                                          \n  metadata jsonb,\n                                                    \n  price_id text references prices,\n                                                                                                                                      \n  quantity integer,\n…"
+            }
+          ]
+        },
+        {
+          "text": "Each subscriptions belongs to one prices.",
+          "evidence": [
+            {
+              "file": "schema.sql",
+              "line": 113,
+              "code": "price_id text references prices"
+            }
+          ]
+        },
+        {
+          "text": "Each row is tied to a login account in Supabase's built-in users list (through user_id).",
+          "evidence": [
+            {
+              "file": "schema.sql",
+              "line": 108,
+              "code": "user_id uuid references auth.users not null"
+            }
+          ]
+        },
+        {
+          "text": "Row-level security is on. The database itself only allows: \"Can only view own subs data.\" (select).",
+          "evidence": [
+            {
+              "file": "supabase/migrations/20230530034630_init.sql",
+              "line": 137,
+              "code": "alter table subscriptions enable row level security"
+            },
+            {
+              "file": "schema.sql",
+              "line": 138,
+              "code": "create policy \"Can only view own subs data.\" on subscriptions for select using (auth.uid() = user_id);"
+            }
+          ]
+        },
+        {
+          "text": "POST /api/webhooks uses the admin key here, which skips row-level security.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 15,
+              "endLine": 18,
+              "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+            }
+          ]
+        },
+        {
+          "text": "Used by POST /api/webhooks, page /account and page /.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:POST /api/webhooks",
+      "kind": "route",
+      "name": "/api/webhooks",
+      "sub": "POST",
+      "method": "POST",
+      "file": "app/api/webhooks/route.ts",
+      "line": 24,
+      "ev": {
+        "file": "app/api/webhooks/route.ts",
+        "line": 24,
+        "endLine": 96,
+        "code": "export async function POST(req: Request) {\n  const body = await req.text();\n  const sig = req.headers.get('stripe-signature') as string;\n  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;\n  let event: Stripe.Event;\n\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "verified": true,
+      "explain": [
+        {
+          "text": "Handles POST requests to /api/webhooks.",
+          "evidence": [
+            {
+              "file": "app/api/webhooks/route.ts",
+              "line": 24,
+              "endLine": 96,
+              "code": "export async function POST(req: Request) {\n  const body = await req.text();\n  const sig = req.headers.get('stripe-signature') as string;\n  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;\n  let event: Stripe.Event;\n\n…"
+            }
+          ]
+        },
+        {
+          "text": "Reads from customers.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 217,
+              "endLine": 218,
+              "code": "const { data: customerData, error: noCustomerError } = await supabaseAdmin\n  .from('customers')"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to products, prices, subscriptions and users.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 30,
+              "endLine": 31,
+              "code": "const { error: upsertError } = await supabaseAdmin\n  .from('products')"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 77,
+              "endLine": 78,
+              "code": "const { error: deletionError } = await supabaseAdmin\n  .from('products')"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 55,
+              "endLine": 56,
+              "code": "const { error: upsertError } = await supabaseAdmin\n  .from('prices')"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 87,
+              "endLine": 88,
+              "code": "const { error: deletionError } = await supabaseAdmin\n  .from('prices')"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 266,
+              "endLine": 267,
+              "code": "const { error: upsertError } = await supabaseAdmin\n  .from('subscriptions')"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 201,
+              "endLine": 202,
+              "code": "const { error: updateError } = await supabaseAdmin\n  .from('users')"
+            }
+          ]
+        },
+        {
+          "text": "Uses Stripe (through manageSubscriptionStatusChange()() → copyBillingDetailsToCustomer()()).",
+          "evidence": [
+            {
+              "file": "app/api/webhooks/route.ts",
+              "line": 33,
+              "endLine": 33,
+              "code": "event = stripe.webhooks.constructEvent(body, sig, webhookSecret);"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 228,
+              "endLine": 230,
+              "code": "const subscription = await stripe.subscriptions.retrieve(subscriptionId, {\n  expand: ['default_payment_method']\n});"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 200,
+              "endLine": 200,
+              "code": "await stripe.customers.update(customer, { name, phone, address });"
+            }
+          ]
+        },
+        {
+          "text": "It verifies the sender's signature.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:GET /auth/callback",
+      "kind": "route",
+      "name": "/auth/callback",
+      "sub": "GET",
+      "method": "GET",
+      "file": "app/auth/callback/route.ts",
+      "line": 6,
+      "ev": {
+        "file": "app/auth/callback/route.ts",
+        "line": 6,
+        "endLine": 36,
+        "code": "export async function GET(request: NextRequest) {\n  // The `/auth/callback` route is required for the server-side auth flow implemented\n  // by the `@supabase/ssr` package. It exchanges an auth code for the user's session.\n  const requestUrl = new URL(request.url);\n  const code = requestUrl.searchParams.get('code');\n\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "Handles GET requests to /auth/callback.",
+          "evidence": [
+            {
+              "file": "app/auth/callback/route.ts",
+              "line": 6,
+              "endLine": 36,
+              "code": "export async function GET(request: NextRequest) {\n  // The `/auth/callback` route is required for the server-side auth flow implemented\n  // by the `@supabase/ssr` package. It exchanges an auth code for the user's session.\n  const requestUrl = new URL(request.url);\n  const code = requestUrl.searchParams.get('code');\n\n…"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in. No login lookup was found in this handler, the functions it calls, or middleware covering this path.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "route:GET /auth/reset_password",
+      "kind": "route",
+      "name": "/auth/reset_password",
+      "sub": "GET",
+      "method": "GET",
+      "file": "app/auth/reset_password/route.ts",
+      "line": 6,
+      "ev": {
+        "file": "app/auth/reset_password/route.ts",
+        "line": 6,
+        "endLine": 36,
+        "code": "export async function GET(request: NextRequest) {\n  // The `/auth/callback` route is required for the server-side auth flow implemented\n  // by the `@supabase/ssr` package. It exchanges an auth code for the user's session.\n  const requestUrl = new URL(request.url);\n  const code = requestUrl.searchParams.get('code');\n\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "Handles GET requests to /auth/reset_password.",
+          "evidence": [
+            {
+              "file": "app/auth/reset_password/route.ts",
+              "line": 6,
+              "endLine": 36,
+              "code": "export async function GET(request: NextRequest) {\n  // The `/auth/callback` route is required for the server-side auth flow implemented\n  // by the `@supabase/ssr` package. It exchanges an auth code for the user's session.\n  const requestUrl = new URL(request.url);\n  const code = requestUrl.searchParams.get('code');\n\n…"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in. No login lookup was found in this handler, the functions it calls, or middleware covering this path.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:redirectToPath() utils/auth-helpers/server.ts",
+      "kind": "action",
+      "name": "redirectToPath()",
+      "sub": "Server action",
+      "file": "utils/auth-helpers/server.ts",
+      "line": 14,
+      "ev": {
+        "file": "utils/auth-helpers/server.ts",
+        "line": 14,
+        "endLine": 16,
+        "code": "export async function redirectToPath(path: string) {\n  return redirect(path);\n}"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/auth-helpers/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 14,
+              "endLine": 16,
+              "code": "export async function redirectToPath(path: string) {\n  return redirect(path);\n}"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /account, Frame around every page and page /signin/:id.",
+          "evidence": [
+            {
+              "file": "app/account/page.tsx",
+              "line": 38,
+              "endLine": 38,
+              "code": "<NameForm userName={userDetails?.full_name ?? ''} />",
+              "note": "renders <NameForm>"
+            },
+            {
+              "file": "components/ui/AccountForms/NameForm.tsx",
+              "line": 22,
+              "endLine": 22,
+              "code": "handleRequest(e, updateName, router);",
+              "note": "calls handleRequest()"
+            },
+            {
+              "file": "utils/auth-helpers/client.ts",
+              "line": 25,
+              "endLine": 25,
+              "code": "return await redirectToPath(redirectUrl);"
+            },
+            {
+              "file": "app/layout.tsx",
+              "line": 26,
+              "endLine": 26,
+              "code": "<Navbar />",
+              "note": "renders <Navbar>"
+            },
+            {
+              "file": "components/ui/Navbar/Navbar.tsx",
+              "line": 18,
+              "endLine": 18,
+              "code": "<Navlinks user={user} />",
+              "note": "renders <Navlinks>"
+            },
+            {
+              "file": "components/ui/Navbar/Navlinks.tsx",
+              "line": 37,
+              "endLine": 37,
+              "code": "<form onSubmit={(e) => handleRequest(e, SignOut, router)}>",
+              "note": "calls handleRequest()"
+            },
+            {
+              "file": "utils/auth-helpers/client.ts",
+              "line": 25,
+              "endLine": 25,
+              "code": "return await redirectToPath(redirectUrl);"
+            },
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 75,
+              "endLine": 78,
+              "code": "<PasswordSignIn\n  allowEmail={allowEmail}\n…",
+              "note": "renders <PasswordSignIn>"
+            },
+            {
+              "file": "components/ui/AuthForms/PasswordSignIn.tsx",
+              "line": 25,
+              "endLine": 25,
+              "code": "await handleRequest(e, signInWithPassword, router);",
+              "note": "calls handleRequest()"
+            },
+            {
+              "file": "utils/auth-helpers/client.ts",
+              "line": 25,
+              "endLine": 25,
+              "code": "return await redirectToPath(redirectUrl);"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:SignOut() utils/auth-helpers/server.ts",
+      "kind": "action",
+      "name": "SignOut()",
+      "sub": "Server action",
+      "file": "utils/auth-helpers/server.ts",
+      "line": 18,
+      "ev": {
+        "file": "utils/auth-helpers/server.ts",
+        "line": 18,
+        "endLine": 33,
+        "code": "export async function SignOut(formData: FormData) {\n  const pathName = String(formData.get('pathName')).trim();\n\n  const supabase = createClient();\n  const { error } = await supabase.auth.signOut();\n\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in this handler",
+        "how": "uses auth.signOut(), which Supabase only runs for the logged-in user",
+        "certainty": "library",
+        "evidence": [
+          {
+            "file": "utils/auth-helpers/server.ts",
+            "line": 22,
+            "endLine": 22,
+            "code": "const { error } = await supabase.auth.signOut();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/auth-helpers/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 18,
+              "endLine": 33,
+              "code": "export async function SignOut(formData: FormData) {\n  const pathName = String(formData.get('pathName')).trim();\n\n  const supabase = createClient();\n  const { error } = await supabase.auth.signOut();\n\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from Frame around every page.",
+          "evidence": [
+            {
+              "file": "app/layout.tsx",
+              "line": 26,
+              "endLine": 26,
+              "code": "<Navbar />",
+              "note": "renders <Navbar>"
+            },
+            {
+              "file": "components/ui/Navbar/Navbar.tsx",
+              "line": 18,
+              "endLine": 18,
+              "code": "<Navlinks user={user} />",
+              "note": "renders <Navlinks>"
+            },
+            {
+              "file": "components/ui/Navbar/Navlinks.tsx",
+              "line": 37,
+              "endLine": 37,
+              "code": "<form onSubmit={(e) => handleRequest(e, SignOut, router)}>"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in this handler: it uses auth.signOut(), which Supabase only runs for the logged-in user.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 22,
+              "endLine": 22,
+              "code": "const { error } = await supabase.auth.signOut();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:signInWithEmail() utils/auth-helpers/server.ts",
+      "kind": "action",
+      "name": "signInWithEmail()",
+      "sub": "Server action",
+      "file": "utils/auth-helpers/server.ts",
+      "line": 35,
+      "ev": {
+        "file": "utils/auth-helpers/server.ts",
+        "line": 35,
+        "endLine": 87,
+        "code": "export async function signInWithEmail(formData: FormData) {\n  const cookieStore = cookies();\n  const callbackURL = getURL('/auth/callback');\n\n  const email = String(formData.get('email')).trim();\n  let redirectPath: string;\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/auth-helpers/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 35,
+              "endLine": 87,
+              "code": "export async function signInWithEmail(formData: FormData) {\n  const cookieStore = cookies();\n  const callbackURL = getURL('/auth/callback');\n\n  const email = String(formData.get('email')).trim();\n  let redirectPath: string;\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /signin/:id.",
+          "evidence": [
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 81,
+              "endLine": 85,
+              "code": "<EmailSignIn\n  allowPassword={allowPassword}\n…",
+              "note": "renders <EmailSignIn>"
+            },
+            {
+              "file": "components/ui/AuthForms/EmailSignIn.tsx",
+              "line": 27,
+              "endLine": 27,
+              "code": "await handleRequest(e, signInWithEmail, router);"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:requestPasswordUpdate() utils/auth-helpers/server.ts",
+      "kind": "action",
+      "name": "requestPasswordUpdate()",
+      "sub": "Server action",
+      "file": "utils/auth-helpers/server.ts",
+      "line": 89,
+      "ev": {
+        "file": "utils/auth-helpers/server.ts",
+        "line": 89,
+        "endLine": 132,
+        "code": "export async function requestPasswordUpdate(formData: FormData) {\n  const callbackURL = getURL('/auth/reset_password');\n\n  // Get form data\n  const email = String(formData.get('email')).trim();\n  let redirectPath: string;\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/auth-helpers/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 89,
+              "endLine": 132,
+              "code": "export async function requestPasswordUpdate(formData: FormData) {\n  const callbackURL = getURL('/auth/reset_password');\n\n  // Get form data\n  const email = String(formData.get('email')).trim();\n  let redirectPath: string;\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /signin/:id.",
+          "evidence": [
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 88,
+              "endLine": 92,
+              "code": "<ForgotPassword\n  allowEmail={allowEmail}\n…",
+              "note": "renders <ForgotPassword>"
+            },
+            {
+              "file": "components/ui/AuthForms/ForgotPassword.tsx",
+              "line": 27,
+              "endLine": 27,
+              "code": "await handleRequest(e, requestPasswordUpdate, router);"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:signInWithPassword() utils/auth-helpers/server.ts",
+      "kind": "action",
+      "name": "signInWithPassword()",
+      "sub": "Server action",
+      "file": "utils/auth-helpers/server.ts",
+      "line": 134,
+      "ev": {
+        "file": "utils/auth-helpers/server.ts",
+        "line": 134,
+        "endLine": 164,
+        "code": "export async function signInWithPassword(formData: FormData) {\n  const cookieStore = cookies();\n  const email = String(formData.get('email')).trim();\n  const password = String(formData.get('password')).trim();\n  let redirectPath: string;\n\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/auth-helpers/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 134,
+              "endLine": 164,
+              "code": "export async function signInWithPassword(formData: FormData) {\n  const cookieStore = cookies();\n  const email = String(formData.get('email')).trim();\n  const password = String(formData.get('password')).trim();\n  let redirectPath: string;\n\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /signin/:id.",
+          "evidence": [
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 75,
+              "endLine": 78,
+              "code": "<PasswordSignIn\n  allowEmail={allowEmail}\n…",
+              "note": "renders <PasswordSignIn>"
+            },
+            {
+              "file": "components/ui/AuthForms/PasswordSignIn.tsx",
+              "line": 25,
+              "endLine": 25,
+              "code": "await handleRequest(e, signInWithPassword, router);"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:signUp() utils/auth-helpers/server.ts",
+      "kind": "action",
+      "name": "signUp()",
+      "sub": "Server action",
+      "file": "utils/auth-helpers/server.ts",
+      "line": 166,
+      "ev": {
+        "file": "utils/auth-helpers/server.ts",
+        "line": 166,
+        "endLine": 223,
+        "code": "export async function signUp(formData: FormData) {\n  const callbackURL = getURL('/auth/callback');\n\n  const email = String(formData.get('email')).trim();\n  const password = String(formData.get('password')).trim();\n  let redirectPath: string;\n…"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/auth-helpers/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 166,
+              "endLine": 223,
+              "code": "export async function signUp(formData: FormData) {\n  const callbackURL = getURL('/auth/callback');\n\n  const email = String(formData.get('email')).trim();\n  const password = String(formData.get('password')).trim();\n  let redirectPath: string;\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /signin/:id.",
+          "evidence": [
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 98,
+              "endLine": 98,
+              "code": "<SignUp allowEmail={allowEmail} redirectMethod={redirectMethod} />",
+              "note": "renders <SignUp>"
+            },
+            {
+              "file": "components/ui/AuthForms/Signup.tsx",
+              "line": 23,
+              "endLine": 23,
+              "code": "await handleRequest(e, signUp, router);"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:updatePassword() utils/auth-helpers/server.ts",
+      "kind": "action",
+      "name": "updatePassword()",
+      "sub": "Server action",
+      "file": "utils/auth-helpers/server.ts",
+      "line": 225,
+      "ev": {
+        "file": "utils/auth-helpers/server.ts",
+        "line": 225,
+        "endLine": 265,
+        "code": "export async function updatePassword(formData: FormData) {\n  const password = String(formData.get('password')).trim();\n  const passwordConfirm = String(formData.get('passwordConfirm')).trim();\n  let redirectPath: string;\n\n  // Check that the password and confirmation match\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in this handler",
+        "how": "uses auth.updateUser(), which Supabase only runs for the logged-in user",
+        "certainty": "library",
+        "evidence": [
+          {
+            "file": "utils/auth-helpers/server.ts",
+            "line": 240,
+            "endLine": 242,
+            "code": "const { error, data } = await supabase.auth.updateUser({\n  password\n});"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/auth-helpers/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 225,
+              "endLine": 265,
+              "code": "export async function updatePassword(formData: FormData) {\n  const password = String(formData.get('password')).trim();\n  const passwordConfirm = String(formData.get('passwordConfirm')).trim();\n  let redirectPath: string;\n\n  // Check that the password and confirmation match\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /signin/:id.",
+          "evidence": [
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 95,
+              "endLine": 95,
+              "code": "<UpdatePassword redirectMethod={redirectMethod} />",
+              "note": "renders <UpdatePassword>"
+            },
+            {
+              "file": "components/ui/AuthForms/UpdatePassword.tsx",
+              "line": 21,
+              "endLine": 21,
+              "code": "await handleRequest(e, updatePassword, router);"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in this handler: it uses auth.updateUser(), which Supabase only runs for the logged-in user.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 240,
+              "endLine": 242,
+              "code": "const { error, data } = await supabase.auth.updateUser({\n  password\n});"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:updateEmail() utils/auth-helpers/server.ts",
+      "kind": "action",
+      "name": "updateEmail()",
+      "sub": "Server action",
+      "file": "utils/auth-helpers/server.ts",
+      "line": 267,
+      "ev": {
+        "file": "utils/auth-helpers/server.ts",
+        "line": 267,
+        "endLine": 306,
+        "code": "export async function updateEmail(formData: FormData) {\n  // Get form data\n  const newEmail = String(formData.get('newEmail')).trim();\n\n  // Check that the email is valid\n  if (!isValidEmail(newEmail)) {\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in this handler",
+        "how": "uses auth.updateUser(), which Supabase only runs for the logged-in user",
+        "certainty": "library",
+        "evidence": [
+          {
+            "file": "utils/auth-helpers/server.ts",
+            "line": 286,
+            "endLine": 291,
+            "code": "const { error } = await supabase.auth.updateUser(\n  { email: newEmail },\n  {\n    emailRedirectTo: callbackUrl\n…"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/auth-helpers/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 267,
+              "endLine": 306,
+              "code": "export async function updateEmail(formData: FormData) {\n  // Get form data\n  const newEmail = String(formData.get('newEmail')).trim();\n\n  // Check that the email is valid\n  if (!isValidEmail(newEmail)) {\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /account.",
+          "evidence": [
+            {
+              "file": "app/account/page.tsx",
+              "line": 39,
+              "endLine": 39,
+              "code": "<EmailForm userEmail={user.email} />",
+              "note": "renders <EmailForm>"
+            },
+            {
+              "file": "components/ui/AccountForms/EmailForm.tsx",
+              "line": 26,
+              "endLine": 26,
+              "code": "handleRequest(e, updateEmail, router);"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in this handler: it uses auth.updateUser(), which Supabase only runs for the logged-in user.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 286,
+              "endLine": 291,
+              "code": "const { error } = await supabase.auth.updateUser(\n  { email: newEmail },\n  {\n    emailRedirectTo: callbackUrl\n…"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:updateName() utils/auth-helpers/server.ts",
+      "kind": "action",
+      "name": "updateName()",
+      "sub": "Server action",
+      "file": "utils/auth-helpers/server.ts",
+      "line": 308,
+      "ev": {
+        "file": "utils/auth-helpers/server.ts",
+        "line": 308,
+        "endLine": 336,
+        "code": "export async function updateName(formData: FormData) {\n  // Get form data\n  const fullName = String(formData.get('fullName')).trim();\n\n  const supabase = createClient();\n  const { error, data } = await supabase.auth.updateUser({\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in this handler",
+        "how": "uses auth.updateUser(), which Supabase only runs for the logged-in user",
+        "certainty": "library",
+        "evidence": [
+          {
+            "file": "utils/auth-helpers/server.ts",
+            "line": 313,
+            "endLine": 315,
+            "code": "const { error, data } = await supabase.auth.updateUser({\n  data: { full_name: fullName }\n});"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/auth-helpers/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 308,
+              "endLine": 336,
+              "code": "export async function updateName(formData: FormData) {\n  // Get form data\n  const fullName = String(formData.get('fullName')).trim();\n\n  const supabase = createClient();\n  const { error, data } = await supabase.auth.updateUser({\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /account.",
+          "evidence": [
+            {
+              "file": "app/account/page.tsx",
+              "line": 38,
+              "endLine": 38,
+              "code": "<NameForm userName={userDetails?.full_name ?? ''} />",
+              "note": "renders <NameForm>"
+            },
+            {
+              "file": "components/ui/AccountForms/NameForm.tsx",
+              "line": 22,
+              "endLine": 22,
+              "code": "handleRequest(e, updateName, router);"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in this handler: it uses auth.updateUser(), which Supabase only runs for the logged-in user.",
+          "evidence": [
+            {
+              "file": "utils/auth-helpers/server.ts",
+              "line": 313,
+              "endLine": 315,
+              "code": "const { error, data } = await supabase.auth.updateUser({\n  data: { full_name: fullName }\n});"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:checkoutWithStripe() utils/stripe/server.ts",
+      "kind": "action",
+      "name": "checkoutWithStripe()",
+      "sub": "Server action",
+      "file": "utils/stripe/server.ts",
+      "line": 21,
+      "ev": {
+        "file": "utils/stripe/server.ts",
+        "line": 21,
+        "endLine": 120,
+        "code": "export async function checkoutWithStripe(\n  price: Price,\n  redirectPath: string = '/account'\n): Promise<CheckoutResponse> {\n  try {\n    // Get the user from Supabase auth\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in this handler",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "utils/stripe/server.ts",
+            "line": 31,
+            "endLine": 31,
+            "code": "} = await supabase.auth.getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/stripe/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/stripe/server.ts",
+              "line": 21,
+              "endLine": 120,
+              "code": "export async function checkoutWithStripe(\n  price: Price,\n  redirectPath: string = '/account'\n): Promise<CheckoutResponse> {\n  try {\n    // Get the user from Supabase auth\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /.",
+          "evidence": [
+            {
+              "file": "app/page.tsx",
+              "line": 18,
+              "endLine": 22,
+              "code": "<Pricing\n  user={user}\n…",
+              "note": "renders <Pricing>"
+            },
+            {
+              "file": "components/ui/Pricing/Pricing.tsx",
+              "line": 57,
+              "endLine": 60,
+              "code": "const { errorRedirect, sessionId } = await checkoutWithStripe(\n  price,\n…"
+            }
+          ]
+        },
+        {
+          "text": "Reads from customers.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 123,
+              "endLine": 124,
+              "code": "await supabaseAdmin\n  .from('customers')"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to customers.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 156,
+              "endLine": 157,
+              "code": "const { error: updateError } = await supabaseAdmin\n  .from('customers')"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 96,
+              "endLine": 97,
+              "code": "const { error: upsertError } = await supabaseAdmin\n  .from('customers')"
+            }
+          ]
+        },
+        {
+          "text": "Uses Stripe (through createOrRetrieveCustomer() → createCustomerInStripe()).",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 136,
+              "endLine": 138,
+              "code": "const existingStripeCustomer = await stripe.customers.retrieve(\n  existingSupabaseCustomer.stripe_customer_id\n);"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 142,
+              "endLine": 142,
+              "code": "const stripeCustomers = await stripe.customers.list({ email: email });"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 108,
+              "endLine": 108,
+              "code": "const newCustomer = await stripe.customers.create(customerData);"
+            },
+            {
+              "file": "utils/stripe/server.ts",
+              "line": 89,
+              "endLine": 89,
+              "code": "session = await stripe.checkout.sessions.create(params);"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in this handler: it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "utils/stripe/server.ts",
+              "line": 31,
+              "endLine": 31,
+              "code": "} = await supabase.auth.getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "action:createStripePortal() utils/stripe/server.ts",
+      "kind": "action",
+      "name": "createStripePortal()",
+      "sub": "Server action",
+      "file": "utils/stripe/server.ts",
+      "line": 122,
+      "ev": {
+        "file": "utils/stripe/server.ts",
+        "line": 122,
+        "endLine": 181,
+        "code": "export async function createStripePortal(currentPath: string) {\n  try {\n    const supabase = createClient();\n    const {\n      error,\n      data: { user }\n…"
+      },
+      "guard": {
+        "status": "checked",
+        "where": "in this handler",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "utils/stripe/server.ts",
+            "line": 128,
+            "endLine": 128,
+            "code": "} = await supabase.auth.getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A server action: a function in utils/stripe/server.ts that the browser can trigger directly, like a hidden API route.",
+          "evidence": [
+            {
+              "file": "utils/stripe/server.ts",
+              "line": 122,
+              "endLine": 181,
+              "code": "export async function createStripePortal(currentPath: string) {\n  try {\n    const supabase = createClient();\n    const {\n      error,\n      data: { user }\n…"
+            }
+          ]
+        },
+        {
+          "text": "Triggered from page /account.",
+          "evidence": [
+            {
+              "file": "app/account/page.tsx",
+              "line": 37,
+              "endLine": 37,
+              "code": "<CustomerPortalForm subscription={subscription} />",
+              "note": "renders <CustomerPortalForm>"
+            },
+            {
+              "file": "components/ui/AccountForms/CustomerPortalForm.tsx",
+              "line": 42,
+              "endLine": 42,
+              "code": "const redirectUrl = await createStripePortal(currentPath);"
+            }
+          ]
+        },
+        {
+          "text": "Reads from customers.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 123,
+              "endLine": 124,
+              "code": "await supabaseAdmin\n  .from('customers')"
+            }
+          ]
+        },
+        {
+          "text": "Saves changes to customers.",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 156,
+              "endLine": 157,
+              "code": "const { error: updateError } = await supabaseAdmin\n  .from('customers')"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 96,
+              "endLine": 97,
+              "code": "const { error: upsertError } = await supabaseAdmin\n  .from('customers')"
+            }
+          ]
+        },
+        {
+          "text": "Uses Stripe (through createOrRetrieveCustomer() → createCustomerInStripe()).",
+          "evidence": [
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 136,
+              "endLine": 138,
+              "code": "const existingStripeCustomer = await stripe.customers.retrieve(\n  existingSupabaseCustomer.stripe_customer_id\n);"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 142,
+              "endLine": 142,
+              "code": "const stripeCustomers = await stripe.customers.list({ email: email });"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 108,
+              "endLine": 108,
+              "code": "const newCustomer = await stripe.customers.create(customerData);"
+            },
+            {
+              "file": "utils/stripe/server.ts",
+              "line": 153,
+              "endLine": 156,
+              "code": "const { url } = await stripe.billingPortal.sessions.create({\n  customer,\n  return_url: getURL('/account')\n});"
+            }
+          ]
+        },
+        {
+          "text": "Checks who's logged in in this handler: it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "utils/stripe/server.ts",
+              "line": 128,
+              "endLine": 128,
+              "code": "} = await supabase.auth.getUser();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/account",
+      "kind": "page",
+      "layout": false,
+      "name": "/account",
+      "route": "/account",
+      "sub": "Page · server-built, interactive parts",
+      "file": "app/account/page.tsx",
+      "line": 12,
+      "ev": {
+        "file": "app/account/page.tsx",
+        "line": 12,
+        "endLine": 43,
+        "code": "export default async function Account() {\n  const supabase = createClient();\n  const [user, userDetails, subscription] = await Promise.all([\n    getUser(supabase),\n…"
+      },
+      "client": true,
+      "pageClient": false,
+      "guard": {
+        "status": "checked",
+        "where": "in this handler",
+        "how": "blocks the request when there's no login",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "app/account/page.tsx",
+            "line": 15,
+            "endLine": 15,
+            "code": "getUser(supabase),"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A page at /account.",
+          "evidence": [
+            {
+              "file": "app/account/page.tsx",
+              "line": 12,
+              "endLine": 43,
+              "code": "export default async function Account() {\n  const supabase = createClient();\n  const [user, userDetails, subscription] = await Promise.all([\n    getUser(supabase),\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server, and some parts of it run in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It triggers server actions: createStripePortal(), redirectToPath(), updateName() and updateEmail().",
+          "evidence": [
+            {
+              "file": "app/account/page.tsx",
+              "line": 37,
+              "endLine": 37,
+              "code": "<CustomerPortalForm subscription={subscription} />",
+              "note": "renders <CustomerPortalForm>"
+            },
+            {
+              "file": "components/ui/AccountForms/CustomerPortalForm.tsx",
+              "line": 42,
+              "endLine": 42,
+              "code": "const redirectUrl = await createStripePortal(currentPath);"
+            },
+            {
+              "file": "app/account/page.tsx",
+              "line": 38,
+              "endLine": 38,
+              "code": "<NameForm userName={userDetails?.full_name ?? ''} />",
+              "note": "renders <NameForm>"
+            },
+            {
+              "file": "components/ui/AccountForms/NameForm.tsx",
+              "line": 22,
+              "endLine": 22,
+              "code": "handleRequest(e, updateName, router);",
+              "note": "calls handleRequest()"
+            },
+            {
+              "file": "utils/auth-helpers/client.ts",
+              "line": 25,
+              "endLine": 25,
+              "code": "return await redirectToPath(redirectUrl);"
+            },
+            {
+              "file": "app/account/page.tsx",
+              "line": 38,
+              "endLine": 38,
+              "code": "<NameForm userName={userDetails?.full_name ?? ''} />",
+              "note": "renders <NameForm>"
+            },
+            {
+              "file": "components/ui/AccountForms/NameForm.tsx",
+              "line": 22,
+              "endLine": 22,
+              "code": "handleRequest(e, updateName, router);"
+            },
+            {
+              "file": "app/account/page.tsx",
+              "line": 39,
+              "endLine": 39,
+              "code": "<EmailForm userEmail={user.email} />",
+              "note": "renders <EmailForm>"
+            },
+            {
+              "file": "components/ui/AccountForms/EmailForm.tsx",
+              "line": 26,
+              "endLine": 26,
+              "code": "handleRequest(e, updateEmail, router);"
+            }
+          ]
+        },
+        {
+          "text": "While building the page, the server reads users and reads subscriptions.",
+          "evidence": [
+            {
+              "file": "utils/supabase/queries.ts",
+              "line": 34,
+              "endLine": 35,
+              "code": "const { data: userDetails } = await supabase\n  .from('users')"
+            },
+            {
+              "file": "utils/supabase/queries.ts",
+              "line": 12,
+              "endLine": 13,
+              "code": "const { data: subscription, error } = await supabase\n  .from('subscriptions')"
+            }
+          ]
+        },
+        {
+          "text": "Only logged-in visitors get it: it blocks the request when there's no login.",
+          "evidence": [
+            {
+              "file": "app/account/page.tsx",
+              "line": 15,
+              "endLine": 15,
+              "code": "getUser(supabase),"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/account/page.tsx",
+        "components/ui/AccountForms/CustomerPortalForm.tsx",
+        "components/ui/AccountForms/EmailForm.tsx",
+        "components/ui/AccountForms/NameForm.tsx",
+        "utils/supabase/server.ts",
+        "utils/supabase/queries.ts",
+        "components/ui/Button/index.ts",
+        "utils/stripe/server.ts",
+        "components/ui/Card/index.ts",
+        "types_db.ts",
+        "utils/auth-helpers/server.ts",
+        "utils/auth-helpers/client.ts",
+        "components/ui/Button/Button.tsx",
+        "utils/stripe/config.ts",
+        "utils/supabase/admin.ts",
+        "utils/helpers.ts",
+        "components/ui/Card/Card.tsx",
+        "utils/auth-helpers/settings.ts",
+        "utils/supabase/client.ts",
+        "components/ui/LoadingDots/index.ts",
+        "components/ui/LoadingDots/LoadingDots.tsx"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "layout:/",
+      "kind": "page",
+      "layout": true,
+      "name": "Frame around every page",
+      "route": "/",
+      "sub": "Page · server-built, interactive parts",
+      "file": "app/layout.tsx",
+      "line": 22,
+      "ev": {
+        "file": "app/layout.tsx",
+        "line": 22,
+        "endLine": 40,
+        "code": "export default async function RootLayout({ children }: PropsWithChildren) {\n  return (\n    <html lang=\"en\">\n      <body className=\"bg-black\">\n…"
+      },
+      "client": true,
+      "pageClient": false,
+      "guard": {
+        "status": "unenforced",
+        "how": "calls auth.getUser() but never stops the request when nobody is logged in",
+        "evidence": [
+          {
+            "file": "app/layout.tsx",
+            "line": 26,
+            "endLine": 26,
+            "code": "<Navbar />",
+            "note": "renders <Navbar>"
+          },
+          {
+            "file": "components/ui/Navbar/Navbar.tsx",
+            "line": 10,
+            "endLine": 10,
+            "code": "} = await supabase.auth.getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "The shared frame (layout) drawn around every page, such as the navigation bar.",
+          "evidence": [
+            {
+              "file": "app/layout.tsx",
+              "line": 22,
+              "endLine": 40,
+              "code": "export default async function RootLayout({ children }: PropsWithChildren) {\n  return (\n    <html lang=\"en\">\n      <body className=\"bg-black\">\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server, and some parts of it run in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It triggers server actions: redirectToPath() and SignOut().",
+          "evidence": [
+            {
+              "file": "app/layout.tsx",
+              "line": 26,
+              "endLine": 26,
+              "code": "<Navbar />",
+              "note": "renders <Navbar>"
+            },
+            {
+              "file": "components/ui/Navbar/Navbar.tsx",
+              "line": 18,
+              "endLine": 18,
+              "code": "<Navlinks user={user} />",
+              "note": "renders <Navlinks>"
+            },
+            {
+              "file": "components/ui/Navbar/Navlinks.tsx",
+              "line": 37,
+              "endLine": 37,
+              "code": "<form onSubmit={(e) => handleRequest(e, SignOut, router)}>",
+              "note": "calls handleRequest()"
+            },
+            {
+              "file": "utils/auth-helpers/client.ts",
+              "line": 25,
+              "endLine": 25,
+              "code": "return await redirectToPath(redirectUrl);"
+            },
+            {
+              "file": "app/layout.tsx",
+              "line": 26,
+              "endLine": 26,
+              "code": "<Navbar />",
+              "note": "renders <Navbar>"
+            },
+            {
+              "file": "components/ui/Navbar/Navbar.tsx",
+              "line": 18,
+              "endLine": 18,
+              "code": "<Navlinks user={user} />",
+              "note": "renders <Navlinks>"
+            },
+            {
+              "file": "components/ui/Navbar/Navlinks.tsx",
+              "line": 37,
+              "endLine": 37,
+              "code": "<form onSubmit={(e) => handleRequest(e, SignOut, router)}>"
+            }
+          ]
+        },
+        {
+          "text": "It looks up who's logged in, but shows the page to everyone.",
+          "evidence": [
+            {
+              "file": "app/layout.tsx",
+              "line": 26,
+              "endLine": 26,
+              "code": "<Navbar />",
+              "note": "renders <Navbar>"
+            },
+            {
+              "file": "components/ui/Navbar/Navbar.tsx",
+              "line": 10,
+              "endLine": 10,
+              "code": "} = await supabase.auth.getUser();"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/layout.tsx",
+        "components/ui/Footer/index.ts",
+        "components/ui/Navbar/index.ts",
+        "components/ui/Toasts/toaster.tsx",
+        "utils/helpers.ts",
+        "components/ui/Footer/Footer.tsx",
+        "components/ui/Navbar/Navbar.tsx",
+        "components/ui/Toasts/toast.tsx",
+        "components/ui/Toasts/use-toast.ts",
+        "components/icons/Logo.tsx",
+        "components/icons/GitHub.tsx",
+        "utils/supabase/server.ts",
+        "components/ui/Navbar/Navlinks.tsx",
+        "utils/cn.ts",
+        "types_db.ts",
+        "utils/auth-helpers/server.ts",
+        "utils/auth-helpers/client.ts",
+        "utils/auth-helpers/settings.ts",
+        "utils/supabase/client.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/",
+      "kind": "page",
+      "layout": false,
+      "name": "/",
+      "route": "/",
+      "sub": "Page · server-built, interactive parts",
+      "file": "app/page.tsx",
+      "line": 9,
+      "ev": {
+        "file": "app/page.tsx",
+        "line": 9,
+        "endLine": 24,
+        "code": "export default async function PricingPage() {\n  const supabase = createClient();\n  const [user, products, subscription] = await Promise.all([\n    getUser(supabase),\n…"
+      },
+      "client": true,
+      "pageClient": false,
+      "guard": {
+        "status": "unenforced",
+        "how": "calls getUser() but never stops the request when nobody is logged in",
+        "evidence": [
+          {
+            "file": "app/page.tsx",
+            "line": 12,
+            "endLine": 12,
+            "code": "getUser(supabase),"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A page at /.",
+          "evidence": [
+            {
+              "file": "app/page.tsx",
+              "line": 9,
+              "endLine": 24,
+              "code": "export default async function PricingPage() {\n  const supabase = createClient();\n  const [user, products, subscription] = await Promise.all([\n    getUser(supabase),\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server, and some parts of it run in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It triggers server actions: checkoutWithStripe().",
+          "evidence": [
+            {
+              "file": "app/page.tsx",
+              "line": 18,
+              "endLine": 22,
+              "code": "<Pricing\n  user={user}\n…",
+              "note": "renders <Pricing>"
+            },
+            {
+              "file": "components/ui/Pricing/Pricing.tsx",
+              "line": 57,
+              "endLine": 60,
+              "code": "const { errorRedirect, sessionId } = await checkoutWithStripe(\n  price,\n…"
+            }
+          ]
+        },
+        {
+          "text": "While building the page, the server reads products and reads subscriptions.",
+          "evidence": [
+            {
+              "file": "utils/supabase/queries.ts",
+              "line": 22,
+              "endLine": 23,
+              "code": "const { data: products, error } = await supabase\n  .from('products')"
+            },
+            {
+              "file": "utils/supabase/queries.ts",
+              "line": 12,
+              "endLine": 13,
+              "code": "const { data: subscription, error } = await supabase\n  .from('subscriptions')"
+            }
+          ]
+        },
+        {
+          "text": "It looks up who's logged in, but shows the page to everyone.",
+          "evidence": [
+            {
+              "file": "app/page.tsx",
+              "line": 12,
+              "endLine": 12,
+              "code": "getUser(supabase),"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/page.tsx",
+        "components/ui/Pricing/Pricing.tsx",
+        "utils/supabase/server.ts",
+        "utils/supabase/queries.ts",
+        "components/ui/Button/index.ts",
+        "components/ui/LogoCloud/index.ts",
+        "utils/stripe/client.ts",
+        "utils/stripe/server.ts",
+        "utils/helpers.ts",
+        "types_db.ts",
+        "components/ui/Button/Button.tsx",
+        "components/ui/LogoCloud/LogoCloud.tsx",
+        "utils/stripe/config.ts",
+        "utils/supabase/admin.ts",
+        "components/ui/LoadingDots/index.ts",
+        "components/ui/LoadingDots/LoadingDots.tsx"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/signin/:id",
+      "kind": "page",
+      "layout": false,
+      "name": "/signin/:id",
+      "route": "/signin/:id",
+      "sub": "Page · server-built, interactive parts",
+      "file": "app/signin/[id]/page.tsx",
+      "line": 20,
+      "ev": {
+        "file": "app/signin/[id]/page.tsx",
+        "line": 20,
+        "endLine": 112,
+        "code": "export default async function SignIn({\n  params,\n  searchParams\n}: {\n…"
+      },
+      "client": true,
+      "pageClient": false,
+      "guard": {
+        "status": "partial",
+        "where": "in this handler",
+        "how": "only stops the request in one case: when !user && viewProp === 'update_password'",
+        "certainty": "proven",
+        "evidence": [
+          {
+            "file": "app/signin/[id]/page.tsx",
+            "line": 49,
+            "endLine": 49,
+            "code": "} = await supabase.auth.getUser();"
+          }
+        ]
+      },
+      "explain": [
+        {
+          "text": "A page at /signin/:id.",
+          "evidence": [
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 20,
+              "endLine": 112,
+              "code": "export default async function SignIn({\n  params,\n  searchParams\n}: {\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server, and some parts of it run in the visitor's browser.",
+          "evidence": []
+        },
+        {
+          "text": "It triggers server actions: redirectToPath(), signInWithPassword(), signInWithEmail(), requestPasswordUpdate(), updatePassword() and signUp().",
+          "evidence": [
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 75,
+              "endLine": 78,
+              "code": "<PasswordSignIn\n  allowEmail={allowEmail}\n…",
+              "note": "renders <PasswordSignIn>"
+            },
+            {
+              "file": "components/ui/AuthForms/PasswordSignIn.tsx",
+              "line": 25,
+              "endLine": 25,
+              "code": "await handleRequest(e, signInWithPassword, router);",
+              "note": "calls handleRequest()"
+            },
+            {
+              "file": "utils/auth-helpers/client.ts",
+              "line": 25,
+              "endLine": 25,
+              "code": "return await redirectToPath(redirectUrl);"
+            },
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 75,
+              "endLine": 78,
+              "code": "<PasswordSignIn\n  allowEmail={allowEmail}\n…",
+              "note": "renders <PasswordSignIn>"
+            },
+            {
+              "file": "components/ui/AuthForms/PasswordSignIn.tsx",
+              "line": 25,
+              "endLine": 25,
+              "code": "await handleRequest(e, signInWithPassword, router);"
+            },
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 81,
+              "endLine": 85,
+              "code": "<EmailSignIn\n  allowPassword={allowPassword}\n…",
+              "note": "renders <EmailSignIn>"
+            },
+            {
+              "file": "components/ui/AuthForms/EmailSignIn.tsx",
+              "line": 27,
+              "endLine": 27,
+              "code": "await handleRequest(e, signInWithEmail, router);"
+            },
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 88,
+              "endLine": 92,
+              "code": "<ForgotPassword\n  allowEmail={allowEmail}\n…",
+              "note": "renders <ForgotPassword>"
+            },
+            {
+              "file": "components/ui/AuthForms/ForgotPassword.tsx",
+              "line": 27,
+              "endLine": 27,
+              "code": "await handleRequest(e, requestPasswordUpdate, router);"
+            },
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 95,
+              "endLine": 95,
+              "code": "<UpdatePassword redirectMethod={redirectMethod} />",
+              "note": "renders <UpdatePassword>"
+            },
+            {
+              "file": "components/ui/AuthForms/UpdatePassword.tsx",
+              "line": 21,
+              "endLine": 21,
+              "code": "await handleRequest(e, updatePassword, router);"
+            },
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 98,
+              "endLine": 98,
+              "code": "<SignUp allowEmail={allowEmail} redirectMethod={redirectMethod} />",
+              "note": "renders <SignUp>"
+            },
+            {
+              "file": "components/ui/AuthForms/Signup.tsx",
+              "line": 23,
+              "endLine": 23,
+              "code": "await handleRequest(e, signUp, router);"
+            }
+          ]
+        },
+        {
+          "text": "It only stops the request in one case: when !user && viewProp === 'update_password'. Otherwise anyone can open it.",
+          "evidence": [
+            {
+              "file": "app/signin/[id]/page.tsx",
+              "line": 49,
+              "endLine": 49,
+              "code": "} = await supabase.auth.getUser();"
+            }
+          ]
+        }
+      ],
+      "files": [
+        "app/signin/[id]/page.tsx",
+        "components/icons/Logo.tsx",
+        "utils/supabase/server.ts",
+        "utils/auth-helpers/settings.ts",
+        "components/ui/Card/index.ts",
+        "components/ui/AuthForms/PasswordSignIn.tsx",
+        "components/ui/AuthForms/EmailSignIn.tsx",
+        "components/ui/AuthForms/Separator.tsx",
+        "components/ui/AuthForms/OauthSignIn.tsx",
+        "components/ui/AuthForms/ForgotPassword.tsx",
+        "components/ui/AuthForms/UpdatePassword.tsx",
+        "components/ui/AuthForms/Signup.tsx",
+        "types_db.ts",
+        "components/ui/Card/Card.tsx",
+        "components/ui/Button/index.ts",
+        "utils/auth-helpers/server.ts",
+        "utils/auth-helpers/client.ts",
+        "components/ui/Button/Button.tsx",
+        "utils/helpers.ts",
+        "utils/supabase/client.ts",
+        "components/ui/LoadingDots/index.ts",
+        "components/ui/LoadingDots/LoadingDots.tsx"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "page:/signin",
+      "kind": "page",
+      "layout": false,
+      "name": "/signin",
+      "route": "/signin",
+      "sub": "Page · built on the server",
+      "file": "app/signin/page.tsx",
+      "line": 5,
+      "ev": {
+        "file": "app/signin/page.tsx",
+        "line": 5,
+        "endLine": 11,
+        "code": "export default function SignIn() {\n  const preferredSignInView =\n    cookies().get('preferredSignInView')?.value || null;\n  const defaultView = getDefaultSignInView(preferredSignInView);\n…"
+      },
+      "client": false,
+      "pageClient": false,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A page at /signin.",
+          "evidence": [
+            {
+              "file": "app/signin/page.tsx",
+              "line": 5,
+              "endLine": 11,
+              "code": "export default function SignIn() {\n  const preferredSignInView =\n    cookies().get('preferredSignInView')?.value || null;\n  const defaultView = getDefaultSignInView(preferredSignInView);\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server before it's sent.",
+          "evidence": []
+        },
+        {
+          "text": "It doesn't send any requests to your server.",
+          "evidence": []
+        },
+        {
+          "text": "Anyone can open it. No login check was found in its code or in middleware.",
+          "evidence": []
+        }
+      ],
+      "files": [
+        "app/signin/page.tsx",
+        "utils/auth-helpers/settings.ts"
+      ]
+    },
+    {
+      "facts": [],
+      "id": "service:Stripe",
+      "kind": "service",
+      "name": "Stripe",
+      "sub": "Outside service · payments",
+      "pkg": "stripe",
+      "explain": [
+        {
+          "text": "An outside company, reached through the \"stripe\" package.",
+          "evidence": []
+        },
+        {
+          "text": "Called by POST /api/webhooks, checkoutWithStripe() and createStripePortal().",
+          "evidence": [
+            {
+              "file": "app/api/webhooks/route.ts",
+              "line": 33,
+              "endLine": 33,
+              "code": "event = stripe.webhooks.constructEvent(body, sig, webhookSecret);"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 228,
+              "endLine": 230,
+              "code": "const subscription = await stripe.subscriptions.retrieve(subscriptionId, {\n  expand: ['default_payment_method']\n});"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 200,
+              "endLine": 200,
+              "code": "await stripe.customers.update(customer, { name, phone, address });"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 136,
+              "endLine": 138,
+              "code": "const existingStripeCustomer = await stripe.customers.retrieve(\n  existingSupabaseCustomer.stripe_customer_id\n);"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 142,
+              "endLine": 142,
+              "code": "const stripeCustomers = await stripe.customers.list({ email: email });"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 108,
+              "endLine": 108,
+              "code": "const newCustomer = await stripe.customers.create(customerData);"
+            },
+            {
+              "file": "utils/stripe/server.ts",
+              "line": 89,
+              "endLine": 89,
+              "code": "session = await stripe.checkout.sessions.create(params);"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 136,
+              "endLine": 138,
+              "code": "const existingStripeCustomer = await stripe.customers.retrieve(\n  existingSupabaseCustomer.stripe_customer_id\n);"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 142,
+              "endLine": 142,
+              "code": "const stripeCustomers = await stripe.customers.list({ email: email });"
+            },
+            {
+              "file": "utils/supabase/admin.ts",
+              "line": 108,
+              "endLine": 108,
+              "code": "const newCustomer = await stripe.customers.create(customerData);"
+            },
+            {
+              "file": "utils/stripe/server.ts",
+              "line": 153,
+              "endLine": 156,
+              "code": "const { url } = await stripe.billingPortal.sessions.create({\n  customer,\n  return_url: getURL('/account')\n});"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "table:prices",
+      "to": "table:products",
+      "kind": "relation",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "schema.sql",
+          "line": 76,
+          "code": "product_id text references products"
+        }
+      ],
+      "label": "each prices belongs to a products"
+    },
+    {
+      "id": "e2",
+      "from": "table:subscriptions",
+      "to": "table:prices",
+      "kind": "relation",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "schema.sql",
+          "line": 113,
+          "code": "price_id text references prices"
+        }
+      ],
+      "label": "each subscriptions belongs to a prices"
+    },
+    {
+      "id": "e3",
+      "from": "route:POST /api/webhooks",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/webhooks/route.ts",
+          "line": 33,
+          "endLine": 33,
+          "code": "event = stripe.webhooks.constructEvent(body, sig, webhookSecret);"
+        },
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 228,
+          "endLine": 230,
+          "code": "const subscription = await stripe.subscriptions.retrieve(subscriptionId, {\n  expand: ['default_payment_method']\n});"
+        },
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 200,
+          "endLine": 200,
+          "code": "await stripe.customers.update(customer, { name, phone, address });"
+        }
+      ],
+      "label": "webhooks.constructEvent, subscriptions.retrieve +1",
+      "calls": [
+        "webhooks.constructEvent",
+        "subscriptions.retrieve",
+        "customers.update"
+      ],
+      "via": [
+        "manageSubscriptionStatusChange()",
+        "copyBillingDetailsToCustomer()"
+      ]
+    },
+    {
+      "id": "e4",
+      "from": "route:POST /api/webhooks",
+      "to": "table:products",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 30,
+          "endLine": 31,
+          "code": "const { error: upsertError } = await supabaseAdmin\n  .from('products')"
+        },
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 77,
+          "endLine": 78,
+          "code": "const { error: deletionError } = await supabaseAdmin\n  .from('products')"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "upsert",
+        "delete"
+      ],
+      "admin": true,
+      "adminEv": {
+        "file": "utils/supabase/admin.ts",
+        "line": 15,
+        "endLine": 18,
+        "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+      }
+    },
+    {
+      "id": "e5",
+      "from": "route:POST /api/webhooks",
+      "to": "table:prices",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 55,
+          "endLine": 56,
+          "code": "const { error: upsertError } = await supabaseAdmin\n  .from('prices')"
+        },
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 87,
+          "endLine": 88,
+          "code": "const { error: deletionError } = await supabaseAdmin\n  .from('prices')"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "upsert",
+        "delete"
+      ],
+      "admin": true,
+      "adminEv": {
+        "file": "utils/supabase/admin.ts",
+        "line": 15,
+        "endLine": 18,
+        "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+      }
+    },
+    {
+      "id": "e6",
+      "from": "route:POST /api/webhooks",
+      "to": "table:customers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 217,
+          "endLine": 218,
+          "code": "const { data: customerData, error: noCustomerError } = await supabaseAdmin\n  .from('customers')"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ],
+      "admin": true,
+      "adminEv": {
+        "file": "utils/supabase/admin.ts",
+        "line": 15,
+        "endLine": 18,
+        "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+      }
+    },
+    {
+      "id": "e7",
+      "from": "route:POST /api/webhooks",
+      "to": "table:subscriptions",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 266,
+          "endLine": 267,
+          "code": "const { error: upsertError } = await supabaseAdmin\n  .from('subscriptions')"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "upsert"
+      ],
+      "admin": true,
+      "adminEv": {
+        "file": "utils/supabase/admin.ts",
+        "line": 15,
+        "endLine": 18,
+        "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+      }
+    },
+    {
+      "id": "e8",
+      "from": "route:POST /api/webhooks",
+      "to": "table:users",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 201,
+          "endLine": 202,
+          "code": "const { error: updateError } = await supabaseAdmin\n  .from('users')"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update"
+      ],
+      "admin": true,
+      "adminEv": {
+        "file": "utils/supabase/admin.ts",
+        "line": 15,
+        "endLine": 18,
+        "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+      }
+    },
+    {
+      "id": "e9",
+      "from": "action:checkoutWithStripe() utils/stripe/server.ts",
+      "to": "table:customers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 123,
+          "endLine": 124,
+          "code": "await supabaseAdmin\n  .from('customers')"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ],
+      "admin": true,
+      "adminEv": {
+        "file": "utils/supabase/admin.ts",
+        "line": 15,
+        "endLine": 18,
+        "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+      }
+    },
+    {
+      "id": "e10",
+      "from": "action:checkoutWithStripe() utils/stripe/server.ts",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 136,
+          "endLine": 138,
+          "code": "const existingStripeCustomer = await stripe.customers.retrieve(\n  existingSupabaseCustomer.stripe_customer_id\n);"
+        },
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 142,
+          "endLine": 142,
+          "code": "const stripeCustomers = await stripe.customers.list({ email: email });"
+        },
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 108,
+          "endLine": 108,
+          "code": "const newCustomer = await stripe.customers.create(customerData);"
+        },
+        {
+          "file": "utils/stripe/server.ts",
+          "line": 89,
+          "endLine": 89,
+          "code": "session = await stripe.checkout.sessions.create(params);"
+        }
+      ],
+      "label": "customers.retrieve, customers.list +2",
+      "calls": [
+        "customers.retrieve",
+        "customers.list",
+        "customers.create",
+        "checkout.sessions.create"
+      ],
+      "via": [
+        "createOrRetrieveCustomer()",
+        "createCustomerInStripe()"
+      ]
+    },
+    {
+      "id": "e11",
+      "from": "action:checkoutWithStripe() utils/stripe/server.ts",
+      "to": "table:customers",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 156,
+          "endLine": 157,
+          "code": "const { error: updateError } = await supabaseAdmin\n  .from('customers')"
+        },
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 96,
+          "endLine": 97,
+          "code": "const { error: upsertError } = await supabaseAdmin\n  .from('customers')"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update",
+        "upsert"
+      ],
+      "admin": true,
+      "adminEv": {
+        "file": "utils/supabase/admin.ts",
+        "line": 15,
+        "endLine": 18,
+        "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+      }
+    },
+    {
+      "id": "e12",
+      "from": "action:createStripePortal() utils/stripe/server.ts",
+      "to": "table:customers",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 123,
+          "endLine": 124,
+          "code": "await supabaseAdmin\n  .from('customers')"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ],
+      "admin": true,
+      "adminEv": {
+        "file": "utils/supabase/admin.ts",
+        "line": 15,
+        "endLine": 18,
+        "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+      }
+    },
+    {
+      "id": "e13",
+      "from": "action:createStripePortal() utils/stripe/server.ts",
+      "to": "service:Stripe",
+      "kind": "service",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 136,
+          "endLine": 138,
+          "code": "const existingStripeCustomer = await stripe.customers.retrieve(\n  existingSupabaseCustomer.stripe_customer_id\n);"
+        },
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 142,
+          "endLine": 142,
+          "code": "const stripeCustomers = await stripe.customers.list({ email: email });"
+        },
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 108,
+          "endLine": 108,
+          "code": "const newCustomer = await stripe.customers.create(customerData);"
+        },
+        {
+          "file": "utils/stripe/server.ts",
+          "line": 153,
+          "endLine": 156,
+          "code": "const { url } = await stripe.billingPortal.sessions.create({\n  customer,\n  return_url: getURL('/account')\n});"
+        }
+      ],
+      "label": "customers.retrieve, customers.list +2",
+      "calls": [
+        "customers.retrieve",
+        "customers.list",
+        "customers.create",
+        "billingPortal.sessions.create"
+      ],
+      "via": [
+        "createOrRetrieveCustomer()",
+        "createCustomerInStripe()"
+      ]
+    },
+    {
+      "id": "e14",
+      "from": "action:createStripePortal() utils/stripe/server.ts",
+      "to": "table:customers",
+      "kind": "write",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 156,
+          "endLine": 157,
+          "code": "const { error: updateError } = await supabaseAdmin\n  .from('customers')"
+        },
+        {
+          "file": "utils/supabase/admin.ts",
+          "line": 96,
+          "endLine": 97,
+          "code": "const { error: upsertError } = await supabaseAdmin\n  .from('customers')"
+        }
+      ],
+      "label": "writes",
+      "ops": [
+        "update",
+        "upsert"
+      ],
+      "admin": true,
+      "adminEv": {
+        "file": "utils/supabase/admin.ts",
+        "line": 15,
+        "endLine": 18,
+        "code": "const supabaseAdmin = createClient<Database>(\n  process.env.NEXT_PUBLIC_SUPABASE_URL || '',\n  process.env.SUPABASE_SERVICE_ROLE_KEY || ''\n…"
+      }
+    },
+    {
+      "id": "e15",
+      "from": "page:/account",
+      "to": "table:users",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/queries.ts",
+          "line": 34,
+          "endLine": 35,
+          "code": "const { data: userDetails } = await supabase\n  .from('users')"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e16",
+      "from": "page:/account",
+      "to": "table:subscriptions",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/queries.ts",
+          "line": 12,
+          "endLine": 13,
+          "code": "const { data: subscription, error } = await supabase\n  .from('subscriptions')"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e17",
+      "from": "page:/account",
+      "to": "action:createStripePortal() utils/stripe/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/account/page.tsx",
+          "line": 37,
+          "endLine": 37,
+          "code": "<CustomerPortalForm subscription={subscription} />",
+          "note": "renders <CustomerPortalForm>"
+        },
+        {
+          "file": "components/ui/AccountForms/CustomerPortalForm.tsx",
+          "line": 42,
+          "endLine": 42,
+          "code": "const redirectUrl = await createStripePortal(currentPath);"
+        }
+      ],
+      "label": "calls createStripePortal()"
+    },
+    {
+      "id": "e18",
+      "from": "page:/account",
+      "to": "action:redirectToPath() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/account/page.tsx",
+          "line": 38,
+          "endLine": 38,
+          "code": "<NameForm userName={userDetails?.full_name ?? ''} />",
+          "note": "renders <NameForm>"
+        },
+        {
+          "file": "components/ui/AccountForms/NameForm.tsx",
+          "line": 22,
+          "endLine": 22,
+          "code": "handleRequest(e, updateName, router);",
+          "note": "calls handleRequest()"
+        },
+        {
+          "file": "utils/auth-helpers/client.ts",
+          "line": 25,
+          "endLine": 25,
+          "code": "return await redirectToPath(redirectUrl);"
+        }
+      ],
+      "label": "calls redirectToPath()"
+    },
+    {
+      "id": "e19",
+      "from": "page:/account",
+      "to": "action:updateName() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/account/page.tsx",
+          "line": 38,
+          "endLine": 38,
+          "code": "<NameForm userName={userDetails?.full_name ?? ''} />",
+          "note": "renders <NameForm>"
+        },
+        {
+          "file": "components/ui/AccountForms/NameForm.tsx",
+          "line": 22,
+          "endLine": 22,
+          "code": "handleRequest(e, updateName, router);"
+        }
+      ],
+      "label": "hands updateName() to a form or button"
+    },
+    {
+      "id": "e20",
+      "from": "page:/account",
+      "to": "action:updateEmail() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/account/page.tsx",
+          "line": 39,
+          "endLine": 39,
+          "code": "<EmailForm userEmail={user.email} />",
+          "note": "renders <EmailForm>"
+        },
+        {
+          "file": "components/ui/AccountForms/EmailForm.tsx",
+          "line": 26,
+          "endLine": 26,
+          "code": "handleRequest(e, updateEmail, router);"
+        }
+      ],
+      "label": "hands updateEmail() to a form or button"
+    },
+    {
+      "id": "e21",
+      "from": "layout:/",
+      "to": "action:redirectToPath() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/layout.tsx",
+          "line": 26,
+          "endLine": 26,
+          "code": "<Navbar />",
+          "note": "renders <Navbar>"
+        },
+        {
+          "file": "components/ui/Navbar/Navbar.tsx",
+          "line": 18,
+          "endLine": 18,
+          "code": "<Navlinks user={user} />",
+          "note": "renders <Navlinks>"
+        },
+        {
+          "file": "components/ui/Navbar/Navlinks.tsx",
+          "line": 37,
+          "endLine": 37,
+          "code": "<form onSubmit={(e) => handleRequest(e, SignOut, router)}>",
+          "note": "calls handleRequest()"
+        },
+        {
+          "file": "utils/auth-helpers/client.ts",
+          "line": 25,
+          "endLine": 25,
+          "code": "return await redirectToPath(redirectUrl);"
+        }
+      ],
+      "label": "calls redirectToPath()"
+    },
+    {
+      "id": "e22",
+      "from": "layout:/",
+      "to": "action:SignOut() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/layout.tsx",
+          "line": 26,
+          "endLine": 26,
+          "code": "<Navbar />",
+          "note": "renders <Navbar>"
+        },
+        {
+          "file": "components/ui/Navbar/Navbar.tsx",
+          "line": 18,
+          "endLine": 18,
+          "code": "<Navlinks user={user} />",
+          "note": "renders <Navlinks>"
+        },
+        {
+          "file": "components/ui/Navbar/Navlinks.tsx",
+          "line": 37,
+          "endLine": 37,
+          "code": "<form onSubmit={(e) => handleRequest(e, SignOut, router)}>"
+        }
+      ],
+      "label": "hands SignOut() to a form or button"
+    },
+    {
+      "id": "e23",
+      "from": "page:/",
+      "to": "table:products",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/queries.ts",
+          "line": 22,
+          "endLine": 23,
+          "code": "const { data: products, error } = await supabase\n  .from('products')"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e24",
+      "from": "page:/",
+      "to": "table:subscriptions",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "utils/supabase/queries.ts",
+          "line": 12,
+          "endLine": 13,
+          "code": "const { data: subscription, error } = await supabase\n  .from('subscriptions')"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e25",
+      "from": "page:/",
+      "to": "action:checkoutWithStripe() utils/stripe/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/page.tsx",
+          "line": 18,
+          "endLine": 22,
+          "code": "<Pricing\n  user={user}\n…",
+          "note": "renders <Pricing>"
+        },
+        {
+          "file": "components/ui/Pricing/Pricing.tsx",
+          "line": 57,
+          "endLine": 60,
+          "code": "const { errorRedirect, sessionId } = await checkoutWithStripe(\n  price,\n…"
+        }
+      ],
+      "label": "calls checkoutWithStripe()"
+    },
+    {
+      "id": "e26",
+      "from": "page:/signin/:id",
+      "to": "action:redirectToPath() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/signin/[id]/page.tsx",
+          "line": 75,
+          "endLine": 78,
+          "code": "<PasswordSignIn\n  allowEmail={allowEmail}\n…",
+          "note": "renders <PasswordSignIn>"
+        },
+        {
+          "file": "components/ui/AuthForms/PasswordSignIn.tsx",
+          "line": 25,
+          "endLine": 25,
+          "code": "await handleRequest(e, signInWithPassword, router);",
+          "note": "calls handleRequest()"
+        },
+        {
+          "file": "utils/auth-helpers/client.ts",
+          "line": 25,
+          "endLine": 25,
+          "code": "return await redirectToPath(redirectUrl);"
+        }
+      ],
+      "label": "calls redirectToPath()"
+    },
+    {
+      "id": "e27",
+      "from": "page:/signin/:id",
+      "to": "action:signInWithPassword() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/signin/[id]/page.tsx",
+          "line": 75,
+          "endLine": 78,
+          "code": "<PasswordSignIn\n  allowEmail={allowEmail}\n…",
+          "note": "renders <PasswordSignIn>"
+        },
+        {
+          "file": "components/ui/AuthForms/PasswordSignIn.tsx",
+          "line": 25,
+          "endLine": 25,
+          "code": "await handleRequest(e, signInWithPassword, router);"
+        }
+      ],
+      "label": "hands signInWithPassword() to a form or button"
+    },
+    {
+      "id": "e28",
+      "from": "page:/signin/:id",
+      "to": "action:signInWithEmail() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/signin/[id]/page.tsx",
+          "line": 81,
+          "endLine": 85,
+          "code": "<EmailSignIn\n  allowPassword={allowPassword}\n…",
+          "note": "renders <EmailSignIn>"
+        },
+        {
+          "file": "components/ui/AuthForms/EmailSignIn.tsx",
+          "line": 27,
+          "endLine": 27,
+          "code": "await handleRequest(e, signInWithEmail, router);"
+        }
+      ],
+      "label": "hands signInWithEmail() to a form or button"
+    },
+    {
+      "id": "e29",
+      "from": "page:/signin/:id",
+      "to": "action:requestPasswordUpdate() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/signin/[id]/page.tsx",
+          "line": 88,
+          "endLine": 92,
+          "code": "<ForgotPassword\n  allowEmail={allowEmail}\n…",
+          "note": "renders <ForgotPassword>"
+        },
+        {
+          "file": "components/ui/AuthForms/ForgotPassword.tsx",
+          "line": 27,
+          "endLine": 27,
+          "code": "await handleRequest(e, requestPasswordUpdate, router);"
+        }
+      ],
+      "label": "hands requestPasswordUpdate() to a form or button"
+    },
+    {
+      "id": "e30",
+      "from": "page:/signin/:id",
+      "to": "action:updatePassword() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/signin/[id]/page.tsx",
+          "line": 95,
+          "endLine": 95,
+          "code": "<UpdatePassword redirectMethod={redirectMethod} />",
+          "note": "renders <UpdatePassword>"
+        },
+        {
+          "file": "components/ui/AuthForms/UpdatePassword.tsx",
+          "line": 21,
+          "endLine": 21,
+          "code": "await handleRequest(e, updatePassword, router);"
+        }
+      ],
+      "label": "hands updatePassword() to a form or button"
+    },
+    {
+      "id": "e31",
+      "from": "page:/signin/:id",
+      "to": "action:signUp() utils/auth-helpers/server.ts",
+      "kind": "request",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/signin/[id]/page.tsx",
+          "line": 98,
+          "endLine": 98,
+          "code": "<SignUp allowEmail={allowEmail} redirectMethod={redirectMethod} />",
+          "note": "renders <SignUp>"
+        },
+        {
+          "file": "components/ui/AuthForms/Signup.tsx",
+          "line": 23,
+          "endLine": 23,
+          "code": "await handleRequest(e, signUp, router);"
+        }
+      ],
+      "label": "hands signUp() to a form or button"
+    }
+  ],
+  "findings": [],
+  "unknowns": [],
+  "coverage": {
+    "sourceFiles": 56,
+    "mapped": 52,
+    "tooling": [
+      "postcss.config.js",
+      "tailwind.config.js"
+    ],
+    "tests": [],
+    "docs": [],
+    "unmapped": [
+      "components/ui/Input/Input.tsx",
+      "components/ui/Input/index.ts"
+    ],
+    "schema": null
+  },
+  "limits": [
+    "Reads TypeScript/JavaScript structure only. It does not run the code.",
+    "Understands Next.js routes and pages, Prisma, Drizzle (pgTable/mysqlTable/sqliteTable schemas, select/insert/update/delete, joins and db.query with `with`), Supabase, and the service packages in its list. Other libraries show up as plain code, not as parts.",
+    "Calls made through require(), dynamic import(), or values passed around as arguments may be missed.",
+    "Regex-style middleware matchers are not evaluated."
+  ],
+  "elapsedMs": 183
+}
