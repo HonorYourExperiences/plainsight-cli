@@ -12,7 +12,7 @@ npx plainsight-cli
 
 One command, in your app's folder. No account, no upload: your code never leaves your machine. You get a summary in the terminal and a single HTML report you can open offline, share or attach to a ticket.
 
-**[Open the live demo report →](https://honoryourexperiences.github.io/plainsight/demo.html)**
+**[Open the live demo report →](https://honoryourexperiences.github.io/plainsight-cli/demo.html)**
 
 ## Why
 
@@ -58,7 +58,7 @@ npx plainsight-cli vercel/ai-chatbot     # any public GitHub repo (cloned to a t
 npx plainsight-cli apps/web              # one app inside a monorepo
 ```
 
-Or install the `plainsight` command once with `npm install -g plainsight-cli`. Before the npm release, run it straight from GitHub with `npx github:HonorYourExperiences/plainsight`.
+Or install the `plainsight` command once with `npm install -g plainsight-cli`. Before the npm release, run it straight from GitHub with `npx github:HonorYourExperiences/plainsight-cli`.
 
 | Option | What it does |
 |---|---|
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: HonorYourExperiences/plainsight@v0.3.0
+      - uses: HonorYourExperiences/plainsight-cli@v0.3.0
         with:
           path: .          # or apps/web in a monorepo
           fail-on: crit    # crit, warn or none

@@ -17,8 +17,8 @@
     "typescript": "5.6.3"
   },
   "keywords": ["nextjs", "security", "static-analysis", "architecture", "diagram", "supabase", "prisma", "drizzle", "vibe-coding", "ai-generated-code", "code-review", "cli"],
-  "homepage": "https://github.com/HonorYourExperiences/plainsight#readme",
-  "bugs": { "url": "https://github.com/HonorYourExperiences/plainsight/issues" },
-  "repository": { "type": "git", "url": "git+https://github.com/HonorYourExperiences/plainsight.git" },
+  "homepage": "https://github.com/HonorYourExperiences/plainsight-cli#readme",
+  "bugs": { "url": "https://github.com/HonorYourExperiences/plainsight-cli/issues" },
+  "repository": { "type": "git", "url": "git+https://github.com/HonorYourExperiences/plainsight-cli.git" },
   "license": "MIT"
 }

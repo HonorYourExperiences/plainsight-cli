@@ -9,7 +9,7 @@ An early commit contains `real/mb.graph.json`, the analysis of a private project
 **Do this:** publish from a fresh repo that has only the current files.
 
 ```bash
-git clone https://github.com/HonorYourExperiences/plainsight.git plainsight-public
+git clone https://github.com/HonorYourExperiences/plainsight-cli.git plainsight-public
 cd plainsight-public
 git checkout main            # after PR #6 is merged
 rm -rf .git && git init -b main && git add -A && git commit -m "Plainsight 0.3.0"
@@ -23,7 +23,7 @@ Create a new empty public repo on GitHub, push this one to it, and keep the curr
 ## 2. Turn on the website
 
 Settings → Pages → Build and deployment → Deploy from a branch → `main`, folder `/docs`.
-The site is then at `https://honoryourexperiences.github.io/plainsight/`, with the demo at `/demo.html`.
+The site is then at `https://honoryourexperiences.github.io/plainsight-cli/`, with the demo at `/demo.html`.
 
 ## 3. Publish to npm and tag the release (one step, automated)
 
@@ -44,7 +44,7 @@ npm retired classic automation tokens in December 2025, so set up **trusted publ
 
 The `release` workflow runs the tests, checks the tag matches `package.json`, publishes with provenance through trusted publishing, and creates the GitHub release from the changelog. It needs the Actions budget from step 4.
 
-For v0.3.0 itself (published by hand in step 1), push the tag to create the release and make `uses: HonorYourExperiences/plainsight@v0.3.0` work; the workflow's publish step will report that 0.3.0 already exists, so create the GitHub release from the changelog by hand this once.
+For v0.3.0 itself (published by hand in step 1), push the tag to create the release and make `uses: HonorYourExperiences/plainsight-cli@v0.3.0` work; the workflow's publish step will report that 0.3.0 already exists, so create the GitHub release from the changelog by hand this once.
 
 Prefer a token? Create a **granular access token** with read-and-write access to `plainsight-cli` and "bypass 2FA" enabled for automation, and save it as the `NPM_TOKEN` repository secret.
 
