@@ -1,6 +1,6 @@
 {
   "name": "plainsight-cli",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "See what you built. Plainsight draws your Next.js app as a living schematic and finds the security holes, with every claim linked to the line of code that proves it.",
   "type": "module",
   "bin": { "plainsight": "bin/plainsight.mjs" },
