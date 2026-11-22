@@ -1,0 +1,6 @@
+# Keep GitHub's language bar about the tool itself, not its demo pages and sample apps.
+docs/** linguist-documentation
+concept/** linguist-documentation
+design/** linguist-documentation
+fixtures/** linguist-vendored
+real/** linguist-vendored
