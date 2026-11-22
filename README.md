@@ -83,7 +83,7 @@ npx plainsight-cli vercel/ai-chatbot     # any public GitHub repo (cloned to a t
 npx plainsight-cli apps/web              # one app inside a monorepo
 ```
 
-Or install the `plainsight` command once with `npm install -g plainsight-cli`. Before the npm release, run it straight from GitHub with `npx github:HonorYourExperiences/plainsight-cli`.
+Or install the `plainsight` command once with `npm install -g plainsight-cli`.
 
 | Option | What it does |
 |---|---|

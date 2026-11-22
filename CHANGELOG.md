@@ -6,6 +6,20 @@
 - Secret keys are masked in every prompt, so pasting one into an AI chat never hands over a key.
 - Each finding now has a stable `rule` id (for example `others-records`, `secret-in-browser`, `unsigned-webhook`).
 
+## 0.3.1
+
+- A page no longer loses a table when two reads share a line (a select and its join): `/dashboard/activity` in saas-starter now shows both `users` and `activityLogs`.
+- A request-driven `where()` on a joined Drizzle table's own columns counts as request-driven for that table (a filter on the main table doesn't).
+- A verifier that rejects through a helper of its own (`rejectInvalidToken(t)`) is recognised as throwing, unless the helper is async and not awaited, or its error is caught and ignored.
+- Verifiers are judged more strictly, so a check that can be skipped no longer hides a "Fix now":
+  - A throw only counts when it rejects the input itself, not missing configuration (`if (!process.env.KEY) throw`), even when nested inside an input check. An early success return (`if (t === "ok") return; throw …`) and destructured inputs (`const { token } = input`) count.
+  - A `catch` passes a failure on only when every path through it throws or redirects; a `return` (even before a rethrow) swallows it.
+  - A verifier skipped when its value is missing (`if (t) verify(t)`) isn't a guard, while one on every branch of a method switch still is.
+  - A helper called twice with different inputs is followed both times.
+- `sql`` filters on a joined Drizzle table count when the joined column and the request value are in the same predicate.
+- Explanations say when a page→action link is inferred ("It may trigger …"), and an action with callers is no longer also called unused.
+- SECURITY.md lists the library options that load web content (`offline: false`, `webFonts: true`).
+
 ## 0.3.0 — first public release
 
 **Accuracy pass on real apps** (taxonomy, saas-starter, ai-chatbot, chatbot-ui, nextjs-subscription-payments, dub).

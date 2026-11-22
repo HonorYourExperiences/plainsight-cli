@@ -1,8 +1,8 @@
 {
   "app": "saas-starter",
   "commit": "6e33e58",
-  "generatedAt": "2026-11-22T18:22:33.600Z",
-  "analyzer": "plainsight 0.3.0",
+  "generatedAt": "2026-11-22T19:23:23.866Z",
+  "analyzer": "plainsight 0.3.1",
   "stack": {
     "static": null,
     "nextAppRouter": true,
@@ -95,7 +95,7 @@
           ]
         },
         {
-          "text": "Used by GET /api/stripe/checkout, POST /api/stripe/webhook, GET /api/team, signIn() and signUp().",
+          "text": "Used by GET /api/stripe/checkout, POST /api/stripe/webhook, GET /api/team, signIn(), signUp() and page Frame around every page.",
           "evidence": []
         }
       ]
@@ -214,7 +214,7 @@
           ]
         },
         {
-          "text": "Used by signIn(), signUp(), signOut(), updatePassword(), deleteAccount(), updateAccount(), removeTeamMember() and inviteTeamMember().",
+          "text": "Used by signIn(), signUp(), signOut(), updatePassword(), deleteAccount(), updateAccount(), removeTeamMember(), inviteTeamMember() and page /dashboard/activity.",
           "evidence": []
         }
       ]
@@ -619,7 +619,7 @@
           ]
         },
         {
-          "text": "Triggered from page /sign-in and page /sign-up.",
+          "text": "May be triggered from page /sign-in and page /sign-up, depending on a condition in the code.",
           "evidence": [
             {
               "file": "app/(login)/sign-in/page.tsx",
@@ -736,8 +736,35 @@
           ]
         },
         {
-          "text": "No page in the app triggers it.",
-          "evidence": []
+          "text": "May be triggered from page /sign-in and page /sign-up, depending on a condition in the code.",
+          "evidence": [
+            {
+              "file": "app/(login)/sign-in/page.tsx",
+              "line": 7,
+              "endLine": 7,
+              "code": "<Login mode=\"signin\" />",
+              "note": "renders <Login>"
+            },
+            {
+              "file": "app/(login)/login.tsx",
+              "line": 19,
+              "endLine": 19,
+              "code": "mode === 'signin' ? signIn : signUp,"
+            },
+            {
+              "file": "app/(login)/sign-up/page.tsx",
+              "line": 7,
+              "endLine": 7,
+              "code": "<Login mode=\"signup\" />",
+              "note": "renders <Login>"
+            },
+            {
+              "file": "app/(login)/login.tsx",
+              "line": 19,
+              "endLine": 19,
+              "code": "mode === 'signin' ? signIn : signUp,"
+            }
+          ]
         },
         {
           "text": "Reads from users, invitations and teams.",
@@ -1821,7 +1848,7 @@
           "evidence": []
         },
         {
-          "text": "While building the page, the server reads users.",
+          "text": "While building the page, the server reads users and reads activityLogs.",
           "evidence": [
             {
               "file": "lib/db/queries.ts",
@@ -1833,6 +1860,12 @@
               "file": "lib/db/queries.ts",
               "line": 87,
               "endLine": 96,
+              "code": "return await db\n  .select({\n    id: activityLogs.id,\n    action: activityLogs.action,\n…"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 87,
+              "endLine": 95,
               "code": "return await db\n  .select({\n    id: activityLogs.id,\n    action: activityLogs.action,\n…"
             }
           ]
@@ -2612,8 +2645,21 @@
           "evidence": []
         },
         {
-          "text": "It triggers server actions: signIn().",
+          "text": "It may trigger signIn() and signUp(): which one is picked by a condition in the code that Plainsight doesn't evaluate.",
           "evidence": [
+            {
+              "file": "app/(login)/sign-in/page.tsx",
+              "line": 7,
+              "endLine": 7,
+              "code": "<Login mode=\"signin\" />",
+              "note": "renders <Login>"
+            },
+            {
+              "file": "app/(login)/login.tsx",
+              "line": 19,
+              "endLine": 19,
+              "code": "mode === 'signin' ? signIn : signUp,"
+            },
             {
               "file": "app/(login)/sign-in/page.tsx",
               "line": 7,
@@ -2688,8 +2734,21 @@
           "evidence": []
         },
         {
-          "text": "It triggers server actions: signIn().",
+          "text": "It may trigger signIn() and signUp(): which one is picked by a condition in the code that Plainsight doesn't evaluate.",
           "evidence": [
+            {
+              "file": "app/(login)/sign-up/page.tsx",
+              "line": 7,
+              "endLine": 7,
+              "code": "<Login mode=\"signup\" />",
+              "note": "renders <Login>"
+            },
+            {
+              "file": "app/(login)/login.tsx",
+              "line": 19,
+              "endLine": 19,
+              "code": "mode === 'signin' ? signIn : signUp,"
+            },
             {
               "file": "app/(login)/sign-up/page.tsx",
               "line": 7,
@@ -2777,13 +2836,25 @@
           "evidence": []
         },
         {
-          "text": "While building the page, the server reads users and reads teamMembers.",
+          "text": "While building the page, the server reads users, reads teamMembers and reads teams.",
           "evidence": [
             {
               "file": "lib/db/queries.ts",
               "line": 26,
               "endLine": 28,
               "code": "const user = await db\n  .select()\n  .from(users)"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 108,
+              "endLine": 127,
+              "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
+            },
+            {
+              "file": "lib/db/queries.ts",
+              "line": 108,
+              "endLine": 127,
+              "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
             },
             {
               "file": "lib/db/queries.ts",
@@ -4187,6 +4258,25 @@
     },
     {
       "id": "e61",
+      "from": "page:/dashboard/activity",
+      "to": "table:activityLogs",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 87,
+          "endLine": 95,
+          "code": "return await db\n  .select({\n    id: activityLogs.id,\n    action: activityLogs.action,\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "select"
+      ]
+    },
+    {
+      "id": "e62",
       "from": "page:/dashboard/general",
       "to": "action:updateAccount() app/(login)/actions.ts",
       "kind": "request",
@@ -4202,7 +4292,7 @@
       "label": "hands updateAccount() to a form or button"
     },
     {
-      "id": "e62",
+      "id": "e63",
       "from": "page:/dashboard/general",
       "to": "unknown:1",
       "kind": "request",
@@ -4232,7 +4322,7 @@
       "label": "GET"
     },
     {
-      "id": "e63",
+      "id": "e64",
       "from": "page:/dashboard",
       "to": "unknown:1",
       "kind": "request",
@@ -4262,7 +4352,7 @@
       "label": "GET"
     },
     {
-      "id": "e64",
+      "id": "e65",
       "from": "page:/dashboard",
       "to": "action:customerPortalAction() lib/payments/actions.ts",
       "kind": "request",
@@ -4285,7 +4375,7 @@
       "label": "hands customerPortalAction() to a form or button"
     },
     {
-      "id": "e65",
+      "id": "e66",
       "from": "page:/dashboard",
       "to": "action:removeTeamMember() app/(login)/actions.ts",
       "kind": "request",
@@ -4308,7 +4398,7 @@
       "label": "hands removeTeamMember() to a form or button"
     },
     {
-      "id": "e66",
+      "id": "e67",
       "from": "page:/dashboard",
       "to": "action:inviteTeamMember() app/(login)/actions.ts",
       "kind": "request",
@@ -4331,7 +4421,7 @@
       "label": "hands inviteTeamMember() to a form or button"
     },
     {
-      "id": "e67",
+      "id": "e68",
       "from": "page:/dashboard/security",
       "to": "action:updatePassword() app/(login)/actions.ts",
       "kind": "request",
@@ -4347,7 +4437,7 @@
       "label": "hands updatePassword() to a form or button"
     },
     {
-      "id": "e68",
+      "id": "e69",
       "from": "page:/dashboard/security",
       "to": "action:deleteAccount() app/(login)/actions.ts",
       "kind": "request",
@@ -4363,7 +4453,7 @@
       "label": "hands deleteAccount() to a form or button"
     },
     {
-      "id": "e69",
+      "id": "e70",
       "from": "layout:/ (dashboard)",
       "to": "unknown:1",
       "kind": "request",
@@ -4400,7 +4490,7 @@
       "label": "GET"
     },
     {
-      "id": "e70",
+      "id": "e71",
       "from": "layout:/ (dashboard)",
       "to": "action:signOut() app/(login)/actions.ts",
       "kind": "request",
@@ -4430,7 +4520,7 @@
       "label": "calls signOut()"
     },
     {
-      "id": "e71",
+      "id": "e72",
       "from": "page:/pricing",
       "to": "service:Stripe",
       "kind": "service",
@@ -4472,7 +4562,7 @@
       ]
     },
     {
-      "id": "e72",
+      "id": "e73",
       "from": "page:/pricing",
       "to": "action:checkoutAction() lib/payments/actions.ts",
       "kind": "request",
@@ -4495,11 +4585,11 @@
       "label": "hands checkoutAction() to a form or button"
     },
     {
-      "id": "e73",
+      "id": "e74",
       "from": "page:/sign-in",
       "to": "action:signIn() app/(login)/actions.ts",
       "kind": "request",
-      "certainty": "proven",
+      "certainty": "inferred",
       "evidence": [
         {
           "file": "app/(login)/sign-in/page.tsx",
@@ -4515,14 +4605,39 @@
           "code": "mode === 'signin' ? signIn : signUp,"
         }
       ],
-      "label": "hands signIn() to a form or button"
+      "label": "hands signIn() to a form or button",
+      "why": "Chosen in the code by the condition mode === 'signin', which Plainsight doesn't evaluate for each page."
     },
     {
-      "id": "e74",
+      "id": "e75",
+      "from": "page:/sign-in",
+      "to": "action:signUp() app/(login)/actions.ts",
+      "kind": "request",
+      "certainty": "inferred",
+      "evidence": [
+        {
+          "file": "app/(login)/sign-in/page.tsx",
+          "line": 7,
+          "endLine": 7,
+          "code": "<Login mode=\"signin\" />",
+          "note": "renders <Login>"
+        },
+        {
+          "file": "app/(login)/login.tsx",
+          "line": 19,
+          "endLine": 19,
+          "code": "mode === 'signin' ? signIn : signUp,"
+        }
+      ],
+      "label": "hands signUp() to a form or button",
+      "why": "Chosen in the code by the condition mode === 'signin', which Plainsight doesn't evaluate for each page."
+    },
+    {
+      "id": "e76",
       "from": "page:/sign-up",
       "to": "action:signIn() app/(login)/actions.ts",
       "kind": "request",
-      "certainty": "proven",
+      "certainty": "inferred",
       "evidence": [
         {
           "file": "app/(login)/sign-up/page.tsx",
@@ -4538,10 +4653,35 @@
           "code": "mode === 'signin' ? signIn : signUp,"
         }
       ],
-      "label": "hands signIn() to a form or button"
+      "label": "hands signIn() to a form or button",
+      "why": "Chosen in the code by the condition mode === 'signin', which Plainsight doesn't evaluate for each page."
     },
     {
-      "id": "e75",
+      "id": "e77",
+      "from": "page:/sign-up",
+      "to": "action:signUp() app/(login)/actions.ts",
+      "kind": "request",
+      "certainty": "inferred",
+      "evidence": [
+        {
+          "file": "app/(login)/sign-up/page.tsx",
+          "line": 7,
+          "endLine": 7,
+          "code": "<Login mode=\"signup\" />",
+          "note": "renders <Login>"
+        },
+        {
+          "file": "app/(login)/login.tsx",
+          "line": 19,
+          "endLine": 19,
+          "code": "mode === 'signin' ? signIn : signUp,"
+        }
+      ],
+      "label": "hands signUp() to a form or button",
+      "why": "Chosen in the code by the condition mode === 'signin', which Plainsight doesn't evaluate for each page."
+    },
+    {
+      "id": "e78",
       "from": "layout:/",
       "to": "table:users",
       "kind": "read",
@@ -4552,15 +4692,22 @@
           "line": 26,
           "endLine": 28,
           "code": "const user = await db\n  .select()\n  .from(users)"
+        },
+        {
+          "file": "lib/db/queries.ts",
+          "line": 108,
+          "endLine": 127,
+          "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
         }
       ],
       "label": "reads",
       "ops": [
-        "select"
+        "select",
+        "findFirst"
       ]
     },
     {
-      "id": "e76",
+      "id": "e79",
       "from": "layout:/",
       "to": "table:teamMembers",
       "kind": "read",
@@ -4579,7 +4726,26 @@
       ]
     },
     {
-      "id": "e77",
+      "id": "e80",
+      "from": "layout:/",
+      "to": "table:teams",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "lib/db/queries.ts",
+          "line": 108,
+          "endLine": 127,
+          "code": "const result = await db.query.teamMembers.findFirst({\n  where: eq(teamMembers.userId, user.id),\n  with: {\n    team: {\n…"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "findFirst"
+      ]
+    },
+    {
+      "id": "e81",
       "from": "service:Stripe",
       "to": "route:POST /api/stripe/webhook",
       "kind": "callback",
@@ -4817,6 +4983,6 @@
     "Calls made through require(), dynamic import(), or values passed around as arguments may be missed.",
     "Regex-style middleware matchers are not evaluated."
   ],
-  "elapsedMs": 174,
+  "elapsedMs": 157,
   "source": "nextjs/saas-starter"
 }

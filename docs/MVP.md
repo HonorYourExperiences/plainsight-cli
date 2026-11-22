@@ -88,8 +88,10 @@ No telemetry, so the signals are public and voluntary:
 - [x] README with quickstart, screenshots, what it finds, limits, privacy
 - [x] Landing page and live demo report (`docs/`)
 - [x] Launch copy (Show HN, Product Hunt, X/LinkedIn thread): `docs/LAUNCH.md`
-- [ ] **Owner:** make the repo public (purge `real/mb.graph.json` from history first; see [RELEASE.md](RELEASE.md))
-- [ ] **Owner:** `npm publish` (needs the npm account)
-- [ ] **Owner:** turn on GitHub Pages (Settings → Pages → `main` / `docs`)
+- [x] Public repo, from a clean copy: [HonorYourExperiences/plainsight-cli](https://github.com/HonorYourExperiences/plainsight-cli), tagged v0.3.0
+- [x] 0.3.1 merged and synced to the public repo
+- [x] npm: [plainsight-cli](https://www.npmjs.com/package/plainsight-cli) 0.3.0 published, so `npx plainsight-cli` works
+- [ ] **Owner:** release 0.3.1 through the tag workflow, not by hand: set up trusted publishing for `release.yml` on npm, then push `v0.3.1` (see [RELEASE.md](RELEASE.md) section 3, step 3)
+- [x] GitHub Pages: https://honoryourexperiences.github.io/plainsight-cli/
 - [ ] **Owner:** raise the GitHub Actions budget so CI runs
 - [ ] **Owner:** report the taxonomy bug upstream before using it in launch posts
