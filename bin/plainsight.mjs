@@ -145,7 +145,10 @@ if (opt.markdown) {
   const shownMd = graph.findings.filter((f) => f.sev !== "info");
   const infos = graph.findings.filter((f) => f.sev === "info");
   const row = (f) => { const n = graph.nodes.find((x) => x.id === f.node); const part = n ? (n.kind === "route" && n.method && n.method !== "ANY" ? `${n.method} ${n.name}` : n.name) : ""; return `| ${sevName[f.sev]} | ${f.title.replace(/\|/g, "\\|")} | ${part ? "`" + part + "`" : ""} | \`${where(f)}\` |`; };
-  if (shownMd.length) { md.push("| | Finding | Part | Where |", "|---|---|---|---|", ...shownMd.map(row), ""); }
+  if (shownMd.length) {
+    md.push("| | Finding | Part | Where |", "|---|---|---|---|", ...shownMd.map(row), "");
+    for (const f of shownMd.filter((x) => x.fix)) md.push(`<details><summary>Fix prompt: ${f.title.replace(/</g, "&lt;")}</summary>`, "", "~~~~text", f.fix, "~~~~", "", "</details>", "");
+  }
   else md.push("No **Fix now** or **Fix soon** findings from the checks this version runs.", "");
   if (infos.length) md.push(`<details><summary>${infos.length} to review</summary>`, "", "| | Finding | Part | Where |", "|---|---|---|---|", ...infos.map(row), "", "</details>", "");
   md.push("Open the HTML report for the drawing, the plain-English explanation of every part, and the code behind each finding.");

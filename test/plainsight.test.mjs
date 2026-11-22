@@ -9,6 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { analyze } from "../src/analyze.mjs";
 import { renderReport } from "../src/report.mjs";
+import { fixPrompt, redact } from "../src/fixprompt.mjs";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const tidy = path.join(root, "fixtures", "tidy");
@@ -332,4 +333,34 @@ test("explicit Drizzle joins read the joined tables", () => {
     "app/api/j/route.ts": 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes, teams } from "@/lib/db/schema";\nexport async function GET() { return Response.json(await db.select().from(notes).leftJoin(teams, eq(notes.teamId, teams.id))); }\n',
   });
   assert.ok(analyze(dir).edges.some((e) => e.from === "route:GET /api/j" && e.to === "table:teams"));
+});
+
+test("every finding has a rule and a fix prompt with its receipts", () => {
+  for (const f of g.findings) {
+    assert.ok(f.rule, `no rule id for "${f.title}"`);
+    assert.ok(f.fix?.includes(f.title), `fix prompt doesn't name "${f.title}"`);
+    for (const e of f.evidence || []) assert.ok(f.fix.includes(`${e.file}:${e.line}`), `fix prompt for "${f.title}" misses ${e.file}:${e.line}`);
+  }
+  const read = find("Anyone can read other people's Habit records");
+  assert.match(read.fix, /Where: GET \/api\/habits · app\/api\/habits\/route\.ts:6/);
+  assert.match(read.fix, /How to fix it: /);
+});
+
+test("every rule that can be fixed tells the AI how", () => {
+  for (const f of g.findings) assert.match(f.fix, /How to fix it: \S/, `no fix guidance for rule "${f.rule}"`);
+});
+
+test("fix prompts never carry a full secret key", () => {
+  assert.equal(redact('new Stripe("sk_live_51NabcdEFGHijkl123456")'), 'new Stripe("sk_live_51Na…")');
+  assert.equal(redact("key = 'sk-ant-api03-abcdefghijklmnop'"), "key = 'sk-ant-api0…'");
+  const leaky = { sev: "crit", rule: "secret-in-browser", title: "t", text: "x", evidence: [{ file: "a.ts", line: 1, code: 'const k = "sk_live_51NabcdEFGHijkl123456"; const w = "whsec_abcdEFGH12345678";' }] };
+  const p = fixPrompt(leaky, {});
+  assert.ok(!p.includes("sk_live_51NabcdEFGHijkl123456") && !p.includes("whsec_abcdEFGH12345678"), "a full key reached the prompt");
+  for (const f of g.findings) assert.ok(!/sk_live_[A-Za-z0-9]{12,}/.test(f.fix), `full key in prompt for "${f.title}"`);
+});
+
+test("the report has a copy button for each fix prompt", () => {
+  const html = renderReport([g]);
+  assert.ok(html.includes('class="fixcopy"'), "no Copy fix prompt button in the report");
+  assert.ok(html.includes("Copy fix prompt"));
 });

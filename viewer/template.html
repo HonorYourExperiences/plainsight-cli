@@ -144,6 +144,11 @@ svg.focus .guard:not(.on) { opacity: .2; }
 .meter { height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; }
 .meter i { display: block; height: 100%; background: var(--flow); }
 details.more summary { cursor: pointer; font-size: 13px; color: var(--flow); }
+.fixrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.fixcopy { font: inherit; font-size: 12.5px; font-weight: 600; padding: 5px 10px; border-radius: 3px; border: 1px solid currentColor; background: var(--sheet); color: var(--ink); cursor: pointer; }
+.fixcopy.done { color: var(--flow); }
+.fixrow small { font-size: 12px; opacity: .75; }
+pre.fixtext { white-space: pre-wrap; word-break: break-word; font-size: 11.5px; line-height: 1.45; max-height: 260px; overflow: auto; background: var(--sheet); border: 1px solid var(--rule); padding: 8px; margin-top: 6px; }
 .limits { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13px; display: grid; gap: 4px; }
 
 /* zoom levels */
@@ -1026,6 +1031,19 @@ const GRAPHS = /*__GRAPHS__*/[];
     panel.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => openGroup(b.dataset.open)));
     panel.querySelector("#back")?.addEventListener("click", showOverview);
     panel.querySelectorAll(".norc summary").forEach((s) => s.addEventListener("click", (e) => e.preventDefault()));
+    panel.querySelectorAll("[data-fix]").forEach((b) => b.addEventListener("click", () => {
+      copyText(panel._fixes?.[+b.dataset.fix] || "").then((ok) => {
+        b.textContent = ok ? "Copied ✓" : "Couldn't copy: open “See the prompt”";
+        b.classList.toggle("done", ok);
+        setTimeout(() => { b.textContent = "Copy fix prompt"; b.classList.remove("done"); }, 2200);
+      });
+    }));
+  }
+  // clipboard API where allowed, a hidden textarea where it isn't (some browsers block it for files opened from disk)
+  function copyText(t) {
+    const fallback = () => { const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand("copy"); } catch {} ta.remove(); return ok; };
+    if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(t).then(() => true, () => fallback());
+    return Promise.resolve(fallback());
   }
   function findingBtn(f) {
     const last = f.evidence?.[f.evidence.length - 1];
@@ -1089,6 +1107,7 @@ const GRAPHS = /*__GRAPHS__*/[];
     const es = G.edges.filter((e) => e.from === id || e.to === id);
     focusReal(new Set([id, ...es.flatMap((e) => [e.from, e.to])]), new Set(es.map((e) => e.id)));
     const fs = findingsByNode[id] || [];
+    panel._fixes = fs.map((f) => f.fix);
     const kindTxt = n.kind === "route" ? (n.worker ? "Cloudflare Worker" : `API route · ${n.method}`) : n.layout ? "Shared layout" : n.sw ? "Service worker" : KIND[n.kind].toLowerCase().replace(/^./, (c) => c.toUpperCase());
     const g = n.guard;
     const guardChip = g && n.kind !== "page" ? `<span class="basis ${g.status === "checked" ? (g.basis === "library" || g.certainty === "library" ? "library" : "proven") : g.status === "none" ? "unresolved" : "inferred"}">${{ checked: "Login checked", partial: "Login check: partial", unenforced: "Login looked up, not enforced", none: "No login check", external: "Key checked outside this code" }[g.status]}</span>` : "";
@@ -1101,8 +1120,10 @@ const GRAPHS = /*__GRAPHS__*/[];
       <div class="stack"><span class="eyebrow">${esc(kindTxt)}</span><h2>${esc(label(n))}</h2>
         ${n.file ? `<span class="chip" style="justify-self:start">${esc(n.file)}${n.line && n.line > 1 ? ":" + n.line : ""}</span>` : ""}${guardChip ? `<div>${guardChip}</div>` : ""}
         ${grp ? `<p class="muted" style="font-size:13px">In the group <button class="inline-link" data-vnode="group:${esc(grp.key)}">${esc(grp.label)}</button></p>` : ""}</div>
-      ${fs.map((f) => `<div class="flag ${f.sev}"><span class="sev ${f.sev}" style="justify-self:start">${f.sev === "crit" ? "Fix now" : f.sev === "warn" ? "Fix soon" : "Review"}</span><strong>${esc(f.title)}</strong><span>${esc(f.text)}</span>
-        <details class="more"><summary>Show the code</summary><div class="receipts" style="padding-left:0;margin-top:6px">${chainHtml(f.evidence)}</div></details></div>`).join("")}
+      ${fs.map((f, i) => `<div class="flag ${f.sev}"><span class="sev ${f.sev}" style="justify-self:start">${f.sev === "crit" ? "Fix now" : f.sev === "warn" ? "Fix soon" : "Review"}</span><strong>${esc(f.title)}</strong><span>${esc(f.text)}</span>
+        <details class="more"><summary>Show the code</summary><div class="receipts" style="padding-left:0;margin-top:6px">${chainHtml(f.evidence)}</div></details>
+        ${f.fix ? `<div class="fixrow"><button type="button" class="fixcopy" data-fix="${i}">Copy fix prompt</button><small>Paste it into Claude, Cursor or Lovable</small></div>
+        <details class="more"><summary>See the prompt</summary><pre class="fixtext">${esc(f.fix)}</pre></details>` : ""}</div>`).join("")}
       <div><h3>In plain English</h3>${claimsHtml(n.explain || [])}</div>
       ${es.length ? `<div><h3>Connected to · ${es.length}</h3><div class="links">${shown.map(link).join("")}</div>${es.length > shown.length ? `<p class="muted" style="font-size:12.5px;margin-top:6px">and ${es.length - shown.length} more</p>` : ""}</div>` : ""}
       ${n.files?.length > 1 ? `<details class="more"><summary>${n.files.length} files make up this page</summary><ul class="files" style="margin-top:6px">${n.files.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></details>` : ""}`;

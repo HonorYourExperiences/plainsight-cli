@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Copy fix prompt.** Every finding in the report has a button that copies a ready-to-paste prompt for Claude, Cursor or Lovable: the problem, the part and the exact file and line, the code involved, what a real fix looks like for that kind of problem, and a request to plan first, reuse the app's own helpers and change nothing else. The same prompt is in `--json` output and, folded, in the `--markdown` summary.
+- Secret keys are masked in every prompt, so pasting one into an AI chat never hands over a key.
+- Each finding now has a stable `rule` id (for example `others-records`, `secret-in-browser`, `unsigned-webhook`).
+
 ## 0.3.0 — first public release
 
 **Accuracy pass on real apps** (taxonomy, saas-starter, ai-chatbot, chatbot-ui, nextjs-subscription-payments, dub).
