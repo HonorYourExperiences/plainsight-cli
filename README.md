@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: HonorYourExperiences/plainsight-cli@v0.3.0
+      - uses: HonorYourExperiences/plainsight-cli@v0.3.1
         with:
           path: .          # or apps/web in a monorepo
           fail-on: crit    # crit, warn or none

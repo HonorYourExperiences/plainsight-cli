@@ -1,7 +1,7 @@
 {
   "app": "saas-starter",
   "commit": "6e33e58",
-  "generatedAt": "2026-11-22T19:23:23.866Z",
+  "generatedAt": "2026-11-22T21:54:10.760Z",
   "analyzer": "plainsight 0.3.1",
   "stack": {
     "static": null,
@@ -4757,6 +4757,7 @@
   ],
   "findings": [
     {
+      "rule": "login-not-enforced",
       "sev": "warn",
       "node": "action:signOut() app/(login)/actions.ts",
       "title": "Looks up the login but doesn't act on it",
@@ -4768,9 +4769,11 @@
           "endLine": 225,
           "code": "const user = (await getUser()) as User;"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"saas-starter\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Fix soon): Looks up the login but doesn't act on it\nWhere: signOut() · app/(login)/actions.ts:225\nStack: Next.js App Router, middleware in middleware.ts\nWhat's wrong: calls getUser() but never stops the request when nobody is logged in, and it changes data\n\nThe code involved:\napp/(login)/actions.ts:225\n    const user = (await getUser()) as User;\n\nHow to fix it: The handler looks up the login but carries on either way. Return 401 when there is no logged-in user, before doing anything else.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "public-lookup",
       "sev": "info",
       "node": "route:GET /api/stripe/checkout",
       "title": "Looks up users, teamMembers, teams records by what the request sends, without a login",
@@ -4794,9 +4797,11 @@
           "endLine": 80,
           "code": "await db\n  .update(teams)"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"saas-starter\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Review): Looks up users, teamMembers, teams records by what the request sends, without a login\nWhere: GET /api/stripe/checkout · app/api/stripe/checkout/route.ts:57\nStack: Next.js App Router, middleware in middleware.ts\nWhat's wrong: That's normal for sign-up, sign-in, tracking and payment return flows, which is what this looks like from its name. Check it only returns or changes what it should.\n\nThe code involved, in order:\napp/api/stripe/checkout/route.ts:57-59\n    const user = await db\n      .select()\n      .from(users)\napp/api/stripe/checkout/route.ts:67-71\n    const userTeam = await db\n      .select({\n        teamId: teamMembers.teamId,\n      })\n    …\napp/api/stripe/checkout/route.ts:79-80\n    await db\n      .update(teams)\n\nHow to fix it: Check whether these records are meant to be public. If they aren't, require a login and only return the logged-in user's records.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "login-not-enforced",
       "sev": "info",
       "node": "route:GET /api/team",
       "title": "Looks up the login but doesn't act on it",
@@ -4815,9 +4820,11 @@
           "endLine": 103,
           "code": "const user = await getUser();"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"saas-starter\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Review): Looks up the login but doesn't act on it\nWhere: GET /api/team · app/api/team/route.ts:4\nStack: Next.js App Router, middleware in middleware.ts\nWhat's wrong: calls getUser() but never stops the request when nobody is logged in\n\nThe code involved, in order:\napp/api/team/route.ts:4\n    const team = await getTeamForUser();\nlib/db/queries.ts:103\n    const user = await getUser();\n\nHow to fix it: The handler looks up the login but carries on either way. Return 401 when there is no logged-in user, before doing anything else.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "login-not-enforced",
       "sev": "info",
       "node": "route:GET /api/user",
       "title": "Looks up the login but doesn't act on it",
@@ -4829,9 +4836,11 @@
           "endLine": 4,
           "code": "const user = await getUser();"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"saas-starter\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Review): Looks up the login but doesn't act on it\nWhere: GET /api/user · app/api/user/route.ts:4\nStack: Next.js App Router, middleware in middleware.ts\nWhat's wrong: calls getUser() but never stops the request when nobody is logged in\n\nThe code involved:\napp/api/user/route.ts:4\n    const user = await getUser();\n\nHow to fix it: The handler looks up the login but carries on either way. Return 401 when there is no logged-in user, before doing anything else.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "public-lookup",
       "sev": "info",
       "node": "action:signIn() app/(login)/actions.ts",
       "title": "Looks up users records by what the request sends, without a login",
@@ -4843,9 +4852,11 @@
           "endLine": 60,
           "code": "const userWithTeam = await db\n  .select({\n    user: users,\n    team: teams\n…"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"saas-starter\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Review): Looks up users records by what the request sends, without a login\nWhere: signIn() · app/(login)/actions.ts:55\nStack: Next.js App Router, middleware in middleware.ts\nWhat's wrong: That's normal for sign-up, sign-in, tracking and payment return flows, which is what this looks like from its name. Check it only returns or changes what it should.\n\nThe code involved:\napp/(login)/actions.ts:55-60\n    const userWithTeam = await db\n      .select({\n        user: users,\n        team: teams\n    …\n\nHow to fix it: Check whether these records are meant to be public. If they aren't, require a login and only return the logged-in user's records.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "fails-after-save",
       "sev": "info",
       "node": "action:signIn() app/(login)/actions.ts",
       "title": "If Stripe fails, the request fails after data was saved",
@@ -4877,9 +4888,11 @@
           "endLine": 44,
           "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"saas-starter\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Review): If Stripe fails, the request fails after data was saved\nWhere: signIn() · app/(login)/actions.ts:91\nStack: Next.js App Router, middleware in middleware.ts\nWhat's wrong: The call to Stripe isn't wrapped in error handling and happens after the activityLogs write. A failure there shows the user an error even though the record already exists.\n\nThe code involved, in order:\napp/(login)/actions.ts:91\n    logActivity(foundTeam?.id, foundUser.id, ActivityType.SIGN_IN)\napp/(login)/actions.ts:44\n    await db.insert(activityLogs).values(newActivity);\napp/(login)/actions.ts:97\n    return createCheckoutSession({ team: foundTeam, priceId });\nlib/payments/stripe.ts:27-44\n    const session = await stripe.checkout.sessions.create({\n      payment_method_types: ['card'],\n      line_items: [\n        {\n    …\n\nHow to fix it: Make the request not fail after the data was saved: catch errors from the outside call and handle them (log, retry later or tell the user) so the saved data and the response agree.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "public-lookup",
       "sev": "info",
       "node": "action:signUp() app/(login)/actions.ts",
       "title": "Looks up users, invitations records by what the request sends, without a login",
@@ -4903,9 +4916,11 @@
           "endLine": 167,
           "code": "await db\n  .update(invitations)"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"saas-starter\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Review): Looks up users, invitations records by what the request sends, without a login\nWhere: signUp() · app/(login)/actions.ts:112\nStack: Next.js App Router, middleware in middleware.ts\nWhat's wrong: That's normal for sign-up, sign-in, tracking and payment return flows, which is what this looks like from its name. Check it only returns or changes what it should.\n\nThe code involved, in order:\napp/(login)/actions.ts:112-114\n    const existingUser = await db\n      .select()\n      .from(users)\napp/(login)/actions.ts:150-152\n    const [invitation] = await db\n      .select()\n      .from(invitations)\napp/(login)/actions.ts:166-167\n    await db\n      .update(invitations)\n\nHow to fix it: Check whether these records are meant to be public. If they aren't, require a login and only return the logged-in user's records.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "fails-after-save",
       "sev": "info",
       "node": "action:signUp() app/(login)/actions.ts",
       "title": "If Stripe fails, the request fails after data was saved",
@@ -4930,7 +4945,8 @@
           "endLine": 44,
           "code": "const session = await stripe.checkout.sessions.create({\n  payment_method_types: ['card'],\n  line_items: [\n    {\n…"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"saas-starter\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Review): If Stripe fails, the request fails after data was saved\nWhere: signUp() · app/(login)/actions.ts:134\nStack: Next.js App Router, middleware in middleware.ts\nWhat's wrong: The call to Stripe isn't wrapped in error handling and happens after the users write. A failure there shows the user an error even though the record already exists.\n\nThe code involved, in order:\napp/(login)/actions.ts:134\n    const [createdUser] = await db.insert(users).values(newUser).returning();\napp/(login)/actions.ts:218\n    return createCheckoutSession({ team: createdTeam, priceId });\nlib/payments/stripe.ts:27-44\n    const session = await stripe.checkout.sessions.create({\n      payment_method_types: ['card'],\n      line_items: [\n        {\n    …\n\nHow to fix it: Make the request not fail after the data was saved: catch errors from the outside call and handle them (log, retry later or tell the user) so the saved data and the response agree.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     }
   ],
   "unknowns": [
@@ -4963,7 +4979,7 @@
   ],
   "coverage": {
     "sourceFiles": 42,
-    "mapped": 37,
+    "mapped": 35,
     "tooling": [
       "drizzle.config.ts",
       "next.config.ts",
@@ -4972,6 +4988,8 @@
     "tests": [],
     "docs": [],
     "unmapped": [
+      "app/(dashboard)/dashboard/activity/loading.tsx",
+      "app/not-found.tsx",
       "lib/db/seed.ts",
       "lib/db/setup.ts"
     ],
@@ -4983,6 +5001,6 @@
     "Calls made through require(), dynamic import(), or values passed around as arguments may be missed.",
     "Regex-style middleware matchers are not evaluated."
   ],
-  "elapsedMs": 157,
+  "elapsedMs": 250,
   "source": "nextjs/saas-starter"
 }

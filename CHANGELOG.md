@@ -1,13 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.3.1
 
 - **Copy fix prompt.** Every finding in the report has a button that copies a ready-to-paste prompt for Claude, Cursor or Lovable: the problem, the part and the exact file and line, the code involved, what a real fix looks like for that kind of problem, and a request to plan first, reuse the app's own helpers and change nothing else. The same prompt is in `--json` output and, folded, in the `--markdown` summary.
 - Secret keys are masked in every prompt, so pasting one into an AI chat never hands over a key.
 - Each finding now has a stable `rule` id (for example `others-records`, `secret-in-browser`, `unsigned-webhook`).
-
-## 0.3.1
-
 - A page no longer loses a table when two reads share a line (a select and its join): `/dashboard/activity` in saas-starter now shows both `users` and `activityLogs`.
 - A request-driven `where()` on a joined Drizzle table's own columns counts as request-driven for that table (a filter on the main table doesn't).
 - A verifier that rejects through a helper of its own (`rejectInvalidToken(t)`) is recognised as throwing, unless the helper is async and not awaited, or its error is caught and ignored.

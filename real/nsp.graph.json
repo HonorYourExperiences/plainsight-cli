@@ -1,8 +1,8 @@
 {
   "app": "nextjs-subscription-payments",
   "commit": "bdd0813",
-  "generatedAt": "2026-11-22T18:26:32.700Z",
-  "analyzer": "plainsight 0.3.0",
+  "generatedAt": "2026-11-22T21:54:11.267Z",
+  "analyzer": "plainsight 0.3.1",
   "stack": {
     "static": null,
     "nextAppRouter": true,
@@ -30,7 +30,7 @@
         "file": "schema.sql",
         "line": 5,
         "endLine": 14,
-        "code": "create table users (\n                         \n  id uuid references auth.users not null primary key,\n  full_name text,\n  avatar_url text,\n                                                           \n  billing_address jsonb,\n                                                \n  payment_method jsonb\n);"
+        "code": "create table users (\r\n                          \n  id uuid references auth.users not null primary key,\r\n  full_name text,\r\n  avatar_url text,\r\n                                                            \n  billing_address jsonb,\r\n                                                 \n  payment_method jsonb\r\n);\r"
       },
       "fields": [
         "id",
@@ -83,7 +83,7 @@
               "file": "schema.sql",
               "line": 5,
               "endLine": 14,
-              "code": "create table users (\n                         \n  id uuid references auth.users not null primary key,\n  full_name text,\n  avatar_url text,\n                                                           \n  billing_address jsonb,\n                                                \n  payment_method jsonb\n);"
+              "code": "create table users (\r\n                          \n  id uuid references auth.users not null primary key,\r\n  full_name text,\r\n  avatar_url text,\r\n                                                            \n  billing_address jsonb,\r\n                                                 \n  payment_method jsonb\r\n);\r"
             }
           ]
         },
@@ -146,7 +146,7 @@
         "file": "schema.sql",
         "line": 38,
         "endLine": 43,
-        "code": "create table customers (\n                         \n  id uuid references auth.users not null primary key,\n                                                                            \n  stripe_customer_id text\n);"
+        "code": "create table customers (\r\n                          \n  id uuid references auth.users not null primary key,\r\n                                                                             \n  stripe_customer_id text\r\n);\r"
       },
       "fields": [
         "id",
@@ -177,7 +177,7 @@
               "file": "schema.sql",
               "line": 38,
               "endLine": 43,
-              "code": "create table customers (\n                         \n  id uuid references auth.users not null primary key,\n                                                                            \n  stripe_customer_id text\n);"
+              "code": "create table customers (\r\n                          \n  id uuid references auth.users not null primary key,\r\n                                                                             \n  stripe_customer_id text\r\n);\r"
             }
           ]
         },
@@ -230,7 +230,7 @@
         "file": "schema.sql",
         "line": 51,
         "endLine": 64,
-        "code": "create table products (\n                                            \n  id text primary key,\n                                                             \n  active boolean,\n                                                                                                                                                                                   \n  name text,\n                                                                                                                                                                                              \n  description text,\n                                                                                   \n  image text,\n                                                                                                          \n…"
+        "code": "create table products (\r\n                                             \n  id text primary key,\r\n                                                              \n  active boolean,\r\n                                                                                                                                                                                    \n  name text,\r\n                                                                                                                                                                                               \n  description text,\r\n                                                                                    \n  image text,\r\n                                                                                                           \n…"
       },
       "fields": [
         "id",
@@ -268,7 +268,7 @@
               "file": "schema.sql",
               "line": 51,
               "endLine": 64,
-              "code": "create table products (\n                                            \n  id text primary key,\n                                                             \n  active boolean,\n                                                                                                                                                                                   \n  name text,\n                                                                                                                                                                                              \n  description text,\n                                                                                   \n  image text,\n                                                                                                          \n…"
+              "code": "create table products (\r\n                                             \n  id text primary key,\r\n                                                              \n  active boolean,\r\n                                                                                                                                                                                    \n  name text,\r\n                                                                                                                                                                                               \n  description text,\r\n                                                                                    \n  image text,\r\n                                                                                                           \n…"
             }
           ]
         },
@@ -316,7 +316,7 @@
         "file": "schema.sql",
         "line": 74,
         "endLine": 97,
-        "code": "create table prices (\n                                           \n  id text primary key,\n                                                     \n  product_id text references products, \n                                                     \n  active boolean,\n                                      \n  description text,\n                                                                                                                                                \n  unit_amount bigint,\n                                                  \n…"
+        "code": "create table prices (\r\n                                            \n  id text primary key,\r\n                                                      \n  product_id text references products, \r\n                                                      \n  active boolean,\r\n                                       \n  description text,\r\n                                                                                                                                                 \n  unit_amount bigint,\r\n                                                   \n…"
       },
       "fields": [
         "id",
@@ -359,7 +359,7 @@
               "file": "schema.sql",
               "line": 74,
               "endLine": 97,
-              "code": "create table prices (\n                                           \n  id text primary key,\n                                                     \n  product_id text references products, \n                                                     \n  active boolean,\n                                      \n  description text,\n                                                                                                                                                \n  unit_amount bigint,\n                                                  \n…"
+              "code": "create table prices (\r\n                                            \n  id text primary key,\r\n                                                      \n  product_id text references products, \r\n                                                      \n  active boolean,\r\n                                       \n  description text,\r\n                                                                                                                                                 \n  unit_amount bigint,\r\n                                                   \n…"
             }
           ]
         },
@@ -417,7 +417,7 @@
         "file": "schema.sql",
         "line": 106,
         "endLine": 136,
-        "code": "create table subscriptions (\n                                                \n  id text primary key,\n  user_id uuid references auth.users not null,\n                                                                                  \n  status subscription_status,\n                                                                                                          \n  metadata jsonb,\n                                                    \n  price_id text references prices,\n                                                                                                                                      \n  quantity integer,\n…"
+        "code": "create table subscriptions (\r\n                                                 \n  id text primary key,\r\n  user_id uuid references auth.users not null,\r\n                                                                                   \n  status subscription_status,\r\n                                                                                                           \n  metadata jsonb,\r\n                                                     \n  price_id text references prices,\r\n                                                                                                                                       \n  quantity integer,\r\n…"
       },
       "fields": [
         "id",
@@ -471,7 +471,7 @@
               "file": "schema.sql",
               "line": 106,
               "endLine": 136,
-              "code": "create table subscriptions (\n                                                \n  id text primary key,\n  user_id uuid references auth.users not null,\n                                                                                  \n  status subscription_status,\n                                                                                                          \n  metadata jsonb,\n                                                    \n  price_id text references prices,\n                                                                                                                                      \n  quantity integer,\n…"
+              "code": "create table subscriptions (\r\n                                                 \n  id text primary key,\r\n  user_id uuid references auth.users not null,\r\n                                                                                   \n  status subscription_status,\r\n                                                                                                           \n  metadata jsonb,\r\n                                                     \n  price_id text references prices,\r\n                                                                                                                                       \n  quantity integer,\r\n…"
             }
           ]
         },
@@ -2002,6 +2002,57 @@
     },
     {
       "facts": [],
+      "id": "page:/signin",
+      "kind": "page",
+      "layout": false,
+      "name": "/signin",
+      "route": "/signin",
+      "sub": "Page · built on the server",
+      "file": "app/signin/page.tsx",
+      "line": 5,
+      "ev": {
+        "file": "app/signin/page.tsx",
+        "line": 5,
+        "endLine": 11,
+        "code": "export default function SignIn() {\n  const preferredSignInView =\n    cookies().get('preferredSignInView')?.value || null;\n  const defaultView = getDefaultSignInView(preferredSignInView);\n…"
+      },
+      "client": false,
+      "pageClient": false,
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "A page at /signin.",
+          "evidence": [
+            {
+              "file": "app/signin/page.tsx",
+              "line": 5,
+              "endLine": 11,
+              "code": "export default function SignIn() {\n  const preferredSignInView =\n    cookies().get('preferredSignInView')?.value || null;\n  const defaultView = getDefaultSignInView(preferredSignInView);\n…"
+            }
+          ]
+        },
+        {
+          "text": "It's built on the server before it's sent.",
+          "evidence": []
+        },
+        {
+          "text": "It doesn't send any requests to your server.",
+          "evidence": []
+        },
+        {
+          "text": "Anyone can open it. No login check was found in its code or in middleware.",
+          "evidence": []
+        }
+      ],
+      "files": [
+        "app/signin/page.tsx",
+        "utils/auth-helpers/settings.ts"
+      ]
+    },
+    {
+      "facts": [],
       "id": "page:/signin/:id",
       "kind": "page",
       "layout": false,
@@ -2173,57 +2224,6 @@
         "utils/supabase/client.ts",
         "components/ui/LoadingDots/index.ts",
         "components/ui/LoadingDots/LoadingDots.tsx"
-      ]
-    },
-    {
-      "facts": [],
-      "id": "page:/signin",
-      "kind": "page",
-      "layout": false,
-      "name": "/signin",
-      "route": "/signin",
-      "sub": "Page · built on the server",
-      "file": "app/signin/page.tsx",
-      "line": 5,
-      "ev": {
-        "file": "app/signin/page.tsx",
-        "line": 5,
-        "endLine": 11,
-        "code": "export default function SignIn() {\n  const preferredSignInView =\n    cookies().get('preferredSignInView')?.value || null;\n  const defaultView = getDefaultSignInView(preferredSignInView);\n…"
-      },
-      "client": false,
-      "pageClient": false,
-      "guard": {
-        "status": "none"
-      },
-      "explain": [
-        {
-          "text": "A page at /signin.",
-          "evidence": [
-            {
-              "file": "app/signin/page.tsx",
-              "line": 5,
-              "endLine": 11,
-              "code": "export default function SignIn() {\n  const preferredSignInView =\n    cookies().get('preferredSignInView')?.value || null;\n  const defaultView = getDefaultSignInView(preferredSignInView);\n…"
-            }
-          ]
-        },
-        {
-          "text": "It's built on the server before it's sent.",
-          "evidence": []
-        },
-        {
-          "text": "It doesn't send any requests to your server.",
-          "evidence": []
-        },
-        {
-          "text": "Anyone can open it. No login check was found in its code or in middleware.",
-          "evidence": []
-        }
-      ],
-      "files": [
-        "app/signin/page.tsx",
-        "utils/auth-helpers/settings.ts"
       ]
     },
     {
@@ -3153,8 +3153,8 @@
     "tests": [],
     "docs": [],
     "unmapped": [
-      "components/ui/Input/Input.tsx",
-      "components/ui/Input/index.ts"
+      "components/ui/Input/index.ts",
+      "components/ui/Input/Input.tsx"
     ],
     "schema": null
   },
@@ -3164,5 +3164,5 @@
     "Calls made through require(), dynamic import(), or values passed around as arguments may be missed.",
     "Regex-style middleware matchers are not evaluated."
   ],
-  "elapsedMs": 183
+  "elapsedMs": 235
 }

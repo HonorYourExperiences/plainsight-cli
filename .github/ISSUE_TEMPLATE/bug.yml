@@ -20,4 +20,4 @@ body:
     id: env
     attributes:
       label: Plainsight version, Node version, OS
-      placeholder: 0.3.0, Node 22, macOS 15
+      placeholder: 0.3.1, Node 22, macOS 15

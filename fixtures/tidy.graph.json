@@ -1,8 +1,8 @@
 {
   "app": "tidy",
-  "commit": "f067dc9",
-  "generatedAt": "2026-11-22T18:26:33.182Z",
-  "analyzer": "plainsight 0.3.0",
+  "commit": "477dc55",
+  "generatedAt": "2026-11-22T21:53:58.805Z",
+  "analyzer": "plainsight 0.3.1",
   "stack": {
     "static": null,
     "nextAppRouter": true,
@@ -100,7 +100,7 @@
           ]
         },
         {
-          "text": "Used by POST /api/habits/:id/check and GET /api/habits.",
+          "text": "Used by GET /api/habits and POST /api/habits/:id/check.",
           "evidence": []
         }
       ]
@@ -183,6 +183,53 @@
     },
     {
       "facts": [],
+      "id": "route:GET /api/habits",
+      "kind": "route",
+      "name": "/api/habits",
+      "sub": "GET",
+      "method": "GET",
+      "file": "app/api/habits/route.ts",
+      "line": 4,
+      "ev": {
+        "file": "app/api/habits/route.ts",
+        "line": 4,
+        "endLine": 8,
+        "code": "export async function GET(req: NextRequest) {\n  const userId = req.nextUrl.searchParams.get(\"user\");\n  const habits = await db.habit.findMany({ where: { userId } });\n  return Response.json(habits);\n}"
+      },
+      "guard": {
+        "status": "none"
+      },
+      "explain": [
+        {
+          "text": "Handles GET requests to /api/habits.",
+          "evidence": [
+            {
+              "file": "app/api/habits/route.ts",
+              "line": 4,
+              "endLine": 8,
+              "code": "export async function GET(req: NextRequest) {\n  const userId = req.nextUrl.searchParams.get(\"user\");\n  const habits = await db.habit.findMany({ where: { userId } });\n  return Response.json(habits);\n}"
+            }
+          ]
+        },
+        {
+          "text": "Reads from Habit.",
+          "evidence": [
+            {
+              "file": "app/api/habits/route.ts",
+              "line": 6,
+              "endLine": 6,
+              "code": "const habits = await db.habit.findMany({ where: { userId } });"
+            }
+          ]
+        },
+        {
+          "text": "It doesn't check who's logged in. No login lookup was found in this handler, the functions it calls, or middleware covering this path.",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "facts": [],
       "id": "route:POST /api/habits/:id/check",
       "kind": "route",
       "name": "/api/habits/:id/check",
@@ -254,53 +301,6 @@
               "code": "const session = await getSession(req);"
             }
           ]
-        }
-      ]
-    },
-    {
-      "facts": [],
-      "id": "route:GET /api/habits",
-      "kind": "route",
-      "name": "/api/habits",
-      "sub": "GET",
-      "method": "GET",
-      "file": "app/api/habits/route.ts",
-      "line": 4,
-      "ev": {
-        "file": "app/api/habits/route.ts",
-        "line": 4,
-        "endLine": 8,
-        "code": "export async function GET(req: NextRequest) {\n  const userId = req.nextUrl.searchParams.get(\"user\");\n  const habits = await db.habit.findMany({ where: { userId } });\n  return Response.json(habits);\n}"
-      },
-      "guard": {
-        "status": "none"
-      },
-      "explain": [
-        {
-          "text": "Handles GET requests to /api/habits.",
-          "evidence": [
-            {
-              "file": "app/api/habits/route.ts",
-              "line": 4,
-              "endLine": 8,
-              "code": "export async function GET(req: NextRequest) {\n  const userId = req.nextUrl.searchParams.get(\"user\");\n  const habits = await db.habit.findMany({ where: { userId } });\n  return Response.json(habits);\n}"
-            }
-          ]
-        },
-        {
-          "text": "Reads from Habit.",
-          "evidence": [
-            {
-              "file": "app/api/habits/route.ts",
-              "line": 6,
-              "endLine": 6,
-              "code": "const habits = await db.habit.findMany({ where: { userId } });"
-            }
-          ]
-        },
-        {
-          "text": "It doesn't check who's logged in. No login lookup was found in this handler, the functions it calls, or middleware covering this path.",
-          "evidence": []
         }
       ]
     },
@@ -882,6 +882,25 @@
     },
     {
       "id": "e4",
+      "from": "route:GET /api/habits",
+      "to": "table:Habit",
+      "kind": "read",
+      "certainty": "proven",
+      "evidence": [
+        {
+          "file": "app/api/habits/route.ts",
+          "line": 6,
+          "endLine": 6,
+          "code": "const habits = await db.habit.findMany({ where: { userId } });"
+        }
+      ],
+      "label": "reads",
+      "ops": [
+        "findMany"
+      ]
+    },
+    {
+      "id": "e5",
       "from": "route:POST /api/habits/:id/check",
       "to": "table:User",
       "kind": "read",
@@ -900,7 +919,7 @@
       ]
     },
     {
-      "id": "e5",
+      "id": "e6",
       "from": "route:POST /api/habits/:id/check",
       "to": "table:Habit",
       "kind": "write",
@@ -916,25 +935,6 @@
       "label": "writes",
       "ops": [
         "update"
-      ]
-    },
-    {
-      "id": "e6",
-      "from": "route:GET /api/habits",
-      "to": "table:Habit",
-      "kind": "read",
-      "certainty": "proven",
-      "evidence": [
-        {
-          "file": "app/api/habits/route.ts",
-          "line": 6,
-          "endLine": 6,
-          "code": "const habits = await db.habit.findMany({ where: { userId } });"
-        }
-      ],
-      "label": "reads",
-      "ops": [
-        "findMany"
       ]
     },
     {
@@ -1094,6 +1094,7 @@
   ],
   "findings": [
     {
+      "rule": "others-records",
       "sev": "crit",
       "node": "route:GET /api/habits",
       "title": "Anyone can read other people's Habit records",
@@ -1105,9 +1106,11 @@
           "endLine": 6,
           "code": "const habits = await db.habit.findMany({ where: { userId } });"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"tidy\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Fix now): Anyone can read other people's Habit records\nWhere: GET /api/habits · app/api/habits/route.ts:6\nStack: Next.js App Router, Prisma, middleware in middleware.ts\nWhat's wrong: Which records it uses comes straight from the request, and nothing checks who is asking. Changing a value in the request gets someone else's data.\n\nThe code involved:\napp/api/habits/route.ts:6\n    const habits = await db.habit.findMany({ where: { userId } });\n\nHow to fix it: Make the handler find out who is logged in (using the app's existing login helper) and only use records that belong to that user. Return 401 when nobody is logged in and 404 when the record belongs to someone else. Don't trust a user id that comes from the request.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "secret-in-browser",
       "sev": "crit",
       "node": "page:/pro",
       "file": "lib/stripe.ts",
@@ -1120,9 +1123,11 @@
           "endLine": 3,
           "code": "export const stripe = new Stripe(\"sk_live_DEMO…\");"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"tidy\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Fix now): Stripe secret key is sent to the browser\nWhere: /pro · lib/stripe.ts:3\nStack: Next.js App Router, Prisma, middleware in middleware.ts\nWhat's wrong: lib/stripe.ts contains a Stripe secret key and is imported by code that runs in the browser (/pro). Anyone can open developer tools and copy it.\n\nThe code involved:\nlib/stripe.ts:3\n    export const stripe = new Stripe(\"sk_live_DEMO…\");\n\nHow to fix it: Move the secret key into a server-only environment variable and move the code that uses it into a server route or server action, so the browser asks the server instead of holding the key. Don't rename it to a NEXT_PUBLIC_ variable or pass it to client components: that still sends it to the browser. Then tell me to roll (replace) the key in the provider's dashboard, because the old one has already been shipped to visitors.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "unsigned-webhook",
       "sev": "warn",
       "node": "route:POST /api/stripe-webhook",
       "title": "Accepts messages without checking who sent them",
@@ -1134,9 +1139,11 @@
           "endLine": 7,
           "code": "await db.user.update({ where: { email }, data: { pro: true } });"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"tidy\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Fix soon): Accepts messages without checking who sent them\nWhere: POST /api/stripe-webhook · app/api/stripe-webhook/route.ts:7\nStack: Next.js App Router, Prisma, middleware in middleware.ts\nWhat's wrong: This webhook changes the database (User) but never verifies a signature. Anyone who finds the address can send a fake message.\n\nThe code involved:\napp/api/stripe-webhook/route.ts:7\n    await db.user.update({ where: { email }, data: { pro: true } });\n\nHow to fix it: Verify the sender's signature with the provider's own verification function and a webhook secret from an environment variable, before acting on the event or touching the database. If that function needs the raw request body (Stripe's does), read the body as raw text and pass it in unparsed. Reject the request with 400 if the signature is missing or wrong.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "open-route",
       "sev": "info",
       "node": "route:POST /api/signup",
       "title": "Open to anyone, no login check",
@@ -1148,9 +1155,11 @@
           "endLine": 15,
           "code": "export async function POST(req: Request) {\n  const { email, password } = await req.json();\n\n  const hash = await bcrypt.hash(password, 12);\n  const user = await db.user.create({ data: { email, hash } });\n  await track(\"signup\", user.id);\n…"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"tidy\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Review): Open to anyone, no login check\nWhere: POST /api/signup · app/api/signup/route.ts:6\nStack: Next.js App Router, Prisma, middleware in middleware.ts\nWhat's wrong: This route uses the database without checking a login. That can be intended (sign-up, public data), so it's listed for review, not as a bug.\n\nThe code involved:\napp/api/signup/route.ts:6-15\n    export async function POST(req: Request) {\n      const { email, password } = await req.json();\n    \n      const hash = await bcrypt.hash(password, 12);\n      const user = await db.user.create({ data: { email, hash } });\n      await track(\"signup\", user.id);\n    …\n\nHow to fix it: Decide whether this route is meant to be public (sign-up and public data often are). If it isn't, add the app's existing login check. If it is, leave it and say so.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "fails-after-save",
       "sev": "info",
       "node": "route:POST /api/signup",
       "title": "If an unresolved address fails, the request fails after data was saved",
@@ -1175,9 +1184,11 @@
           "endLine": 5,
           "code": "await fetch(url, { method: \"POST\", body: JSON.stringify({ name, id }) });"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"tidy\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Review): If an unresolved address fails, the request fails after data was saved\nWhere: POST /api/signup · app/api/signup/route.ts:10\nStack: Next.js App Router, Prisma, middleware in middleware.ts\nWhat's wrong: The call to an unresolved address isn't wrapped in error handling and happens after the User write. A failure there shows the user an error even though the record already exists.\n\nThe code involved, in order:\napp/api/signup/route.ts:10\n    const user = await db.user.create({ data: { email, hash } });\napp/api/signup/route.ts:11\n    await track(\"signup\", user.id);\nlib/analytics.ts:5\n    await fetch(url, { method: \"POST\", body: JSON.stringify({ name, id }) });\n\nHow to fix it: Make the request not fail after the data was saved: catch errors from the outside call and handle them (log, retry later or tell the user) so the saved data and the response agree.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     },
     {
+      "rule": "fails-after-save",
       "sev": "info",
       "node": "route:POST /api/signup",
       "title": "If Resend fails, the request fails after data was saved",
@@ -1195,7 +1206,8 @@
           "endLine": 12,
           "code": "await resend.emails.send({ from: \"hi@tidy.app\", to: email, subject: \"Welcome\", html: \"<p>Welcome</p>\" });"
         }
-      ]
+      ],
+      "fix": "Plainsight (a code checker) found a problem in my app \"tidy\". Please fix only this problem, with the smallest change that does it, and don't change anything unrelated.\n\nProblem (Review): If Resend fails, the request fails after data was saved\nWhere: POST /api/signup · app/api/signup/route.ts:10\nStack: Next.js App Router, Prisma, middleware in middleware.ts\nWhat's wrong: The call to Resend isn't wrapped in error handling and happens after the User write. A failure there shows the user an error even though the record already exists.\n\nThe code involved, in order:\napp/api/signup/route.ts:10\n    const user = await db.user.create({ data: { email, hash } });\napp/api/signup/route.ts:12\n    await resend.emails.send({ from: \"hi@tidy.app\", to: email, subject: \"Welcome\", html: \"<p>Welcome</p>\" });\n\nHow to fix it: Make the request not fail after the data was saved: catch errors from the outside call and handle them (log, retry later or tell the user) so the saved data and the response agree.\n\nBefore you change anything, read the files above and tell me in one or two sentences what you plan to do. If the app already has a helper for this (a login check, a database client, a config file), use it instead of writing a new one. When you're done, list the files you changed. I'll run `npx plainsight-cli` again to confirm the finding is gone."
     }
   ],
   "unknowns": [
@@ -1243,5 +1255,5 @@
     "Calls made through require(), dynamic import(), or values passed around as arguments may be missed.",
     "Regex-style middleware matchers are not evaluated."
   ],
-  "elapsedMs": 61
+  "elapsedMs": 155
 }
