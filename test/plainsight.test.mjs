@@ -333,3 +333,211 @@ test("explicit Drizzle joins read the joined tables", () => {
   });
   assert.ok(analyze(dir).edges.some((e) => e.from === "route:GET /api/j" && e.to === "table:teams"));
 });
+
+// Review follow-ups after PR #6
+test("a page keeps every table its query reads, including joined ones on the same line", () => {
+  const dir = tempApp({
+    "app/activity/page.tsx": 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes, teams } from "@/lib/db/schema";\nexport default async function A() { const rows = await db.select().from(notes).leftJoin(teams, eq(notes.teamId, teams.id)); return rows.length; }\n',
+  });
+  const reads = analyze(dir).edges.filter((e) => e.from === "page:/activity" && e.kind === "read").map((e) => e.to).sort();
+  assert.deepEqual(reads, ["table:notes", "table:teams"]);
+});
+
+test("a request-driven filter on a joined table is still request-driven", () => {
+  const dir = tempApp({
+    "app/api/t/[id]/route.ts": 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes, teams } from "@/lib/db/schema";\nexport async function GET(req: Request, { params }: any) { return Response.json(await db.select().from(teams).leftJoin(notes, eq(notes.teamId, teams.id)).where(eq(notes.id, Number(params.id)))); }\n',
+  });
+  const f = analyze(dir).findings.find((x) => x.node === "route:GET /api/t/:id");
+  assert.equal(f?.sev, "crit", "notes has an owner column, so this is someone else's record");
+});
+
+test("a verifier that rejects through a local helper counts", () => {
+  const dir = tempApp({
+    "lib/tokens.ts": 'function rejectInvalidToken(t: string | null) { if (t !== "ok") throw new Error("bad"); }\nexport function verifyToken(t: string | null) { rejectInvalidToken(t); }\n',
+    "app/api/a/[id]/route.ts": 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes } from "@/lib/db/schema";\nimport { verifyToken } from "@/lib/tokens";\nexport async function GET(req: Request, { params }: any) { verifyToken(req.headers.get("t")); return Response.json(await db.select().from(notes).where(eq(notes.id, Number(params.id)))); }\n',
+  });
+  assert.equal(analyze(dir).nodes.find((n) => n.id === "route:GET /api/a/:id").guard.status, "checked");
+});
+
+test("a verifier's helper only counts when its failure reaches the verifier", () => {
+  const route = (fn) => 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes } from "@/lib/db/schema";\nimport { ' + fn + ' } from "@/lib/tokens";\nexport async function GET(req: Request, { params }: any) { await ' + fn + '(req.headers.get("t")); return Response.json(await db.select().from(notes).where(eq(notes.id, Number(params.id)))); }\n';
+  const dir = tempApp({
+    "lib/tokens.ts": 'async function check(t: string | null) { if (t !== "ok") throw new Error("bad"); }\nfunction strict(t: string | null) { if (t !== "ok") throw new Error("bad"); }\nexport async function verifyUnawaitedToken(t: string | null) { check(t); }\nexport async function verifyLoggedToken(t: string | null) { try { strict(t); } catch (e) { console.error(e); } }\nexport async function verifyRethrownToken(t: string | null) { try { strict(t); } catch (e) { throw e; } }\n',
+    "app/api/a/[id]/route.ts": route("verifyUnawaitedToken"),
+    "app/api/b/[id]/route.ts": route("verifyLoggedToken"),
+    "app/api/c/[id]/route.ts": route("verifyRethrownToken"),
+  });
+  const g = analyze(dir), st = (id) => g.nodes.find((n) => n.id === id).guard.status;
+  assert.notEqual(st("route:GET /api/a/:id"), "checked", "async helper not awaited");
+  assert.notEqual(st("route:GET /api/b/:id"), "checked", "error caught and logged");
+  assert.equal(st("route:GET /api/c/:id"), "checked", "error rethrown");
+});
+
+test("a request filter on the main table doesn't make a joined table request-driven", () => {
+  const dir = tempApp({
+    "app/api/t/[id]/route.ts": 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes, teams } from "@/lib/db/schema";\nexport async function GET(req: Request, { params }: any) { return Response.json(await db.select().from(teams).leftJoin(notes, eq(notes.teamId, teams.id)).where(eq(teams.id, Number(params.id)))); }\n',
+  });
+  assert.ok(!analyze(dir).findings.some((f) => f.sev === "crit"), "teams has no owner column, and the filter is on teams");
+});
+
+test("verifier helpers: a conditional call or a finally return doesn't prove a guard", () => {
+  const route = (fn) => 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes } from "@/lib/db/schema";\nimport { ' + fn + ' } from "@/lib/tokens";\nexport async function GET(req: Request, { params }: any) { ' + fn + '(req.headers.get("t")); return Response.json(await db.select().from(notes).where(eq(notes.id, Number(params.id)))); }\n';
+  const dir = tempApp({
+    "lib/tokens.ts": 'function reject(t: string | null) { if (t !== "ok") throw new Error("bad"); }\nexport function verifyOptionalToken(t: string | null) { if (t) reject(t); }\nexport function verifyFinallyToken(t: string | null) { try { reject(t); } finally { return; } }\n',
+    "app/api/a/[id]/route.ts": route("verifyOptionalToken"),
+    "app/api/b/[id]/route.ts": route("verifyFinallyToken"),
+  });
+  const g = analyze(dir), st = (id) => g.nodes.find((n) => n.id === id).guard.status;
+  assert.notEqual(st("route:GET /api/a/:id"), "checked", "missing token skips the helper");
+  assert.notEqual(st("route:GET /api/b/:id"), "checked", "finally return swallows the throw");
+});
+
+test("joined-table columns written as notes[\"id\"] count too", () => {
+  const dir = tempApp({
+    "app/api/t/[id]/route.ts": 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes, teams } from "@/lib/db/schema";\nexport async function GET(req: Request, { params }: any) { return Response.json(await db.select().from(teams).leftJoin(notes, eq(notes.teamId, teams.id)).where(eq(notes["id"], Number(params.id)))); }\n',
+  });
+  assert.equal(analyze(dir).findings.find((x) => x.node === "route:GET /api/t/:id")?.sev, "crit");
+});
+
+test("an action picked by a condition is inferred, not proven", () => {
+  const dir = tempApp({
+    "app/actions.ts": '"use server";\nexport async function signIn(d: FormData) {}\nexport async function signUp(d: FormData) {}\n',
+    "app/login.tsx": '"use client";\nimport { signIn, signUp } from "./actions";\nexport function Login({ mode }: { mode: string }) { return <form action={mode === "signin" ? signIn : signUp} />; }\n',
+    "app/sign-in/page.tsx": 'import { Login } from "../login";\nexport default function P() { return <Login mode="signin" />; }\n',
+  });
+  const g = analyze(dir);
+  const e = g.edges.find((x) => x.from === "page:/sign-in" && x.to.startsWith("action:signUp"));
+  assert.ok(e, "the reference is still drawn");
+  assert.equal(e.certainty, "inferred");
+});
+
+test("a verifier's throw only counts when it depends on the verifier's input", () => {
+  const route = (fn) => 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes } from "@/lib/db/schema";\nimport { ' + fn + ' } from "@/lib/tokens";\nexport async function GET(req: Request, { params }: any) { ' + fn + '(req.headers.get("t")); return Response.json(await db.select().from(notes).where(eq(notes.id, Number(params.id)))); }\n';
+  const dir = tempApp({
+    "lib/tokens.ts": 'function assertConfigured() { if (!process.env.SIGNING_KEY) throw new Error("no key"); }\nexport function verifyConfigToken(t: string | null) { assertConfigured(); return t === "ok"; }\n',
+    "app/api/a/[id]/route.ts": route("verifyConfigToken"),
+  });
+  assert.notEqual(analyze(dir).nodes.find((n) => n.id === "route:GET /api/a/:id").guard.status, "checked", "only throws when config is missing");
+});
+
+test("conditional actions: parentheses don't hide the condition, and a direct use on the same line wins", () => {
+  const dir = tempApp({
+    "app/actions.ts": '"use server";\nexport async function signIn(d: FormData) {}\nexport async function signUp(d: FormData) {}\n',
+    "app/login.tsx": '"use client";\nimport { signIn, signUp } from "./actions";\nexport function Login({ mode }: { mode: string }) { return <><form action={mode === "signin" ? (signIn) : signUp} /><form action={signUp} /></>; }\n',
+    "app/sign-in/page.tsx": 'import { Login } from "../login";\nexport default function P() { return <Login mode="signin" />; }\n',
+  });
+  const g = analyze(dir), c = (a) => g.edges.find((x) => x.from === "page:/sign-in" && x.to.startsWith("action:" + a))?.certainty;
+  assert.equal(c("signIn"), "inferred", "(signIn) is still one arm of the condition");
+  assert.equal(c("signUp"), "proven", "signUp is also used directly");
+});
+
+test("verifier: a catch that returns swallows the failure, and a config check that mentions the token isn't a rejection", () => {
+  const route = (fn) => 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes } from "@/lib/db/schema";\nimport { ' + fn + ' } from "@/lib/tokens";\nexport async function GET(req: Request, { params }: any) { ' + fn + '(req.headers.get("t")); return Response.json(await db.select().from(notes).where(eq(notes.id, Number(params.id)))); }\n';
+  const dir = tempApp({
+    "lib/tokens.ts": 'function reject(t: string | null) { if (t !== "ok") throw new Error("bad"); }\nfunction assertConfigured(t: string | null) { if (t && !process.env.SIGNING_KEY) throw new Error("no key"); }\nexport function verifyReturnToken(t: string | null) { try { reject(t); } catch { return; } }\nexport function verifyConfigToken(t: string | null) { assertConfigured(t); return t === "ok"; }\n',
+    "app/api/a/[id]/route.ts": route("verifyReturnToken"),
+    "app/api/b/[id]/route.ts": route("verifyConfigToken"),
+  });
+  const g = analyze(dir), st = (id) => g.nodes.find((n) => n.id === id).guard.status;
+  assert.notEqual(st("route:GET /api/a/:id"), "checked");
+  assert.notEqual(st("route:GET /api/b/:id"), "checked");
+});
+
+test("explanations say when an action link is inferred", () => {
+  const dir = tempApp({
+    "app/actions.ts": '"use server";\nexport async function signIn(d: FormData) {}\nexport async function signUp(d: FormData) {}\n',
+    "app/login.tsx": '"use client";\nimport { signIn, signUp } from "./actions";\nexport function Login({ mode }: { mode: string }) { return <form action={mode === "signin" ? signIn : signUp} />; }\n',
+    "app/sign-in/page.tsx": 'import { Login } from "../login";\nexport default function P() { return <Login mode="signin" />; }\n',
+  });
+  const g = analyze(dir);
+  const page = g.nodes.find((n) => n.id === "page:/sign-in").explain.map((x) => x.text).join(" ");
+  assert.ok(/may trigger/i.test(page) && !/It triggers server actions/.test(page), page);
+  const act = g.nodes.find((n) => n.id.startsWith("action:signUp")).explain.map((x) => x.text).join(" ");
+  assert.ok(/May be triggered from/.test(act), act);
+});
+
+// Review follow-ups on 367a36c
+test("verifier: destructured inputs and an early success return still reject", () => {
+  const route = (fn) => 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes } from "@/lib/db/schema";\nimport { ' + fn + ' } from "@/lib/tokens";\nexport async function GET(req: Request, { params }: any) { ' + fn + '({ token: req.headers.get("t") }); return Response.json(await db.select().from(notes).where(eq(notes.id, Number(params.id)))); }\n';
+  const dir = tempApp({
+    "lib/tokens.ts": 'export function verifyDestructuredToken(input: any) { const { token } = input; if (token !== "ok") throw new Error("bad"); }\nexport function verifyEarlyToken(input: any) { if (input.token === "ok") return; throw new Error("bad"); }\nexport function verifyConfigToken(input: any) { if (process.env.SKIP) return; throw new Error("bad"); }\n',
+    "app/api/a/[id]/route.ts": route("verifyDestructuredToken"),
+    "app/api/b/[id]/route.ts": route("verifyEarlyToken"),
+    "app/api/c/[id]/route.ts": route("verifyConfigToken"),
+  });
+  const g = analyze(dir);
+  const crit = (n) => g.findings.some((f) => f.node === n && f.sev === "crit");
+  assert.ok(!crit("route:GET /api/a/:id"), "destructured token is still the input");
+  assert.ok(!crit("route:GET /api/b/:id"), "only a good token returns early");
+  assert.ok(crit("route:GET /api/c/:id"), "an early return on configuration isn't about the input");
+});
+
+test("a sql template filter on a joined table is request-driven", () => {
+  const dir = tempApp({
+    "app/api/t/[id]/route.ts": 'import { sql, eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes, teams } from "@/lib/db/schema";\nexport async function GET(req: Request, { params }: any) { return Response.json(await db.select().from(teams).leftJoin(notes, eq(notes.teamId, teams.id)).where(sql`${notes.id} = ${Number(params.id)}`)); }\n',
+    "app/api/u/[id]/route.ts": 'import { sql, eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes, teams } from "@/lib/db/schema";\nexport async function GET(req: Request, { params }: any) { return Response.json(await db.select().from(teams).leftJoin(notes, eq(notes.teamId, teams.id)).where(sql`${teams.id} = ${Number(params.id)}`)); }\n',
+  });
+  const g = analyze(dir);
+  assert.equal(g.findings.find((f) => f.node === "route:GET /api/t/:id")?.sev, "crit");
+  assert.ok(!g.findings.some((f) => f.node === "route:GET /api/u/:id" && f.sev === "crit"), "the filter is on teams only");
+});
+
+// Review follow-ups on 6232a8b
+test("verifier helpers: the same helper is followed again with a different input", () => {
+  const dir = tempApp({
+    "lib/tokens.ts": 'function check(a: string, b: string) { if (b !== "ok") throw new Error("bad"); }\nexport function verifyToken(t: string) { check(t, "ok"); check("ok", t); }\n',
+    "app/api/a/[id]/route.ts": 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes } from "@/lib/db/schema";\nimport { verifyToken } from "@/lib/tokens";\nexport async function GET(req: Request, { params }: any) { verifyToken(req.headers.get("t")!); return Response.json(await db.select().from(notes).where(eq(notes.id, Number(params.id)))); }\n',
+  });
+  assert.ok(!analyze(dir).findings.some((f) => f.sev === "crit"), "the second call passes t to b, which is checked");
+});
+
+test("a sql template with the request value in another predicate doesn't make the joined table request-driven", () => {
+  const dir = tempApp({
+    "app/api/t/[id]/route.ts": 'import { sql, eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes, teams } from "@/lib/db/schema";\nexport async function GET(req: Request, { params }: any) { return Response.json(await db.select().from(teams).leftJoin(notes, eq(notes.teamId, teams.id)).where(sql`${notes.id} IS NOT NULL AND ${teams.id} = ${Number(params.id)}`)); }\n',
+  });
+  assert.ok(!analyze(dir).findings.some((f) => f.sev === "crit"), "the request value is compared with teams.id");
+});
+
+test("an action with only proven callers isn't also called unused", () => {
+  const g = JSON.parse(fs.readFileSync(new URL("../real/saas-starter.graph.json", import.meta.url)));
+  for (const n of g.nodes.filter((x) => x.kind === "action")) {
+    const texts = (n.explain || []).map((x) => x.text);
+    assert.ok(!(texts.some((t) => t.startsWith("Triggered from") || t.startsWith("May be triggered")) && texts.includes("No page in the app triggers it.")), n.id);
+  }
+});
+
+// Review follow-ups on 24df3b5
+test("verifier: conditional rethrow, nested config checks and branched verify() don't prove a guard", () => {
+  const route = (fn) => 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes } from "@/lib/db/schema";\nimport { ' + fn + ' } from "@/lib/tokens";\nexport async function GET(req: Request, { params }: any) { ' + fn + '(req.headers.get("t")); return Response.json(await db.select().from(notes).where(eq(notes.id, Number(params.id)))); }\n';
+  const dir = tempApp({
+    "lib/tokens.ts": [
+      'function rejectInvalid(t: any) { if (t !== "ok") throw new Error("bad"); }',
+      'function verify(t: any) { if (t !== "ok") throw new Error("bad"); }',
+      'function assertConfigured(t: any) { if (t) { if (!process.env.SIGNING_KEY) throw new Error("no key"); } }',
+      'export function verifyRethrowToken(t: any) { try { rejectInvalid(t); } catch (e) { if (t === "blocked") throw e; return; } }',
+      'export function verifyNestedToken(t: any) { assertConfigured(t); }',
+      'export function verifyBranchToken(t: any) { if (t) verify(t); }',
+      'export function verifyDefaultToken(t: any) { switch (typeof t) { case "number": break; default: rejectInvalid(t); } }',
+      'export function verifyEarlyReturnToken(t: any) { try { rejectInvalid(t); } catch (e) { if (t !== "blocked") return; throw e; } }',
+      'export function verifyAlwaysRethrowToken(t: any) { try { rejectInvalid(t); } catch (e) { console.error(e); throw e; } }',
+    ].join("\n") + "\n",
+    "app/api/a/[id]/route.ts": route("verifyRethrowToken"),
+    "app/api/b/[id]/route.ts": route("verifyNestedToken"),
+    "app/api/c/[id]/route.ts": route("verifyBranchToken"),
+    "app/api/d/[id]/route.ts": route("verifyDefaultToken"),
+    "app/api/e/[id]/route.ts": route("verifyAlwaysRethrowToken"),
+    "app/api/f/[id]/route.ts": route("verifyEarlyReturnToken"),
+  });
+  const g = analyze(dir);
+  const crit = (n) => g.findings.some((f) => f.node === n && f.sev === "crit");
+  for (const r of ["a", "b", "c", "d", "f"]) assert.ok(crit(`route:GET /api/${r}/:id`), r);
+  assert.ok(!crit("route:GET /api/e/:id"), "a catch that always rethrows passes the failure on");
+});
+
+test("a verifier on every branch of a method switch still counts", () => {
+  const dir = tempApp({
+    "lib/tokens.ts": 'function verifyAToken(r: any) { if (r.headers.get("a") !== "ok") throw new Error("bad"); }\nfunction verifyBToken(r: any) { if (r.headers.get("b") !== "ok") throw new Error("bad"); }\nexport function verifyRequest(req: any) { if (req.method === "GET") verifyAToken(req); else if (req.method === "POST") verifyBToken(req); else throw new Error("method"); }\n',
+    "app/api/a/[id]/route.ts": 'import { eq } from "drizzle-orm";\nimport { db } from "@/lib/db";\nimport { notes } from "@/lib/db/schema";\nimport { verifyRequest } from "@/lib/tokens";\nexport async function GET(req: Request, { params }: any) { if (req.method === "GET") verifyRequest(req); else verifyRequest(req); return Response.json(await db.select().from(notes).where(eq(notes.id, Number(params.id)))); }\n',
+  });
+  assert.ok(!analyze(dir).findings.some((f) => f.sev === "crit"), "branching on the method isn't skipping the check");
+});

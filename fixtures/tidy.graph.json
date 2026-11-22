@@ -1,7 +1,7 @@
 {
   "app": "tidy",
-  "commit": "8fb1d8d",
-  "generatedAt": "2026-11-22T18:22:34.668Z",
+  "commit": "f067dc9",
+  "generatedAt": "2026-11-22T18:26:33.182Z",
   "analyzer": "plainsight 0.3.0",
   "stack": {
     "static": null,
@@ -1243,5 +1243,5 @@
     "Calls made through require(), dynamic import(), or values passed around as arguments may be missed.",
     "Regex-style middleware matchers are not evaluated."
   ],
-  "elapsedMs": 63
+  "elapsedMs": 61
 }
