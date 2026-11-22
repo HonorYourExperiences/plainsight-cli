@@ -46,7 +46,9 @@ const GUIDE = {
 // a CI summary never hands a key to anyone. Private keys are cut down to their
 // header, whether written with real or escaped (\n) line breaks.
 const SECRET = /(sk_(?:live|test)_|rk_(?:live|test)_|sk-(?:ant-|proj-)?|AKIA|ghp_|gho_|github_pat_|xox[abpr]-|re_|whsec_)([A-Za-z0-9]{4})[A-Za-z0-9_-]{6,}/g;
-const PEM = /(-----BEGIN ([A-Z ]*)PRIVATE KEY-----)[\s\S]*?(?:-----END \2PRIVATE KEY-----|(?=["'`])|$)/g;
+// with an END marker: remove everything up to it; without one (a snippet cut after the
+// first line): remove only the rest of that line, never the rest of the prompt
+const PEM = /(-----BEGIN ([A-Z ]*)PRIVATE KEY-----)(?:[\s\S]*?-----END \2PRIVATE KEY-----|[^\n"'`]*)/g;
 export const redact = (text = "") => text.replace(PEM, "$1 … (key removed)").replace(SECRET, "$1$2…");
 
 function stackLine(stack = {}) {

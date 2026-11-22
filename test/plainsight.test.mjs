@@ -403,3 +403,11 @@ test("findings that aren't tied to a part still get a copy button", () => {
   const html = renderReport([g]);
   assert.ok(html.includes("data-fixall"), "no copy control for findings without a part");
 });
+
+test("a private key cut after its first line doesn't swallow the rest of the prompt", () => {
+  const p = fixPrompt({ sev: "warn", rule: "secret-in-code", title: "private key is written into the code", text: "x",
+    evidence: [{ file: "a.ts", line: 1, code: "const key = `-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkq" }] }, {});
+  assert.ok(!p.includes("MIIEvQIBADANBgkq"), "key body reached the prompt");
+  assert.match(p, /How to fix it: /);
+  assert.match(p, /npx plainsight-cli/, "the end of the prompt was removed");
+});
