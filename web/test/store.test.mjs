@@ -77,3 +77,15 @@ test("the repo picker lists public repos by default and asks GitHub for private 
     assert.match(calls[1][0], /visibility=all/);
   } finally { globalThis.fetch = realFetch; }
 });
+
+test("private repos are listed only for users who granted GitHub's repo permission", async () => {
+  const { db } = await (await import("../lib/db.mjs")).getDb();
+  const now = new Date().toISOString(); // raw SQLite stores dates as text; Better Auth converts them itself
+  const row = (userId, scope) => ({ id: `acc_${userId}`, accountId: `gh_${userId}`, providerId: "github", userId, accessToken: `gho_${userId}`, scope, createdAt: now, updatedAt: now });
+  await db.insertInto("user").values([{ id: "u_pub", name: "P", email: "p@x.test", emailVerified: 1, createdAt: now, updatedAt: now }, { id: "u_priv", name: "Q", email: "q@x.test", emailVerified: 1, createdAt: now, updatedAt: now }]).execute();
+  await db.insertInto("account").values([row("u_pub", "read:user,user:email"), row("u_priv", "read:user,user:email,repo")]).execute();
+  assert.deepEqual(await store.githubAccount("u_pub"), { token: "gho_u_pub", scopes: ["read:user", "user:email"], privateRepos: false });
+  assert.equal((await store.githubAccount("u_priv")).privateRepos, true);
+  assert.equal(await store.githubAccount("nobody"), null);
+  assert.equal(await store.githubToken("u_priv"), "gho_u_priv");
+});

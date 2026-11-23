@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { currentUser, providers, privateRepos } from "@/lib/auth.mjs";
-import { listMaps, githubToken } from "@/lib/store.mjs";
+import { listMaps, githubAccount } from "@/lib/store.mjs";
 import { listGithubRepos } from "@/lib/scan.mjs";
 import Header from "@/components/Header";
 import RepoPicker from "@/components/RepoPicker";
@@ -13,10 +13,11 @@ export const metadata = { title: "Your maps · Plainsight" };
 export default async function Dashboard() {
   const user = await currentUser(await headers());
   if (!user) redirect("/");
-  const [maps, token] = await Promise.all([listMaps(user.id), githubToken(user.id)]);
+  const [maps, gh] = await Promise.all([listMaps(user.id), githubAccount(user.id)]);
+  const includePrivate = privateRepos && !!gh?.privateRepos;
   let repos = null, repoError = null;
-  if (token) {
-    try { repos = await listGithubRepos(token, { includePrivate: privateRepos }); } catch (e) { repoError = e.message; }
+  if (gh) {
+    try { repos = await listGithubRepos(gh.token, { includePrivate }); } catch (e) { repoError = e.message; }
   }
   return (
     <>
@@ -27,7 +28,7 @@ export default async function Dashboard() {
         <div className="grid2">
           <section className="panel" aria-labelledby="scan-h">
             <h2 id="scan-h">Scan a repo</h2>
-            <RepoPicker repos={repos} repoError={repoError} canConnectGithub={providers.github && !token} privateRepos={privateRepos} />
+            <RepoPicker repos={repos} repoError={repoError} canConnectGithub={providers.github && !gh} privateShown={includePrivate} canAddPrivate={privateRepos && !!gh && !includePrivate} />
           </section>
           <section className="panel" aria-labelledby="ci-h">
             <h2 id="ci-h">Every push, automatically</h2>

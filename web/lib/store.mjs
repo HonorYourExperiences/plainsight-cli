@@ -76,7 +76,13 @@ export async function userFromBearer(header) {
 }
 
 // ---------- GitHub ----------
+export async function githubAccount(userId) {
+  const r = await (await db()).selectFrom("account").select(["accessToken", "scope"]).where("userId", "=", userId).where("providerId", "=", "github").executeTakeFirst();
+  if (!r?.accessToken) return null;
+  const scopes = String(r.scope || "").split(/[,\s]+/).filter(Boolean);
+  return { token: r.accessToken, scopes, privateRepos: scopes.includes("repo") };
+}
+
 export async function githubToken(userId) {
-  const r = await (await db()).selectFrom("account").select(["accessToken"]).where("userId", "=", userId).where("providerId", "=", "github").executeTakeFirst();
-  return r?.accessToken || null;
+  return (await githubAccount(userId))?.token || null;
 }

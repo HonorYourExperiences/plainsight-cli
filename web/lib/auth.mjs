@@ -12,8 +12,9 @@ export const providers = {
   github: !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET),
   email: true,
 };
-// Private repos need GitHub's broad "repo" scope, so it's off unless the site owner turns it on.
-export const privateRepos = process.env.PLAINSIGHT_GITHUB_PRIVATE_REPOS === "1";
+// Private repos need GitHub's broad "repo" scope (it also allows changes), so nobody gets asked for it
+// at sign-in: each user can opt in from the dashboard. Site owners can turn the option off with "0".
+export const privateRepos = process.env.PLAINSIGHT_GITHUB_PRIVATE_REPOS !== "0";
 
 const g = globalThis.__plainsightAuth || (globalThis.__plainsightAuth = {});
 
@@ -26,7 +27,7 @@ function options(db, type) {
     telemetry: { enabled: false },
     socialProviders: {
       ...(providers.google && { google: { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET } }),
-      ...(providers.github && { github: { clientId: process.env.GITHUB_CLIENT_ID, clientSecret: process.env.GITHUB_CLIENT_SECRET, scope: privateRepos ? ["repo"] : [] } }),
+      ...(providers.github && { github: { clientId: process.env.GITHUB_CLIENT_ID, clientSecret: process.env.GITHUB_CLIENT_SECRET } }),
     },
     // signing in with Google and later GitHub (same verified email) lands in one account
     account: { accountLinking: { enabled: true, trustedProviders: ["google", "github"] } },
