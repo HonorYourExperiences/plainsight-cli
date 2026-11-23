@@ -90,7 +90,8 @@ const fileSet = new Set(sourceFiles);
 const isToolingConfig = (r) => /(^|\/)[\w.-]+\.config\.(m?[jt]s|cjs)$/.test(r) || /(^|\/)(jest|vitest)\.setup\./.test(r);
 const isScripts = (r) => /^(scripts|tools|bin)\//.test(r);
 const isDocs = (r) => /^(docs|art|examples?|design)\//.test(r);
-const isTest = (r) => /(\.|\/)(test|spec)\.[jt]sx?$/.test(r) || /(^|\/)(__tests__|tests?|e2e|cypress|playwright)\//.test(r);
+// tests, and the fixtures and sample apps they read
+const isTest = (r) => /(\.|\/)(test|spec)\.[cm]?[jt]sx?$/.test(r) || /(^|\/)(__tests__|tests?|e2e|cypress|playwright|__fixtures__|fixtures?)\//.test(r);
 
 // ---------- tsconfig paths ----------
 let baseDir = root, aliasPaths = {}, hasBaseUrl = false;
@@ -1573,6 +1574,8 @@ const browserFiles = new Set();
 for (const m of F.values()) if (m.directives.has("use client")) for (const f of reach(m.file)) browserFiles.add(f);
 for (const m of F.values()) for (const s of m.secrets) {
   const inBrowser = browserFiles.has(m.file);
+  // a key in a test or fixture is almost always a planted fake; only a browser-bound one is still worth raising
+  if (!inBrowser && isTest(m.rel)) continue;
   const who = [...nodes.values()].filter((n) => n.kind === "page" && n.files?.includes(m.rel));
   findings.push({ rule: inBrowser ? "secret-in-browser" : "secret-in-code", sev: inBrowser ? "crit" : "warn", node: who[0]?.id || null, file: m.rel, title: inBrowser ? `${s.label} is sent to the browser` : `${s.label} is written into the code`,
     text: inBrowser ? `${m.rel} contains a ${s.label} and is imported by code that runs in the browser${who.length ? ` (${who.map((w) => w.name).join(", ")})` : ""}. Anyone can open developer tools and copy it.` : `${m.rel} contains a ${s.label}. Anyone with access to the code has it. Move it to an environment variable.`,

@@ -619,3 +619,12 @@ test("a verifier on every branch of a method switch still counts", () => {
   });
   assert.ok(!analyze(dir).findings.some((f) => f.sev === "crit"), "branching on the method isn't skipping the check");
 });
+
+test("a key in a test or fixture file isn't a Fix soon, the same key in app code is", () => {
+  const key = 'export const KEY = "sk_live_FAKExTESTxKEYx0000";\n';
+  const fixSoon = (g, file) => g.findings.some((f) => f.rule === "secret-in-code" && f.file === file && f.sev === "warn");
+  const g = analyze(tempApp({ "test/x.test.ts": key, "fixtures/demo/lib/x.ts": key, "lib/x.ts": key }));
+  assert.ok(!fixSoon(g, "test/x.test.ts"), "test file");
+  assert.ok(!fixSoon(g, "fixtures/demo/lib/x.ts"), "fixture app");
+  assert.ok(fixSoon(g, "lib/x.ts"), "app code still flagged");
+});

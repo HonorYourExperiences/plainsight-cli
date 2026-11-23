@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- A key written into a test file (`test/`, `tests/`, `__tests__/`, `*.test.*`, `*.spec.*`) or a fixture or sample app (`fixtures/`, `__fixtures__/`) is no longer a "Fix soon": those are almost always planted fakes. A key that reaches the browser is still a "Fix now" wherever it lives, and coverage now counts fixtures and `.mjs`/`.cjs` tests as tests.
+
 ## 0.3.1
 
 - **Copy fix prompt.** Every finding in the report has a button that copies a ready-to-paste prompt for Claude, Cursor or Lovable: the problem, the part and the exact file and line, the code involved, what a real fix looks like for that kind of problem, and a request to plan first, reuse the app's own helpers and change nothing else. The same prompt is in `--json` output and, folded, in the `--markdown` summary.
