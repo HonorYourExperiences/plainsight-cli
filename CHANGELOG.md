@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **For AI agents:** `plainsight mcp` runs Plainsight as an MCP server. Claude Code, Cursor and other agents can scan the app they're working on, read each finding's receipts and fix prompt, look up any part and its pipes, and rescan to confirm a fix. It reads code on your machine, like the CLI.
+- **`--upload`** sends the map to a Plainsight website (`PLAINSIGHT_URL`, `PLAINSIGHT_TOKEN`), and the GitHub Action takes `upload-url` and `upload-token` to do the same on every run. Upload problems print a warning and never fail the check on their own.
+- **Plainsight website** (`web/`, optional, self-hosted): sign in with Google, GitHub or an email link, pick a repo, see its map; API tokens for workflows and agents; a REST API. See `web/README.md`.
 - A key written into a test file (`test/`, `tests/`, `__tests__/`, `*.test.*`, `*.spec.*`) or a fixture or sample app (`fixtures/`, `__fixtures__/`) is no longer a "Fix soon": those are almost always planted fakes. A key that reaches the browser is still a "Fix now" wherever it lives, and coverage now counts fixtures and `.mjs`/`.cjs` tests as tests.
 
 ## 0.3.1

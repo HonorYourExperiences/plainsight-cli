@@ -4,7 +4,7 @@
   "description": "See what you built. Plainsight draws your Next.js app as a living schematic and finds the security holes, with every claim linked to the line of code that proves it.",
   "type": "module",
   "bin": { "plainsight": "bin/plainsight.mjs" },
-  "exports": { ".": "./src/analyze.mjs", "./report": "./src/report.mjs" },
+  "exports": { ".": "./src/analyze.mjs", "./report": "./src/report.mjs", "./agent": "./src/agent.mjs", "./package.json": "./package.json" },
   "files": ["bin/", "src/", "viewer/template.html", "README.md", "LICENSE", "CHANGELOG.md"],
   "engines": { "node": ">=18" },
   "scripts": {

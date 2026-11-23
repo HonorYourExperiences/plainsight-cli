@@ -14,6 +14,12 @@ inputs:
   report-name:
     description: Name of the uploaded report artifact
     default: plainsight-report
+  upload-url:
+    description: Address of your Plainsight website, to save each run's map to your dashboard (optional)
+    default: ""
+  upload-token:
+    description: A Plainsight API token, from a repo secret such as secrets.PLAINSIGHT_TOKEN (needed with upload-url)
+    default: ""
 outputs:
   report:
     description: Path to the HTML report
@@ -33,12 +39,15 @@ runs:
       env:
         PS_PATH: ${{ inputs.path }}
         PS_FAIL_ON: ${{ inputs.fail-on }}
+        PLAINSIGHT_URL: ${{ inputs.upload-url }}
+        PLAINSIGHT_TOKEN: ${{ inputs.upload-token }}
       run: |
         work=$(mktemp -d "$RUNNER_TEMP/plainsight.XXXXXX")
         out="$work/plainsight-report.html"
         md="$work/plainsight-summary.md"
         args=("$PS_PATH" --out "$out" --markdown "$md")
         if [ "$PS_FAIL_ON" != "none" ]; then args+=(--fail-on "$PS_FAIL_ON"); fi
+        if [ -n "$PLAINSIGHT_URL" ] && [ -n "$PLAINSIGHT_TOKEN" ]; then args+=(--upload); fi
         set +e
         node "$GITHUB_ACTION_PATH/bin/plainsight.mjs" "${args[@]}"
         code=$?

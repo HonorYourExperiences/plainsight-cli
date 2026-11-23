@@ -115,6 +115,30 @@ jobs:
 
 The check fails on "Fix now" findings, writes the findings table into the run's summary, and uploads the HTML report as an artifact.
 
+Running the [Plainsight website](web/README.md)? Add `upload-url: https://your-site` and `upload-token: ${{ secrets.PLAINSIGHT_TOKEN }}` and every run's map shows up in your dashboard too (the `--upload` option of the CLI).
+
+## For AI agents (MCP)
+
+`plainsight mcp` runs Plainsight as an [MCP](https://modelcontextprotocol.io) server, so Claude Code, Cursor and other agents can check the app they're working on, read each finding's receipts and fix prompt, and rescan to confirm a fix. It reads the code on your machine, like the CLI.
+
+```bash
+claude mcp add plainsight -- npx -y plainsight-cli mcp
+```
+
+Other clients (`.cursor/mcp.json` and the like):
+
+```json
+{ "mcpServers": { "plainsight": { "command": "npx", "args": ["-y", "plainsight-cli", "mcp"] } } }
+```
+
+| Tool | What it does |
+|---|---|
+| `plainsight_scan` | Scans a folder (`path`), a public repo (`repo: "owner/name"`) or a saved map (`map`), and lists the parts and numbered findings |
+| `plainsight_finding` | One finding: what can happen, the code receipts in order, and a fix prompt (keys masked) |
+| `plainsight_parts` | The app's pages, routes, actions, tables and services, with their files |
+| `plainsight_part` | One part and its pipes: what calls it, what it reads or calls, and how certain each link is |
+| `plainsight_maps` | Maps saved on your Plainsight website (set `PLAINSIGHT_URL` and `PLAINSIGHT_TOKEN`) |
+
 ## What it reads
 
 - **Next.js:** App Router and Pages Router (pages, layouts, API routes, server actions, middleware), following calls across files, through wrappers like `withUser(...)`, safe-action clients, `cache()`, re-exports and rendered components.
@@ -136,7 +160,7 @@ Every report has a **Coverage** section listing the files it read, left out and 
 
 ## Privacy
 
-Plainsight runs entirely on your machine. It makes no network requests except `git clone` when you pass a repo URL, and the report loads nothing from the internet unless you pass `--cdn`. There is no telemetry.
+Plainsight runs entirely on your machine. It makes no network requests except `git clone` when you pass a repo URL, and the report loads nothing from the internet unless you pass `--cdn`. There is no telemetry. `--upload` (off unless you ask for it) sends the map, which includes the code snippets behind each finding, to the Plainsight website address you set, and nowhere else.
 
 ## Use it as a library
 
