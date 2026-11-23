@@ -13,6 +13,8 @@ the file and lines it came from.
 
 Usage
   plainsight [repo] [options]
+  plainsight mcp       run as an MCP server, so AI agents can scan and ask
+                       about the app (see "For AI agents" in the README)
 
   repo                 a folder (default: the current folder) or a git URL,
                        e.g. https://github.com/owner/name or owner/name
@@ -30,6 +32,9 @@ Options
       --fail-on <level>
                        exit with code 1 if there are findings at this level or
                        worse: crit ("Fix now") or warn ("Fix soon"). For CI.
+      --upload         also save the map to your Plainsight website, so it
+                       shows up in your dashboard. Needs PLAINSIGHT_URL and
+                       PLAINSIGHT_TOKEN (an API token from the website).
   -q, --quiet          print only the report path and problems
   -v, --version        print the version
   -h, --help           print this help
@@ -42,7 +47,14 @@ Examples
 
 // ---------- arguments ----------
 const args = process.argv.slice(2);
-const opt = { out: "plainsight-report.html", json: null, markdown: null, report: true, open: false, offline: true, failOn: null, quiet: false, repo: null };
+if (args[0] === "mcp") {
+  const { runMcp } = await import("./mcp.mjs");
+  await runMcp();
+  // let open network sockets finish closing first: exiting mid-close crashes Node on Windows
+  setTimeout(() => process.exit(0), 200);
+  await new Promise(() => {});
+}
+const opt = { out: "plainsight-report.html", json: null, markdown: null, report: true, open: false, offline: true, failOn: null, quiet: false, repo: null, upload: false };
 for (let i = 0; i < args.length; i++) {
   const a = args[i], next = () => { if (i + 1 >= args.length) die(`${a} needs a value`); return args[++i]; };
   if (a === "-h" || a === "--help") { console.log(HELP); process.exit(0); }
@@ -51,6 +63,7 @@ for (let i = 0; i < args.length; i++) {
   else if (a === "--json") opt.json = next();
   else if (a === "--markdown") opt.markdown = next();
   else if (a === "--no-report") opt.report = false;
+  else if (a === "--upload") opt.upload = true;
   else if (a === "--open") opt.open = true;
   else if (a === "--cdn") opt.offline = false;
   else if (a === "--fail-on") { opt.failOn = next(); if (!["crit", "warn"].includes(opt.failOn)) die('--fail-on takes "crit" or "warn"'); }
@@ -155,6 +168,24 @@ if (opt.markdown) {
   md.push("Open the HTML report for the drawing, the plain-English explanation of every part, and the code behind each finding.");
   fs.mkdirSync(path.dirname(path.resolve(opt.markdown)), { recursive: true });
   fs.writeFileSync(opt.markdown, md.join("\n") + "\n");
+}
+
+// ---------- upload ----------
+if (opt.upload) {
+  const base = (process.env.PLAINSIGHT_URL || "").replace(/\/+$/, ""), token = process.env.PLAINSIGHT_TOKEN;
+  if (!base || !token) console.error(yellow("plainsight: --upload needs PLAINSIGHT_URL and PLAINSIGHT_TOKEN; the map was not uploaded."));
+  else {
+    // in GitHub Actions, name the map after the repo and commit being checked
+    const repo = process.env.GITHUB_REPOSITORY || graph.source || graph.app;
+    const commit = (process.env.GITHUB_SHA || "").slice(0, 7) || graph.commit || null;
+    const run = process.env.GITHUB_RUN_ID && process.env.GITHUB_SERVER_URL ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : null;
+    try {
+      const res = await fetch(`${base}/api/v1/maps`, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ repo, commit, run, graph }) });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) console.error(yellow(`plainsight: upload failed (${res.status}): ${body.error || "no details"}`));
+      else console.log(`  Map:    ${body.url}`);
+    } catch (e) { console.error(yellow(`plainsight: upload failed: ${e.message}`)); }
+  }
 }
 
 // ---------- exit code ----------
