@@ -58,7 +58,7 @@ The repo is set up for it: `web/vercel.json` installs the CLI from the repo root
    - `BETTER_AUTH_SECRET`: 32+ random characters
    - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
    - `RESEND_API_KEY` and `EMAIL_FROM` for email sign-in
-4. **Sign-in return addresses:** add `<BETTER_AUTH_URL>/api/auth/callback/github` to the GitHub OAuth app and `<BETTER_AUTH_URL>/api/auth/callback/google` to the Google client. A GitHub OAuth app has one callback URL, so use a separate app for production and local testing.
+4. **Sign-in return addresses:** add `<BETTER_AUTH_URL>/api/auth/callback/github` to the GitHub OAuth app (**Add redirect URI**) and `<BETTER_AUTH_URL>/api/auth/callback/google` to the Google client's authorized redirect URIs. Keep the `localhost` ones for local testing.
 5. **Deploy**, then sign in once with each method.
 
 ### Anywhere else
