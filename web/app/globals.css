@@ -1,0 +1,56 @@
+:root {
+  --ground: #050E18; --plate: #0A1A2A; --line: #1C3550; --ink: #E4F2FA; --dim: #8FA9BC;
+  --beam: #5CE1FF; --alarm: #FF4D5E; --amber: #FFB547; --ok: #7FD9A8;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ground); color: var(--ink); font: 15px/1.55 var(--f-body); }
+a { color: var(--beam); }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; letter-spacing: .01em; line-height: 1.2; }
+h1 { font-size: 30px; margin: 0 0 8px; }
+h2 { font-size: 19px; margin: 0 0 12px; }
+code, pre, .mono { font-family: var(--f-mono); font-size: 13px; }
+pre { background: var(--plate); border: 1px solid var(--line); padding: 12px 14px; overflow-x: auto; margin: 8px 0 0; white-space: pre; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+header.top { border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; gap: 18px; height: 58px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font: 600 18px var(--f-display); }
+.brand svg { width: 24px; height: 24px; }
+nav { display: flex; gap: 16px; margin-left: auto; align-items: center; }
+nav a { color: var(--dim); text-decoration: none; }
+nav a:hover, nav a[aria-current] { color: var(--ink); }
+main { padding: 32px 0 64px; }
+.lead { color: var(--dim); margin: 0 0 24px; max-width: 640px; }
+.panel { background: var(--plate); border: 1px solid var(--line); padding: 20px; margin: 0 0 20px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } h1 { font-size: 25px; } }
+button, .btn { font: 500 14px var(--f-body); border: 1px solid var(--line); background: #0F2438; color: var(--ink); padding: 9px 14px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border-radius: 0; }
+button:hover, .btn:hover { border-color: var(--beam); }
+button.primary, .btn.primary { background: var(--beam); color: var(--ground); border-color: var(--beam); font-weight: 600; }
+button.danger { color: var(--alarm); }
+button:disabled { opacity: .55; cursor: wait; }
+input[type=text], input[type=email] { font: 14px var(--f-body); background: var(--ground); border: 1px solid var(--line); color: var(--ink); padding: 9px 12px; width: 100%; border-radius: 0; }
+input:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--beam); outline-offset: 2px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.stack { display: grid; gap: 10px; }
+.muted { color: var(--dim); }
+.small { font-size: 13px; }
+.err { color: var(--alarm); }
+.okc { color: var(--ok); }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--dim); font-weight: 500; font-size: 13px; }
+.pill { display: inline-block; padding: 1px 8px; font: 600 12px var(--f-mono); border: 1px solid currentColor; white-space: nowrap; }
+.pill.crit { color: var(--alarm); } .pill.warn { color: var(--amber); } .pill.none { color: var(--ok); } .pill.info { color: var(--dim); }
+.repos { max-height: 360px; overflow-y: auto; border: 1px solid var(--line); }
+.repos button { width: 100%; justify-content: space-between; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; }
+.repos button:hover { background: #0F2438; }
+.signin { max-width: 400px; margin: 40px auto; }
+.divider { display: flex; align-items: center; gap: 10px; color: var(--dim); font-size: 13px; margin: 6px 0; }
+.divider::before, .divider::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+.frame { width: 100%; height: calc(100vh - 150px); min-height: 520px; border: 1px solid var(--line); background: var(--ground); display: block; }
+.secret { background: #0F2438; border: 1px solid var(--beam); padding: 12px; word-break: break-all; }
+.frame-overlay { position: absolute; inset: 1px; display: grid; place-items: center; background: var(--ground); padding: 20px; }
