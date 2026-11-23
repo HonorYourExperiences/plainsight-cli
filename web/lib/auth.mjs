@@ -29,8 +29,10 @@ function options(db, type) {
       ...(providers.google && { google: { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET } }),
       ...(providers.github && { github: { clientId: process.env.GITHUB_CLIENT_ID, clientSecret: process.env.GITHUB_CLIENT_SECRET } }),
     },
-    // signing in with Google and later GitHub (same verified email) lands in one account
-    account: { accountLinking: { enabled: true, trustedProviders: ["google", "github"] } },
+    // signing in with Google and later GitHub (same verified email) lands in one account.
+    // Connecting GitHub while signed in may use a different email (people often keep GitHub on
+    // another address): the user is signed in here and approves on GitHub, so they own both.
+    account: { accountLinking: { enabled: true, trustedProviders: ["google", "github"], allowDifferentEmails: true } },
     plugins: [magicLink({ expiresIn: 60 * 10, sendMagicLink: ({ email, url }) => sendSignInEmail(email, url) }), nextCookies()],
   };
 }
