@@ -9,7 +9,10 @@ export async function GET(req, { params }) {
   if (!user) return new Response("Sign in to see this map.", { status: 401 });
   const map = await getMap(user.id, (await params).id);
   if (!map) return new Response("Not found.", { status: 404 });
-  return new Response(await renderReport([map.graph], { offline: true, webFonts: true }), {
+  // tell the map page the report really rendered: some browsers block the frame yet still fire "load"
+  const ready = `<script>try{parent!==window&&parent.postMessage({plainsight:"report-ready"},"*")}catch(e){}</script>`;
+  const html = (await renderReport([map.graph], { offline: true, webFonts: true })) + ready;
+  return new Response(html, {
     headers: {
       "content-type": "text/html; charset=utf-8",
       // even opened directly, the report runs in an opaque origin with no access to the site's cookies or APIs
