@@ -6,6 +6,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import * as tar from "tar";
 
 import { cliBin } from "./cli.mjs";
 
@@ -14,7 +15,6 @@ const MAX_RUNNING = 2;
 let running = 0;
 
 export const REPO_NAME = /^[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
-const tarBin = () => (process.platform === "win32" ? path.join(process.env.SystemRoot || "C:\\Windows", "System32", "tar.exe") : "tar");
 
 function run(cmd, args, { timeout }) {
   return new Promise((resolve, reject) => {
@@ -53,7 +53,9 @@ export async function scanGithubRepo(fullName, { token } = {}) {
 
     const out = path.join(work, "src");
     fs.mkdirSync(out);
-    await run(tarBin(), ["-xzf", archive, "-C", out], { timeout: 60_000 });
+    // unpacked in JavaScript, so it works on hosts without a tar program (Vercel); entries that
+    // try to leave the folder (absolute paths, "..") are refused by the library
+    await tar.x({ file: archive, cwd: out, strict: true });
     fs.rmSync(archive);
     const [top] = fs.readdirSync(out); // GitHub names it owner-repo-<commit>
     if (!top) throw new Error("The download was empty.");

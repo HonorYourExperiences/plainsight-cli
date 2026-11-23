@@ -8,6 +8,7 @@ import RepoPicker from "@/components/RepoPicker";
 import MapList from "@/components/MapList";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 300; // scans run as server actions from this page
 export const metadata = { title: "Your maps · Plainsight" };
 
 export default async function Dashboard() {

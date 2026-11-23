@@ -47,7 +47,23 @@ Open http://localhost:3000 and sign in by email. With no email provider set, the
 
 ## Deploy it
 
-Any host that runs a long-lived Node server with `tar` and a writable temp folder works: Railway, Render, Fly.io, a VPS. Scans can take up to a couple of minutes, so short serverless time limits are a poor fit.
+### On Vercel
+
+The repo is set up for it: `web/vercel.json` installs the CLI from the repo root too, and `next.config.mjs` ships the CLI's files with every server function. Scans allow up to 300 seconds.
+
+1. **Import the repo** at vercel.com/new and pick `plainsight-cli`. Set **Root Directory** to `web`, and turn on **Include files outside the root directory** (under the root directory setting).
+2. **Database:** in the project, open **Storage → Create → Neon (Postgres)** and connect it to the project. That adds `DATABASE_URL` for you. Tables are created on the first request.
+3. **Environment variables** (Settings → Environment Variables), for Production:
+   - `BETTER_AUTH_URL`: the site's address, e.g. `https://plainsight-web.vercel.app`
+   - `BETTER_AUTH_SECRET`: 32+ random characters
+   - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+   - `RESEND_API_KEY` and `EMAIL_FROM` for email sign-in
+4. **Sign-in return addresses:** add `<BETTER_AUTH_URL>/api/auth/callback/github` to the GitHub OAuth app (**Add redirect URI**) and `<BETTER_AUTH_URL>/api/auth/callback/google` to the Google client's authorized redirect URIs. Keep the `localhost` ones for local testing.
+5. **Deploy**, then sign in once with each method.
+
+### Anywhere else
+
+Any host that runs Node 22.13+ with a writable temp folder works: Railway, Render, Fly.io, a VPS. Scans can take up to a couple of minutes, so short time limits are a poor fit.
 
 1. **Database:** a Postgres URL in `DATABASE_URL` (Neon, Supabase, Railway). Tables are created on first start.
 2. **Secret and address:** `BETTER_AUTH_SECRET` (32+ random characters) and `BETTER_AUTH_URL` (the public `https://` address).
