@@ -53,3 +53,4 @@ th { color: var(--dim); font-weight: 500; font-size: 13px; }
 .divider::before, .divider::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
 .frame { width: 100%; height: calc(100vh - 150px); min-height: 520px; border: 1px solid var(--line); background: var(--ground); display: block; }
 .secret { background: #0F2438; border: 1px solid var(--beam); padding: 12px; word-break: break-all; }
+.frame-overlay { position: absolute; inset: 1px; display: grid; place-items: center; background: var(--ground); padding: 20px; }

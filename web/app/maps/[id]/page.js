@@ -4,6 +4,7 @@ import { currentUser } from "@/lib/auth.mjs";
 import { getMap } from "@/lib/store.mjs";
 import Header from "@/components/Header";
 import { Counts } from "@/components/MapList";
+import MapFrame from "@/components/MapFrame";
 
 export const dynamic = "force-dynamic";
 
@@ -27,8 +28,7 @@ export default async function MapPage({ params }) {
             <a className="btn" href={`/maps/${map.id}/report`} target="_blank" rel="noopener">Open full screen</a>
           </div>
         </div>
-        {/* sandboxed without same-origin: the report can't read this site's cookies, even if a scanned repo tried to inject script */}
-        <iframe className="frame" title={`Plainsight map of ${map.repo}`} src={`/maps/${map.id}/report`} sandbox="allow-scripts allow-popups allow-downloads" allow="clipboard-write" />
+        <MapFrame title={`Plainsight map of ${map.repo}`} src={`/maps/${map.id}/report`} />
       </main>
     </>
   );
