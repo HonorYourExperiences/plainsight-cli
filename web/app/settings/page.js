@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: HonorYourExperiences/plainsight-cli@v0.4.0
+      - uses: HonorYourExperiences/plainsight-cli@v0.3.1
         with:
           fail-on: crit
           upload-url: ${site}
